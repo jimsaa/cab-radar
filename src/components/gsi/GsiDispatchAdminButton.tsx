@@ -1,0 +1,34 @@
+"use client";
+
+import {
+  getGsiDispatchSite,
+  openGsiDispatch,
+  type GsiDispatchSiteId,
+} from "@/lib/gsi-dispatch";
+import { cn } from "@/lib/utils";
+
+interface GsiDispatchAdminButtonProps {
+  siteId?: GsiDispatchSiteId;
+  className?: string;
+}
+
+/** Compact Tesla admin utility — opens Swedavia GSI in a new tab. */
+export function GsiDispatchAdminButton({
+  siteId = "landvetter",
+  className,
+}: GsiDispatchAdminButtonProps) {
+  const site = getGsiDispatchSite(siteId);
+
+  return (
+    <button
+      type="button"
+      onClick={() => openGsiDispatch(site)}
+      className={cn(
+        "shrink-0 rounded-lg border border-[#3A4048] bg-[#1B1E22]/80 px-2.5 py-1.5 text-[11px] font-semibold text-[#B0B6BE] transition hover:border-[#4A5159] hover:text-white active:scale-[0.98]",
+        className
+      )}
+    >
+      {site.adminLabel}
+    </button>
+  );
+}

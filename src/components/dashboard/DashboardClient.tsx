@@ -7,6 +7,7 @@ import { DashboardSafetyBanner } from "@/components/dashboard/RecentEventsList";
 import { RadarLatestReports } from "@/components/dashboard/RadarLatestReports";
 import { ReportEventGrid } from "@/components/dashboard/ReportEventGrid";
 import { ReportEventSheet } from "@/components/dashboard/ReportEventSheet";
+import { GsiDispatchCard } from "@/components/gsi/GsiDispatchCard";
 import { useAlertValidationPrompt } from "@/hooks/useAlertValidationPrompt";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useEmergencyGpsTracking } from "@/hooks/useEmergencyGpsTracking";
@@ -132,6 +133,7 @@ export function DashboardClient({
             Verifiering krävs för att rapportera händelser.
           </p>
         )}
+        <GsiDispatchCard className="mt-4" />
       </section>
 
       <RadarLatestReports
