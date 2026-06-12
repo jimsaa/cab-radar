@@ -20,6 +20,7 @@ import { isPresenceFresh, PRESENCE_STALE_MS } from "./emergency-privacy";
 import { fetchActiveDriverNetwork } from "./driver-activity";
 import { fetchAllHelpArticles } from "./help";
 import { fetchAllBanners, fetchAllDeals } from "./deals";
+import { maskLicenceLast4 } from "./licence.shared";
 import {
   formatRelativeSwedish,
   formatSwedishDateTime,
@@ -57,10 +58,18 @@ export interface CommandCenterPendingUser {
   display_name: string | null;
   cabradar_user_id: string | null;
   phone_number: string | null;
+  driver_license_last4: string | null;
   driver_city: string | null;
   taxi_company_name: string | null;
   taxi_number: string | null;
   created_at: string;
+}
+
+export interface CommandCenterTestModeDriver {
+  id: string;
+  display_name: string | null;
+  cabradar_user_id: string | null;
+  driver_license_last4: string | null;
 }
 
 export interface CommandCenterOffer {
@@ -107,12 +116,26 @@ export interface AdminCommandCenterSnapshot {
   testLiveFeed: LiveFeedItem[];
   drivers: CommandCenterDriver[];
   pendingUsers: CommandCenterPendingUser[];
+  testModeDrivers: CommandCenterTestModeDriver[];
   pendingCivil: CommandCenterCivilItem[];
   testPendingCivil: CommandCenterCivilItem[];
   activeOffers: CommandCenterOffer[];
   alertChimeEnabled: boolean;
   isFullAdmin: boolean;
   canViewEmergencyPhone: boolean;
+}
+
+export function formatCommandCenterDriverLabel(driver: {
+  display_name: string | null;
+  cabradar_user_id: string | null;
+  driver_license_last4?: string | null;
+}): string {
+  if (driver.display_name?.trim()) return driver.display_name.trim();
+  if (driver.driver_license_last4) {
+    return `Leg ${maskLicenceLast4(driver.driver_license_last4)}`;
+  }
+  if (driver.cabradar_user_id) return driver.cabradar_user_id;
+  return "Okänd förare";
 }
 
 async function countActiveDrivers(supabase: SupabaseClient): Promise<number> {
@@ -186,7 +209,7 @@ async function fetchPendingUsers(
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, display_name, cabradar_user_id, phone_number, driver_city, taxi_company_name, taxi_number, created_at"
+        "id, display_name, cabradar_user_id, phone_number, driver_license_last4, driver_city, taxi_company_name, taxi_number, created_at"
       )
       .eq("verification_status", "pending_verification")
       .eq("is_admin", false)
@@ -195,6 +218,30 @@ async function fetchPendingUsers(
 
     if (error) return [];
     return (data ?? []) as CommandCenterPendingUser[];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchTestModeDrivers(
+  supabase: SupabaseClient
+): Promise<CommandCenterTestModeDriver[]> {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, cabradar_user_id, driver_license_last4")
+      .eq("test_mode_enabled", true)
+      .eq("is_admin", false)
+      .neq("verification_status", "rejected")
+      .order("display_name", { ascending: true, nullsFirst: false })
+      .limit(20);
+
+    if (error) {
+      if (isMissingSchemaError(error)) return [];
+      return [];
+    }
+
+    return (data ?? []) as CommandCenterTestModeDriver[];
   } catch {
     return [];
   }
@@ -358,6 +405,7 @@ export async function fetchAdminCommandCenterSnapshot(
       testLiveFeed: [],
       drivers: [],
       pendingUsers: [],
+      testModeDrivers: [],
       pendingCivil: [],
       testPendingCivil: [],
       activeOffers: [],
@@ -379,6 +427,7 @@ export async function fetchAdminCommandCenterSnapshot(
     pendingUsers,
     allPendingCivil,
     activeOffers,
+    testModeDrivers,
   ] = await Promise.all([
     fetchAllDeals(serviceSupabase),
     fetchAllBanners(serviceSupabase),
@@ -391,6 +440,7 @@ export async function fetchAdminCommandCenterSnapshot(
     fetchPendingUsers(serviceSupabase),
     fetchPendingCivilItems(serviceSupabase),
     fetchActiveOffersList(serviceSupabase),
+    fetchTestModeDrivers(serviceSupabase),
   ]);
 
   const creatorNames = await loadCreatorNames(serviceSupabase, activeAlerts);
@@ -425,6 +475,7 @@ export async function fetchAdminCommandCenterSnapshot(
     testLiveFeed,
     drivers,
     pendingUsers,
+    testModeDrivers,
     pendingCivil,
     testPendingCivil,
     activeOffers,
