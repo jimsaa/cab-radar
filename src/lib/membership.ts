@@ -1,5 +1,5 @@
+import { formatSwedishDate } from "./datetime";
 import type { DriverVerificationStatus } from "./verification";
-
 import type { MembershipType } from "./types/database";
 
 export const MEMBERSHIP_THRESHOLDS = {
@@ -76,7 +76,7 @@ export function canParticipateInRewards(profile: MembershipProfile): boolean {
 
 export function formatMembershipExpiry(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("sv-SE");
+  return formatSwedishDate(iso);
 }
 
 export function membershipStatusIcon(profile: MembershipProfile): string {

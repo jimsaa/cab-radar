@@ -1,4 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  formatRelativeSwedish,
+  formatSwedishDateTime,
+} from "./datetime";
 import { googleMapsLink } from "./constants";
 import { isMissingSchemaError } from "./db-errors";
 import { distanceMeters } from "./geo";
@@ -85,31 +89,22 @@ export function formatSpeedKmh(speedMps: number | null | undefined): string | nu
 
 export function formatTimeSince(iso: string | null | undefined): string | null {
   if (!iso) return null;
-  const diffMs = Date.now() - new Date(iso).getTime();
-  if (diffMs < 0) return null;
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "mindre än 1 min sedan";
-  if (minutes < 60) return `${minutes} min sedan`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours} h sedan`;
+  const rel = formatRelativeSwedish(iso);
+  if (rel === "Just nu") return "just nu";
+  if (/^\d{4}-\d{2}-\d{2}/.test(rel)) return rel;
+  return rel.charAt(0).toLowerCase() + rel.slice(1);
 }
 
 export function formatEmergencyActivatedAt(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return formatSwedishDateTime(iso);
 }
 
 /** e.g. "Aktiverad för 8 minuter sedan" */
 export function formatEmergencyActivatedAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "Aktiverad just nu";
-  if (minutes === 1) return "Aktiverad för 1 minut sedan";
-  if (minutes < 60) return `Aktiverad för ${minutes} minuter sedan`;
-  const hours = Math.floor(minutes / 60);
-  if (hours === 1) return "Aktiverad för 1 timme sedan";
-  return `Aktiverad för ${hours} timmar sedan`;
+  const rel = formatRelativeSwedish(iso);
+  if (rel === "Just nu") return "Aktiverad just nu";
+  if (/^\d{4}-\d{2}-\d{2}/.test(rel)) return `Aktiverad ${rel}`;
+  return `Aktiverad ${rel.charAt(0).toLowerCase()}${rel.slice(1)}`;
 }
 
 export function emergencyTaxiCompany(

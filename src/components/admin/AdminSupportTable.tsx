@@ -1,6 +1,7 @@
 "use client";
 
 import type { SupportMessage } from "@/lib/types/database";
+import { formatSwedishDateTime } from "@/lib/datetime";
 import { AdminStatusList } from "./AdminStatusList";
 
 export function AdminSupportTable({
@@ -27,7 +28,7 @@ export function AdminSupportTable({
             {item.display_name ? ` · ${item.display_name}` : ""}
           </p>
           <p className="mt-1 text-xs text-muted">
-            {new Date(item.created_at).toLocaleString("sv-SE")} · v{item.app_version}
+            {formatSwedishDateTime(item.created_at)} · v{item.app_version}
           </p>
         </>
       )}

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { formatSwedishDateTime, formatSwedishObservedDate } from "./datetime";
 import { isMissingSchemaError } from "./db-errors";
 
 export type CivilSource = "user_submission" | "admin_manual";
@@ -606,12 +607,11 @@ export async function createManualRegistryEntry(
 }
 
 export function formatCivilkollObservedDate(isoDate: string): string {
-  return isoDate.slice(0, 10);
+  return formatSwedishObservedDate(isoDate);
 }
 
 export function formatCivilDateTime(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("sv-SE");
+  return formatSwedishDateTime(iso);
 }
 
 /** @deprecated use fetchCivilSubmissions */

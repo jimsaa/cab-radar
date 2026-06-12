@@ -18,6 +18,7 @@ import {
   type EmergencyAlertWithDriver,
 } from "@/lib/emergency";
 
+import { formatSwedishDateTime } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
@@ -124,9 +125,7 @@ export function AdminEmergencyDetail({
   const lastGpsSince = formatTimeSince(alert.emergency_last_gps_at);
 
   const lastGpsAt = alert.emergency_last_gps_at
-
-    ? new Date(alert.emergency_last_gps_at).toLocaleString("sv-SE")
-
+    ? formatSwedishDateTime(alert.emergency_last_gps_at)
     : "—";
 
 

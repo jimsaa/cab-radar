@@ -1,6 +1,7 @@
 "use client";
 
 import type { PartnerLead } from "@/lib/types/database";
+import { formatSwedishDateTime } from "@/lib/datetime";
 import { AdminStatusList } from "./AdminStatusList";
 
 export function AdminPartnerTable({ leads }: { leads: PartnerLead[] }) {
@@ -27,7 +28,7 @@ export function AdminPartnerTable({ leads }: { leads: PartnerLead[] }) {
             {item.email ? ` · ${item.email}` : ""}
           </p>
           <p className="mt-1 text-xs text-muted">
-            {new Date(item.created_at).toLocaleString("sv-SE")}
+            {formatSwedishDateTime(item.created_at)}
           </p>
         </>
       )}

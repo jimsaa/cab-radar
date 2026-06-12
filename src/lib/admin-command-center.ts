@@ -19,8 +19,14 @@ import {
 import { isPresenceFresh, PRESENCE_STALE_MS } from "./emergency-privacy";
 import { fetchAllHelpArticles } from "./help";
 import { fetchAllBanners, fetchAllDeals } from "./deals";
-import type { DriverAlert } from "./types/database";
+import {
+  formatRelativeSwedish,
+  formatSwedishDateTime,
+  formatSwedishTime,
+  secondsSinceTimestamp,
+} from "./datetime";
 import { alertFullAddress } from "./tesla-navigation";
+import type { DriverAlert } from "./types/database";
 
 export const ADMIN_REFRESH_INTERVAL_MS = 5000;
 export const TESLA_COMMAND_CENTER_MIN_WIDTH = 1024;
@@ -274,20 +280,11 @@ export function formatAlertLocation(alert: DriverAlert): string {
 }
 
 export function formatFeedTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("sv-SE", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatSwedishTime(iso);
 }
 
 export function formatFeedTimestamp(iso: string): string {
-  return new Date(iso).toLocaleString("sv-SE", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatSwedishDateTime(iso);
 }
 
 export function buildLiveFeed(
@@ -444,24 +441,20 @@ export async function fetchAdminCommandCenterSnapshot(
 }
 
 export function secondsSince(timestamp: number | null): number | null {
-  if (timestamp == null) return null;
-  return Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  return secondsSinceTimestamp(timestamp);
 }
 
 export function formatAdminRefreshLabel(seconds: number | null): string {
   if (seconds == null) return "Ansluter…";
   if (seconds <= 2) return "🟢 Uppdaterad just nu";
-  if (seconds < 60) return `🕒 Uppdaterad för ${seconds} sek sedan`;
+  if (seconds === 1) return "🕒 Uppdaterad för 1 sekund sedan";
+  if (seconds < 60) return `🕒 Uppdaterad för ${seconds} sekunder sedan`;
   const mins = Math.floor(seconds / 60);
-  return `🕒 Uppdaterad för ${mins} min sedan`;
+  if (mins === 1) return "🕒 Uppdaterad för 1 minut sedan";
+  return `🕒 Uppdaterad för ${mins} minuter sedan`;
 }
 
 export function formatDriverActivity(lastKnownAt: string | null): string {
   if (!lastKnownAt) return "Ingen aktivitet";
-  const sec = secondsSince(new Date(lastKnownAt).getTime());
-  if (sec == null) return "—";
-  if (sec < 60) return "Just nu";
-  if (sec < 3600) return `${Math.floor(sec / 60)} min sedan`;
-  if (sec < 86400) return `${Math.floor(sec / 3600)} h sedan`;
-  return new Date(lastKnownAt).toLocaleDateString("sv-SE");
+  return formatRelativeSwedish(lastKnownAt);
 }

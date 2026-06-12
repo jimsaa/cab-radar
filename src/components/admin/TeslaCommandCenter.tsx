@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { Phone, Shield } from "lucide-react";
+import { Phone } from "lucide-react";
 import { TeslaLiveFeedPanel } from "@/components/admin/TeslaLiveFeedPanel";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
@@ -19,6 +19,7 @@ import {
   getEmergencyGpsStatus,
   type EmergencyAlertWithDriver,
 } from "@/lib/emergency";
+import { formatSwedishClockNow, formatSwedishDate } from "@/lib/datetime";
 import { APP_NAME } from "@/lib/constants";
 import { formatDriverActivity } from "@/lib/admin-command-center";
 import { TEST_EMERGENCY_DISCLAIMER } from "@/lib/test-mode";
@@ -30,12 +31,7 @@ function ClockDisplay() {
 
   useEffect(() => {
     function tick() {
-      setTime(
-        new Date().toLocaleTimeString("sv-SE", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
+      setTime(formatSwedishClockNow());
     }
     tick();
     const id = window.setInterval(tick, 30_000);
@@ -79,11 +75,11 @@ function TeslaEmergencyCard({
   return (
     <div
       className={cn(
-        "grid gap-4 rounded-[18px] border p-5 lg:grid-cols-[1fr_auto]",
+        "grid w-full gap-4 rounded-[18px] border-2 p-5 lg:grid-cols-[1fr_auto]",
         isTest
           ? "admin-pulse-emergency border-amber-500/60 bg-amber-500/10"
-          : "admin-pulse-emergency border-[#FF3B30]/60 bg-[#262B31]",
-        isNew && !isTest && "ring-2 ring-[#FF3B30]/50",
+          : "border-[#FF3B30]/70 bg-[#262B31] shadow-[0_0_24px_rgba(255,59,48,0.12)]",
+        isNew && !isTest && "ring-2 ring-[#FF3B30]/60",
         isNew && isTest && "ring-2 ring-amber-500/50"
       )}
     >
@@ -182,8 +178,7 @@ function InfoCell({
 
 /** Full-screen Tesla dispatch center — emergencies top, ops below. */
 export function TeslaCommandCenter() {
-  const { snapshot, refreshLabel, newEmergencyIds, refresh } =
-    useAdminCommandCenter();
+  const { snapshot, newEmergencyIds, refresh } = useAdminCommandCenter();
 
   const resolveEmergency = useCallback(
     async (alertId: string) => {
@@ -233,52 +228,52 @@ export function TeslaCommandCenter() {
   const emergencies = snapshot?.emergencies ?? [];
   const liveEmergencies = emergencies.filter((e) => !e.is_test);
   const testEmergencies = emergencies.filter((e) => e.is_test);
+  const hasLiveEmergencies = liveEmergencies.length > 0;
   const stats = snapshot?.stats;
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-[#1E2125] text-white">
       {/* Header */}
-      <header className="flex shrink-0 items-center justify-between border-b border-[#3A4048] px-6 py-3">
-        <div className="flex items-center gap-3">
+      <header className="flex shrink-0 items-center justify-between border-b border-[#3A4048] px-6 py-4">
+        <div className="flex min-w-0 items-center gap-4">
           <Image
             src="/logo.png"
             alt={APP_NAME}
-            width={36}
-            height={36}
-            className="rounded-lg"
+            width={44}
+            height={44}
+            className="shrink-0 rounded-xl"
           />
-          <div>
-            <p className="text-sm font-bold">{APP_NAME}</p>
-            <span className="rounded-md bg-[#3B82F6]/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6]">
-              Admin läge
-            </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#22C55E]"
+                aria-hidden
+              />
+              <span className="text-[11px] font-bold uppercase tracking-wide text-[#22C55E]">
+                LIVE
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11px] font-medium text-[#8A9099]">
+              Systemet uppdateras automatiskt
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-[#8A9099]" />
-          <h1 className="text-lg font-bold tracking-tight">
+        <div className="flex flex-col items-center px-4 text-center">
+          <h1 className="text-lg font-bold tracking-tight text-white">
             ADMIN COMMAND CENTER
           </h1>
         </div>
 
-        <div className="flex items-center gap-6 text-right">
-          <p className="text-[11px] font-medium text-[#22C55E]">{refreshLabel}</p>
+        <div className="shrink-0 text-right">
           <ClockDisplay />
         </div>
       </header>
 
-      {/* 1. Emergency — live incidents only */}
-      <section className="shrink-0 border-b border-[#3A4048] px-4 py-3">
-        {liveEmergencies.length === 0 ? (
-          <div className="flex items-center justify-center gap-3 rounded-[18px] border border-[#3A4048] bg-[#262B31] px-6 py-4">
-            <span className="text-2xl">✅</span>
-            <p className="text-lg font-semibold text-[#22C55E]">
-              Inga aktiva nödlägen
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3 rounded-[18px] border border-[#FF3B30]/30 bg-[#FF3B30]/5 p-2">
+      {/* Emergency — only when active (no empty state) */}
+      {hasLiveEmergencies && (
+        <section className="admin-pulse-emergency shrink-0 border-b-2 border-[#FF3B30]/50 bg-[#FF3B30]/[0.07] px-4 py-4">
+          <div className="space-y-3">
             {liveEmergencies.map((e) => (
               <TeslaEmergencyCard
                 key={e.id}
@@ -289,8 +284,8 @@ export function TeslaCommandCenter() {
               />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* 1b. Test emergencies */}
       {testEmergencies.length > 0 && (
@@ -462,7 +457,7 @@ export function TeslaCommandCenter() {
                         {u.taxi_number ? ` · Taxi ${u.taxi_number}` : ""}
                       </p>
                       <p className="text-[10px] text-[#8A9099]">
-                        {new Date(u.created_at).toLocaleDateString("sv-SE")}
+                        {formatSwedishDate(u.created_at)}
                       </p>
                     </div>
                     <div className="mt-2 flex shrink-0 flex-wrap gap-1">
@@ -541,12 +536,8 @@ export function TeslaCommandCenter() {
       </div>
 
       {/* Footer */}
-      <footer className="flex shrink-0 items-center justify-between border-t border-[#3A4048] px-6 py-2 text-[11px] text-[#8A9099]">
+      <footer className="flex shrink-0 items-center border-t border-[#3A4048] px-6 py-2 text-[11px] text-[#8A9099]">
         <span>{APP_NAME} Admin Command Center</span>
-        <span className="flex items-center gap-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-[#22C55E]" />
-          Systemet uppdateras automatiskt · LIVE
-        </span>
       </footer>
     </div>
   );

@@ -1,14 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatSwedishDateTime } from "@/lib/datetime";
 import { Download } from "lucide-react";
 import { waitlistToCsv, type WaitlistEntry } from "@/lib/waitlist";
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("sv-SE", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
+  return formatSwedishDateTime(iso);
 }
 
 export function AdminWaitlistTable({
