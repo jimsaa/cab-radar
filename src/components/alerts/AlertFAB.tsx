@@ -77,12 +77,12 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
           onClick={close}
           role="presentation"
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-card-border bg-background p-4 shadow-2xl pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4"
+            className="relative max-h-[min(90dvh,calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem))] w-full max-w-sm overflow-y-auto rounded-2xl border border-card-border bg-background p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"

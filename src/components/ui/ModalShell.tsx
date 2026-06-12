@@ -38,7 +38,7 @@ export function ModalShell({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="presentation"
       onClick={handleClose}
     >
@@ -48,7 +48,7 @@ export function ModalShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-card-border bg-card p-5 shadow-xl"
+        className="relative max-h-[min(90dvh,calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem))] w-full max-w-md overflow-y-auto rounded-2xl border border-card-border bg-card p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
