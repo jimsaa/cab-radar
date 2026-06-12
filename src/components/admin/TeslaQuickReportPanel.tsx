@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Shield } from "lucide-react";
 import { ReportEventSheet } from "@/components/dashboard/ReportEventSheet";
 import {
   DASHBOARD_REPORT_TYPES,
@@ -8,16 +9,18 @@ import {
 } from "@/lib/dashboard-report-types";
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 
-/** Tesla-friendly display icons (override dashboard defaults where needed). */
+/** Shared Tesla quick-report card — equal visual weight for all types. */
+const TESLA_REPORT_BUTTON_CLASS =
+  "flex min-h-[72px] w-full items-center gap-4 rounded-[16px] border border-[#3A4048] bg-[#262B31] px-4 py-3 text-left text-base font-bold text-white transition hover:border-[#4A5159] hover:bg-[#2a3038] active:scale-[0.98] disabled:opacity-40";
+
+/** Tesla-friendly display icons (operational reports only — nod uses Shield icon). */
 const TESLA_ICONS: Record<string, string> = {
   taxikontroll: "🚕",
   laser: "📡",
   ko: "🚗",
   stopp: "⛔",
   olycka: "🚑",
-  nod: "🆘",
 };
 
 interface TeslaQuickReportPanelProps {
@@ -50,24 +53,20 @@ export function TeslaQuickReportPanel({ onReported }: TeslaQuickReportPanelProps
             type="button"
             disabled={!userId}
             onClick={() => openReport(item)}
-            className={cn(
-              "flex min-h-[72px] w-full items-center gap-4 rounded-[16px] border px-4 py-3 text-left transition active:scale-[0.98] disabled:opacity-40",
-              item.discreet
-                ? "border-[#3A4048] bg-[#1B1E22] hover:border-[#4A5159]"
-                : "border-[#3A4048] bg-[#262B31] hover:border-[#4A5159] hover:bg-[#2a3038]"
-            )}
+            className={TESLA_REPORT_BUTTON_CLASS}
           >
-            <span className="text-3xl leading-none" aria-hidden>
-              {TESLA_ICONS[item.id] ?? item.icon}
-            </span>
-            <span
-              className={cn(
-                "text-base font-bold",
-                item.discreet ? "text-[#B0B6BE]" : "text-white"
-              )}
-            >
-              {item.id === "nod" ? "Taxi i nöd" : item.label}
-            </span>
+            {item.id === "nod" ? (
+              <Shield
+                className="h-5 w-5 shrink-0 text-white/75"
+                strokeWidth={1.5}
+                aria-hidden
+              />
+            ) : (
+              <span className="text-3xl leading-none" aria-hidden>
+                {TESLA_ICONS[item.id] ?? item.icon}
+              </span>
+            )}
+            <span>{item.id === "nod" ? "Taxi i nöd" : item.label}</span>
           </button>
         ))}
       </div>

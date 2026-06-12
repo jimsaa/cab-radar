@@ -2,6 +2,10 @@ import { DashboardClient } from "@/components/dashboard/DashboardClient";
 
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 
+import { PendingOnboardingScreen } from "@/components/verification/PendingOnboardingScreen";
+
+import { WelcomeActivationBanner } from "@/components/verification/WelcomeActivationBanner";
+
 import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 
 import { BannerSlot } from "@/components/layout/BannerSlot";
@@ -37,6 +41,8 @@ import {
 import type { DriverVerificationStatus } from "@/lib/verification";
 
 import { syncMembershipProfile } from "@/lib/profile";
+
+import { filterAlertsForDriverFeed } from "@/lib/emergency-driver";
 
 
 
@@ -126,7 +132,26 @@ export default async function HomePage() {
 
   const hasAccess = profile ? hasCabRadarAccess(profile) : false;
 
+  const cityFilterOptions = profile
+    ? {
+        driverCity: profile.driver_city,
+        showNationalEmergencies: profile.show_national_emergencies,
+        isAdmin: profile.is_admin,
+      }
+    : undefined;
 
+  const filteredAlerts =
+    userId && alerts.length > 0
+      ? filterAlertsForDriverFeed(alerts, userId, cityFilterOptions)
+      : alerts;
+
+  if (userId && profile && !isVerified && profile.verification_status === "pending_verification") {
+    return (
+      <div className="pb-2">
+        <PendingOnboardingScreen />
+      </div>
+    );
+  }
 
   if (userId && hasAccess) {
 
@@ -142,6 +167,10 @@ export default async function HomePage() {
         />
 
 
+
+        {profile?.welcome_pending && (
+          <WelcomeActivationBanner userId={userId} />
+        )}
 
         {verificationStatus && !isVerified && (
 
@@ -173,7 +202,7 @@ export default async function HomePage() {
 
         <DashboardClient
 
-          initialAlerts={alerts}
+          initialAlerts={filteredAlerts}
 
           feedBanner={feedBanner}
 
@@ -188,6 +217,12 @@ export default async function HomePage() {
           canReport={canContribute}
 
           isVerified={isVerified}
+
+          driverCity={profile?.driver_city ?? null}
+
+          showNationalEmergencies={profile?.show_national_emergencies ?? false}
+
+          isAdmin={profile?.is_admin ?? false}
 
         />
 

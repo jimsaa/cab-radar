@@ -25,7 +25,14 @@ interface SignupBody {
   password?: string;
   displayName?: string;
   phoneNumber?: string;
+  driverCity?: string;
+  taxiCompanyName?: string;
+  taxiNumber?: string;
   driverLicenseNumber?: string;
+}
+
+function normalizePhone(raw: string): string {
+  return raw.replace(/\s/g, "");
 }
 
 export async function POST(request: Request) {
@@ -52,6 +59,9 @@ export async function POST(request: Request) {
   const password = body.password;
   const displayName = body.displayName?.trim();
   const phoneNumber = body.phoneNumber?.trim();
+  const driverCity = body.driverCity?.trim();
+  const taxiCompanyName = body.taxiCompanyName?.trim();
+  const taxiNumber = body.taxiNumber?.trim() || null;
   const licence = normalizeLicenceInput(body.driverLicenseNumber ?? "");
 
   if (!email || !password) {
@@ -69,6 +79,21 @@ export async function POST(request: Request) {
       { error: "Lösenordet måste vara minst 6 tecken." },
       { status: 400 }
     );
+  }
+
+  if (!phoneNumber || normalizePhone(phoneNumber).length < 8) {
+    return NextResponse.json(
+      { error: "Mobilnummer krävs." },
+      { status: 400 }
+    );
+  }
+
+  if (!driverCity || driverCity.length < 2) {
+    return NextResponse.json({ error: "Stad krävs." }, { status: 400 });
+  }
+
+  if (!taxiCompanyName || taxiCompanyName.length < 2) {
+    return NextResponse.json({ error: "Taxibolag krävs." }, { status: 400 });
   }
 
   if (!isValidLicence(licence)) {
@@ -148,6 +173,13 @@ export async function POST(request: Request) {
     async function saveLicenceOnProfile(): Promise<
       { ok: true; cabradarUserId: string | null } | { ok: false; error: string; status: number }
     > {
+      const onboardingFields = {
+        phone_number: phoneNumber,
+        driver_city: driverCity,
+        taxi_company_name: taxiCompanyName,
+        ...(taxiNumber ? { taxi_number: taxiNumber } : {}),
+      };
+
       for (let attempt = 0; attempt < 8; attempt++) {
         const { data: profile, error: profileSelectError } = await supabase
           .from("profiles")
@@ -164,7 +196,7 @@ export async function POST(request: Request) {
             .from("profiles")
             .update({
               ...licenceFields,
-              ...(phoneNumber ? { phone_number: phoneNumber } : {}),
+              ...onboardingFields,
               updated_at: new Date().toISOString(),
             })
             .eq("id", userId);
@@ -220,8 +252,11 @@ export async function POST(request: Request) {
       const { error: insertError } = await supabase.from("profiles").insert({
         id: userId,
         display_name: displayName || userEmail.split("@")[0],
-        phone_number: phoneNumber || null,
         ...licenceFields,
+        phone_number: phoneNumber,
+        driver_city: driverCity,
+        taxi_company_name: taxiCompanyName,
+        taxi_number: taxiNumber,
       });
 
       if (insertError) {
@@ -285,7 +320,7 @@ export async function POST(request: Request) {
     console.log("[AUTH] Signup completed");
     return NextResponse.json({
       ok: true,
-      message: "Kontot har skapats.",
+      message: "Kontot har skapats och väntar på onboarding.",
       cabradarUserId: profileResult.cabradarUserId,
       needsEmailConfirm: false,
     });

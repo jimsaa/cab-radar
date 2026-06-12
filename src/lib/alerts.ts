@@ -21,7 +21,13 @@ export function alertNeedsAdmin(type: AlertType): boolean {
   return ALERT_TYPES_NEEDING_ADMIN.includes(type);
 }
 
-export function shouldPushNotify(alert: Pick<DriverAlert, "type" | "is_major" | "status" | "admin_verified">): boolean {
+export function shouldPushNotify(
+  alert: Pick<
+    DriverAlert,
+    "type" | "is_major" | "status" | "admin_verified" | "is_test"
+  >
+): boolean {
+  if (alert.is_test) return false;
   if (alert.status !== "active" || !alert.admin_verified) return false;
   if (alert.type === "slow_traffic") return alert.is_major;
   if (isCurrentAlertType(alert.type)) {
@@ -56,6 +62,7 @@ export async function createAlert(
   input: CreateAlertInput
 ): Promise<DriverAlert> {
   const isEmergency = input.type === "taxi_emergency";
+  const isTest = Boolean(input.is_test);
   const row = {
     type: input.type,
     title: isEmergency ? PUBLIC_EMERGENCY_LABEL : input.title,
@@ -65,6 +72,7 @@ export async function createAlert(
     road_address: input.road_address ?? null,
     city: input.city ?? null,
     is_major: input.is_major ?? false,
+    is_test: isTest,
     created_by: userId,
   };
 

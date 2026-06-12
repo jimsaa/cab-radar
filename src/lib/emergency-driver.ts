@@ -1,4 +1,8 @@
 import type { DriverAlert } from "./types/database";
+import {
+  filterAlertsForDriverCity,
+  type DriverAlertFilterOptions,
+} from "./driver-city";
 
 export function getOwnActiveEmergency(
   alerts: DriverAlert[],
@@ -17,15 +21,23 @@ export function getOwnActiveEmergency(
 
 export function filterAlertsForDriverFeed(
   alerts: DriverAlert[],
-  userId: string | null | undefined
+  userId: string | null | undefined,
+  cityOptions?: DriverAlertFilterOptions
 ): DriverAlert[] {
-  if (!userId) return alerts;
-  return alerts.filter(
-    (a) =>
-      !(
-        a.type === "taxi_emergency" &&
-        a.created_by === userId &&
-        a.status === "active"
-      )
-  );
+  const withoutOwnEmergency = !userId
+    ? alerts
+    : alerts.filter(
+        (a) =>
+          !(
+            a.type === "taxi_emergency" &&
+            a.created_by === userId &&
+            a.status === "active"
+          )
+      );
+
+  if (!cityOptions) return withoutOwnEmergency;
+  return filterAlertsForDriverCity(withoutOwnEmergency, {
+    ...cityOptions,
+    userId,
+  });
 }

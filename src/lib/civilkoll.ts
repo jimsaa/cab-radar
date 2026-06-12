@@ -38,6 +38,7 @@ export interface CivilSubmission {
   reviewed_at: string | null;
   created_at: string;
   updated_at: string;
+  is_test?: boolean;
 }
 
 export interface CivilSubmissionWithSubmitter extends CivilSubmission {
@@ -80,6 +81,7 @@ function normalizeSubmissionRow(row: RawSubmissionRow): CivilSubmission {
     reviewed_at: (row.reviewed_at as string | null) ?? null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
+    is_test: Boolean(row.is_test),
   };
 }
 
@@ -319,7 +321,8 @@ export async function submitCivilkollReport(
   supabase: SupabaseClient,
   userId: string,
   registrationNumber: string,
-  comment?: string | null
+  comment?: string | null,
+  options?: { isTest?: boolean }
 ): Promise<void> {
   const normalized = normalizeRegistrationNumber(registrationNumber);
   if (!isValidRegistrationNumber(normalized)) {
@@ -327,10 +330,12 @@ export async function submitCivilkollReport(
   }
 
   const trimmedComment = comment?.trim() || null;
+  const isTest = Boolean(options?.isTest);
   const baseRow = {
     registration_number: normalized,
     submitted_by: userId,
     status: "pending" as const,
+    is_test: isTest,
   };
 
   let { error } = await supabase.from(SUBMISSIONS_TABLE).insert({

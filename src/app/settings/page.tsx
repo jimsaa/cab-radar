@@ -16,6 +16,8 @@ import { isVerifiedDriver, isBetaUser } from "@/lib/membership";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
 import { syncMembershipProfile } from "@/lib/profile";
 import { AdditionalProfileInfo } from "@/components/profile/AdditionalProfileInfo";
+import { AlertRegionSettings } from "@/components/profile/AlertRegionSettings";
+import { TestModeSettings } from "@/components/test-mode/TestModeSettings";
 import { PushNotificationsSection } from "@/components/notifications/PushNotificationsSection";
 import { NAV } from "@/lib/constants";
 
@@ -129,6 +131,27 @@ export default function SettingsPage() {
           profile={profile}
           onReload={(updated) => setProfile(updated)}
         />
+      )}
+
+      {profile && userId && isVerifiedDriver(profile) && (
+        <div className="mb-4">
+          <TestModeSettings
+            userId={userId}
+            profile={profile}
+            onChange={setProfile}
+          />
+        </div>
+      )}
+
+      {profile && userId && isVerifiedDriver(profile) && (
+        <div className="mb-4">
+          <AlertRegionSettings
+            userId={userId}
+            profile={profile}
+            disabled={saving}
+            onChange={setProfile}
+          />
+        </div>
       )}
 
       {profile && userId && (

@@ -13,7 +13,12 @@ import {
 } from "@/lib/signup-success";
 import Link from "next/link";
 import { AlertCircle, Shield } from "lucide-react";
-import { LICENCE_PRIVACY_MESSAGE } from "@/lib/verification";
+import { LICENCE_PRIVACY_MESSAGE, ONBOARDING_PENDING_MESSAGE } from "@/lib/verification";
+import {
+  DRIVER_CITY_OPTIONS,
+  isValidDriverCitySelection,
+  resolveDriverCity,
+} from "@/lib/driver-city";
 
 interface AuthFormProps {
   mode: "login" | "signup";
@@ -58,6 +63,10 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [driverCity, setDriverCity] = useState("");
+  const [customCity, setCustomCity] = useState("");
+  const [taxiCompany, setTaxiCompany] = useState("");
+  const [taxiNumber, setTaxiNumber] = useState("");
   const [driverLicenseNumber, setDriverLicenseNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -108,6 +117,37 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
+    const phone = phoneNumber.trim();
+    if (phone.replace(/\D/g, "").length < 8) {
+      setError("Mobilnummer krävs (minst 8 siffror).");
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidDriverCitySelection(driverCity, customCity)) {
+      setError(
+        driverCity === "Annan"
+          ? "Ange din stad när du valt Annan."
+          : "Välj din stad."
+      );
+      setLoading(false);
+      return;
+    }
+
+    const company = taxiCompany.trim();
+    if (company.length < 2) {
+      setError("Taxibolag krävs.");
+      setLoading(false);
+      return;
+    }
+
+    const resolvedCity = resolveDriverCity(driverCity, customCity);
+    if (!resolvedCity) {
+      setError("Välj din stad.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -116,7 +156,10 @@ export function AuthForm({ mode }: AuthFormProps) {
           email,
           password,
           displayName,
-          phoneNumber,
+          phoneNumber: phone,
+          driverCity: resolvedCity,
+          taxiCompanyName: company,
+          taxiNumber: taxiNumber.trim() || undefined,
           driverLicenseNumber: licence,
         }),
       });
@@ -258,7 +301,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-muted">Mobilnummer</span>
+            <span className="text-sm text-muted">Mobilnummer *</span>
             <input
               className="field"
               type="tel"
@@ -267,6 +310,61 @@ export function AuthForm({ mode }: AuthFormProps) {
               placeholder="070 123 45 67"
               required
               autoComplete="tel"
+              disabled={submitDisabled}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-muted">Stad *</span>
+            <select
+              className="field"
+              value={driverCity}
+              onChange={(e) => setDriverCity(e.target.value)}
+              required
+              disabled={submitDisabled}
+            >
+              <option value="">Välj stad</option>
+              {DRIVER_CITY_OPTIONS.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {driverCity === "Annan" && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-muted">Ange stad *</span>
+              <input
+                className="field"
+                value={customCity}
+                onChange={(e) => setCustomCity(e.target.value)}
+                placeholder="Din stad"
+                required
+                disabled={submitDisabled}
+              />
+            </label>
+          )}
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-muted">Taxibolag *</span>
+            <input
+              className="field"
+              value={taxiCompany}
+              onChange={(e) => setTaxiCompany(e.target.value)}
+              placeholder="T.ex. Taxi Göteborg"
+              required
+              disabled={submitDisabled}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-muted">Taxinummer (valfritt)</span>
+            <input
+              className="field"
+              value={taxiNumber}
+              onChange={(e) => setTaxiNumber(e.target.value)}
+              placeholder="T.ex. 1234"
               disabled={submitDisabled}
             />
           </label>
@@ -336,6 +434,12 @@ export function AuthForm({ mode }: AuthFormProps) {
             />
           </label>
         </>
+      )}
+
+      {mode === "signup" && (
+        <p className="text-xs leading-relaxed text-muted">
+          {ONBOARDING_PENDING_MESSAGE}
+        </p>
       )}
 
       {mode === "login" && (

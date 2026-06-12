@@ -53,7 +53,7 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
     onCreated?.(alert);
     close();
 
-    const message = reportSuccessMessage(data.type);
+    const message = reportSuccessMessage(data.type, alert.is_test);
     if (message) {
       window.alert(message);
     }

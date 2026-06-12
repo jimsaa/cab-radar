@@ -14,6 +14,7 @@ import {
   meetsContributionRequirements,
 } from "@/lib/membership";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
+import { formatDriverCityLabel } from "@/lib/driver-city";
 import type { Profile } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -166,6 +167,64 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
       setFeedback({
         type: "error",
         message: "Kunde inte uppdatera beta-status.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function setTestMode(userId: string, testModeEnabled: boolean) {
+    if (!isAdmin) {
+      setFeedback({
+        type: "error",
+        message: "Endast administratörer kan ändra testläge.",
+      });
+      return;
+    }
+
+    setBusyId(userId);
+    setFeedback(null);
+
+    try {
+      const res = await fetch("/api/admin/set-test-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ driverId: userId, testModeEnabled }),
+      });
+
+      const data: {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+        testModeEnabled?: boolean;
+      } = await res.json();
+
+      if (!res.ok || !data.ok) {
+        setFeedback({
+          type: "error",
+          message: data.error ?? "Kunde inte uppdatera testläge.",
+        });
+        return;
+      }
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? { ...u, test_mode_enabled: Boolean(data.testModeEnabled) }
+            : u
+        )
+      );
+
+      setFeedback({
+        type: "success",
+        message: data.message ?? "Testläge uppdaterat.",
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("[ADMIN] set-test-mode error:", err);
+      setFeedback({
+        type: "error",
+        message: "Kunde inte uppdatera testläge.",
       });
     } finally {
       setBusyId(null);
@@ -478,7 +537,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
 
       {pendingCount > 0 && (
         <p className="rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm">
-          {pendingCount} förare väntar på verifiering
+          👤 {pendingCount} förare väntar onboarding
         </p>
       )}
 
@@ -524,6 +583,16 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                     </td>
                     <td className="p-3">
                       <p className="font-medium">{u.display_name ?? "—"}</p>
+                      {u.verification_status === "pending_verification" &&
+                        !u.is_admin && (
+                          <p className="mt-1 text-xs text-muted">
+                            {formatDriverCityLabel(u.driver_city)}
+                            {u.taxi_company_name
+                              ? ` · ${u.taxi_company_name}`
+                              : ""}
+                            {u.taxi_number ? ` · Taxi ${u.taxi_number}` : ""}
+                          </p>
+                        )}
                       {!u.is_admin && isAdmin && (
                         <div className="mt-2 space-y-2">
                           <div className="rounded-lg border border-card-border/80 bg-background/40 p-2">
@@ -599,6 +668,26 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                               </label>
                             </div>
                           )}
+                          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2">
+                            <label className="flex cursor-pointer items-start gap-2">
+                              <input
+                                type="checkbox"
+                                checked={u.test_mode_enabled}
+                                disabled={isBusy}
+                                onChange={(e) =>
+                                  void setTestMode(u.id, e.target.checked)
+                                }
+                                className="mt-0.5 h-4 w-4 shrink-0 accent-amber-500"
+                              />
+                              <span className="text-xs leading-snug">
+                                <span className="font-medium">Testläge</span>
+                                <span className="mt-0.5 block text-[10px] text-muted">
+                                  Föraren skickar endast testrapporter tills
+                                  testläge stängs av.
+                                </span>
+                              </span>
+                            </label>
+                          </div>
                           <div className="rounded-lg border border-card-border/80 bg-background/40 p-2">
                             <label className="flex cursor-pointer items-start gap-2">
                               <input
@@ -680,6 +769,15 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                     <td className="p-3">
                       {!u.is_admin && (
                         <div className="flex flex-wrap gap-1">
+                          {u.verification_status === "pending_verification" &&
+                            u.phone_number && (
+                              <a
+                                href={`tel:${u.phone_number.replace(/\s/g, "")}`}
+                                className="rounded-lg border border-card-border bg-card px-2 py-1 text-xs font-medium text-foreground"
+                              >
+                                📞 Ring upp
+                              </a>
+                            )}
                           {u.verification_status !== "verified" && (
                             <button
                               type="button"
@@ -689,7 +787,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                               }
                               className="rounded-lg bg-success/15 px-2 py-1 text-xs font-medium text-success disabled:opacity-50"
                             >
-                              Godkänn
+                              ✅ Aktivera
                             </button>
                           )}
                           {u.verification_status !== "rejected" && (
@@ -701,7 +799,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                               }
                               className="rounded-lg bg-danger/15 px-2 py-1 text-xs font-medium text-danger disabled:opacity-50"
                             >
-                              Neka
+                              ❌ Avvisa
                             </button>
                           )}
                           {u.verification_status !== "pending_verification" && (

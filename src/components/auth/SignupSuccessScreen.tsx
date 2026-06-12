@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { BrandHeader } from "@/components/branding/BrandHeader";
 import { clearSignupSuccess } from "@/lib/signup-success";
+import { ONBOARDING_PENDING_MESSAGE } from "@/lib/verification";
 
 const REDIRECT_SECONDS = 8;
 
@@ -37,7 +38,7 @@ export function SignupSuccessScreen({
 
   const infoText = needsEmailConfirm
     ? "Kontrollera din e-post och bekräfta ditt konto innan du loggar in."
-    : "Vi granskar ditt taxiförarleg. innan du får full tillgång till CabRadar.";
+    : ONBOARDING_PENDING_MESSAGE;
 
   return (
     <div className="safe-bottom mx-auto max-w-lg px-4 py-8">
@@ -51,12 +52,12 @@ export function SignupSuccessScreen({
         <h1 className="text-xl font-bold tracking-tight">🚕 Förarkonto skapat!</h1>
 
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Ditt konto har skapats och väntar på verifiering.
+          Ditt konto har skapats och väntar på godkännande.
         </p>
 
         <div className="mt-5 rounded-xl border border-card-border bg-background/90 px-4 py-4 text-left">
           <p className="text-center text-sm font-semibold text-accent-bright">
-            ⏳ Väntar på verifiering
+            ⏳ Väntar godkännande
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted">{infoText}</p>
         </div>

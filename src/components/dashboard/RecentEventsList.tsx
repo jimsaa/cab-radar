@@ -12,6 +12,7 @@ import { filterAlertsForDriverFeed } from "@/lib/emergency-driver";
 import { logAlertFeedRender } from "@/lib/report-alert-mapping";
 import type { DriverAlert } from "@/lib/types/database";
 import { formatRelativeTimeAgo, cn } from "@/lib/utils";
+import { formatTestAlertTypeLabel } from "@/lib/test-mode";
 import { PublicEmergencyAlertView } from "@/components/alerts/PublicEmergencyAlertView";
 
 interface RecentEventsListProps {
@@ -59,7 +60,7 @@ function RecentEventRow({ alert }: { alert: DriverAlert }) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold leading-tight">
-          {alertTypeLabel(alert.type)}
+          {formatTestAlertTypeLabel(alert.type, Boolean(alert.is_test))}
         </p>
         <p className="mt-0.5 truncate text-sm text-muted">
           {locationLine(alert)}

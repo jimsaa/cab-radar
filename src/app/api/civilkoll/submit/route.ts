@@ -20,13 +20,15 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("verification_status, is_admin")
+    .select("verification_status, is_admin, test_mode_enabled")
     .eq("id", user.id)
     .single();
 
   if (!profile || !isVerifiedDriver(profile)) {
     return NextResponse.json({ error: "Kräver verifierad förare." }, { status: 403 });
   }
+
+  const isTest = Boolean(profile.test_mode_enabled);
 
   let body: { registrationNumber?: string; comment?: string };
   try {
@@ -45,9 +47,16 @@ export async function POST(request: Request) {
       supabase,
       user.id,
       normalized,
-      body.comment ?? null
+      body.comment ?? null,
+      { isTest }
     );
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      isTest,
+      message: isTest
+        ? "Testanmälan skickad — inget riktigt Civilkoll-flöde påverkas."
+        : undefined,
+    });
   } catch (err) {
     console.error("[CIVILKOLL SUBMIT]", err);
     return NextResponse.json(

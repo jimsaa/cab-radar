@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, List, Map as MapIcon } from "lucide-react";
 import { AlertFeed } from "@/components/alerts/AlertFeed";
 import { AlertValidationPrompt } from "@/components/alerts/AlertValidationPrompt";
@@ -47,6 +47,9 @@ interface DashboardClientProps {
   canValidate?: boolean;
   canReport?: boolean;
   isVerified?: boolean;
+  driverCity?: string | null;
+  showNationalEmergencies?: boolean;
+  isAdmin?: boolean;
 }
 
 export function DashboardClient({
@@ -58,6 +61,9 @@ export function DashboardClient({
   canValidate = false,
   canReport = false,
   isVerified = false,
+  driverCity = null,
+  showNationalEmergencies = false,
+  isAdmin = false,
 }: DashboardClientProps) {
   const [view, setView] = useState<"home" | "all">("home");
   const [allTab, setAllTab] = useState<"list" | "map">("list");
@@ -68,8 +74,20 @@ export function DashboardClient({
 
   const { alerts, updateAlert } = useAlertsRealtime(initialAlerts, chimeEnabled);
 
+  const cityFilterOptions = useMemo(
+    () => ({
+      driverCity,
+      showNationalEmergencies,
+      isAdmin,
+    }),
+    [driverCity, showNationalEmergencies, isAdmin]
+  );
+
   const ownActiveEmergency = getOwnActiveEmergency(alerts, userId);
-  const driverFeedAlerts = filterAlertsForDriverFeed(alerts, userId);
+  const driverFeedAlerts = useMemo(
+    () => filterAlertsForDriverFeed(alerts, userId, cityFilterOptions),
+    [alerts, userId, cityFilterOptions]
+  );
 
   const {
     promptText,

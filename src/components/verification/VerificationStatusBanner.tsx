@@ -1,5 +1,6 @@
 import { ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 import {
+  ONBOARDING_PENDING_MESSAGE,
   VERIFICATION_STATUS_LABELS,
   type DriverVerificationStatus,
 } from "@/lib/verification";
@@ -40,8 +41,7 @@ export function VerificationStatusBanner({
           </p>
           {isPending ? (
             <p className="mt-1 text-sm text-muted leading-relaxed">
-              Vi granskar ditt leg. Tills dess: inga varningar, erbjudanden
-              eller poäng. Tar oftast 1–2 dagar.
+              {ONBOARDING_PENDING_MESSAGE}
             </p>
           ) : (
             <p className="mt-1 text-sm text-muted leading-relaxed">

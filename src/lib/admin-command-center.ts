@@ -8,6 +8,7 @@ import {
   fetchPendingAlerts,
 } from "./alerts";
 import { alertTypeLabel } from "./constants";
+import { formatTestAlertTypeLabel } from "./test-mode";
 import { fetchCivilSubmissions } from "./civilkoll";
 import { isMissingSchemaError } from "./db-errors";
 import {
@@ -19,6 +20,7 @@ import { isPresenceFresh, PRESENCE_STALE_MS } from "./emergency-privacy";
 import { fetchAllHelpArticles } from "./help";
 import { fetchAllBanners, fetchAllDeals } from "./deals";
 import type { DriverAlert } from "./types/database";
+import { alertFullAddress } from "./tesla-navigation";
 
 export const ADMIN_REFRESH_INTERVAL_MS = 5000;
 export const TESLA_COMMAND_CENTER_MIN_WIDTH = 1024;
@@ -47,6 +49,10 @@ export interface CommandCenterPendingUser {
   id: string;
   display_name: string | null;
   cabradar_user_id: string | null;
+  phone_number: string | null;
+  driver_city: string | null;
+  taxi_company_name: string | null;
+  taxi_number: string | null;
   created_at: string;
 }
 
@@ -62,6 +68,7 @@ export interface CommandCenterCivilItem {
   registration_number: string;
   submitter_display_name: string | null;
   created_at: string;
+  is_test: boolean;
 }
 
 export interface LiveFeedItem {
@@ -69,9 +76,17 @@ export interface LiveFeedItem {
   type: string;
   type_label: string;
   driver_name: string;
+  /** Short location for list rows, e.g. "Rödbo, Göteborg" */
   location: string;
+  /** Full address for navigation and detail panel */
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  description: string | null;
   time_label: string;
+  timestamp_label: string;
   created_at: string;
+  is_test: boolean;
 }
 
 export interface AdminCommandCenterSnapshot {
@@ -82,9 +97,11 @@ export interface AdminCommandCenterSnapshot {
   pendingAlerts: DriverAlert[];
   recentEvents: DriverAlert[];
   liveFeed: LiveFeedItem[];
+  testLiveFeed: LiveFeedItem[];
   drivers: CommandCenterDriver[];
   pendingUsers: CommandCenterPendingUser[];
   pendingCivil: CommandCenterCivilItem[];
+  testPendingCivil: CommandCenterCivilItem[];
   activeOffers: CommandCenterOffer[];
   alertChimeEnabled: boolean;
   isFullAdmin: boolean;
@@ -168,7 +185,9 @@ async function fetchPendingUsers(
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, cabradar_user_id, created_at")
+      .select(
+        "id, display_name, cabradar_user_id, phone_number, driver_city, taxi_company_name, taxi_number, created_at"
+      )
       .eq("verification_status", "pending_verification")
       .eq("is_admin", false)
       .order("created_at", { ascending: false })
@@ -188,12 +207,13 @@ async function fetchPendingCivilItems(
     const submissions = await fetchCivilSubmissions(supabase);
     return submissions
       .filter((s) => s.status === "pending")
-      .slice(0, 10)
+      .slice(0, 20)
       .map((s) => ({
         id: s.id,
         registration_number: s.registration_number,
         submitter_display_name: s.submitter_display_name,
         created_at: s.created_at,
+        is_test: Boolean((s as { is_test?: boolean }).is_test),
       }));
   } catch {
     return [];
@@ -245,13 +265,26 @@ async function loadCreatorNames(
 }
 
 export function formatAlertLocation(alert: DriverAlert): string {
-  if (alert.city?.trim()) return alert.city.trim();
-  if (alert.road_address?.trim()) return alert.road_address.trim();
-  return "Okänd plats";
+  const full = alertFullAddress(alert.road_address, alert.city);
+  if (full !== "Okänd plats") return full;
+  if (alert.latitude != null && alert.longitude != null) {
+    return `${alert.latitude.toFixed(4)}, ${alert.longitude.toFixed(4)}`;
+  }
+  return full;
 }
 
 export function formatFeedTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("sv-SE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function formatFeedTimestamp(iso: string): string {
+  return new Date(iso).toLocaleString("sv-SE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -271,13 +304,19 @@ export function buildLiveFeed(
     .map((alert) => ({
       id: alert.id,
       type: alert.type,
-      type_label: alertTypeLabel(alert.type),
+      type_label: formatTestAlertTypeLabel(alert.type, Boolean(alert.is_test)),
       driver_name: alert.created_by
         ? (creatorNames.get(alert.created_by) ?? "Okänd förare")
         : "Okänd förare",
       location: formatAlertLocation(alert),
+      address: formatAlertLocation(alert),
+      latitude: alert.latitude,
+      longitude: alert.longitude,
+      description: alert.description?.trim() || null,
       time_label: formatFeedTime(alert.created_at),
+      timestamp_label: formatFeedTimestamp(alert.created_at),
       created_at: alert.created_at,
+      is_test: Boolean(alert.is_test),
     }));
 }
 
@@ -325,9 +364,11 @@ export async function fetchAdminCommandCenterSnapshot(
       pendingAlerts: [],
       recentEvents: [],
       liveFeed: [],
+      testLiveFeed: [],
       drivers: [],
       pendingUsers: [],
       pendingCivil: [],
+      testPendingCivil: [],
       activeOffers: [],
       alertChimeEnabled,
       isFullAdmin: false,
@@ -345,7 +386,7 @@ export async function fetchAdminCommandCenterSnapshot(
     verifiedDrivers,
     drivers,
     pendingUsers,
-    pendingCivil,
+    allPendingCivil,
     activeOffers,
   ] = await Promise.all([
     fetchAllDeals(serviceSupabase),
@@ -362,12 +403,16 @@ export async function fetchAdminCommandCenterSnapshot(
   ]);
 
   const creatorNames = await loadCreatorNames(serviceSupabase, activeAlerts);
-  const liveFeed = buildLiveFeed(activeAlerts, creatorNames);
+  const allFeed = buildLiveFeed(activeAlerts, creatorNames);
+  const liveFeed = allFeed.filter((item) => !item.is_test);
+  const testLiveFeed = allFeed.filter((item) => item.is_test);
+  const pendingCivil = allPendingCivil.filter((c) => !c.is_test).slice(0, 10);
+  const testPendingCivil = allPendingCivil.filter((c) => c.is_test).slice(0, 10);
   const recentEvents = activeAlerts
     .filter((a) => a.type !== "taxi_emergency")
     .slice(0, 15);
   const activeReports = activeAlerts.filter(
-    (a) => a.type !== "taxi_emergency"
+    (a) => a.type !== "taxi_emergency" && !a.is_test
   ).length;
 
   return {
@@ -386,9 +431,11 @@ export async function fetchAdminCommandCenterSnapshot(
     pendingAlerts,
     recentEvents,
     liveFeed,
+    testLiveFeed,
     drivers,
     pendingUsers,
     pendingCivil,
+    testPendingCivil,
     activeOffers,
     alertChimeEnabled,
     isFullAdmin: true,

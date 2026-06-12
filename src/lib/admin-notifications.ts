@@ -111,12 +111,14 @@ export async function fetchAdminBadgeCounts(
         .select("*", { count: "exact", head: true })
         .eq("type", "taxi_emergency")
         .eq("status", "active")
+        .eq("is_test", false)
     ),
     safeCount(
       supabase
         .from("driver_alerts")
         .select("*", { count: "exact", head: true })
         .eq("status", "pending_review")
+        .eq("is_test", false)
     ),
     safeCount(
       supabase

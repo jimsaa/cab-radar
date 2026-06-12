@@ -104,6 +104,13 @@ export async function POST(request: Request) {
       updatePayload.verified_at = verifiedAt;
     }
 
+    if (action === "approve") {
+      updatePayload.welcome_pending = true;
+      updatePayload.test_mode_enabled = true;
+    } else if (action === "reset") {
+      updatePayload.welcome_pending = false;
+    }
+
     const { data: updated, error: updateError } = await service
       .from("profiles")
       .update(updatePayload)
@@ -143,9 +150,9 @@ export async function POST(request: Request) {
 
     const message =
       action === "approve"
-        ? "✅ Föraren har verifierats."
+        ? "✅ Föraren har aktiverats."
         : action === "reject"
-          ? "✅ Föraren har nekats."
+          ? "✅ Föraren har avvisats."
           : "✅ Föraren har återställts.";
 
     return NextResponse.json({

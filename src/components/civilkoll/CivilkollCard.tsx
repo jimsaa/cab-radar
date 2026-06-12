@@ -120,7 +120,11 @@ export function CivilkollCard() {
           comment: reportComment,
         }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        isTest?: boolean;
+        message?: string;
+      };
 
       if (!res.ok) {
         setSubmitMessage(data.error ?? "Kunde inte skicka anmälan.");
@@ -129,7 +133,10 @@ export function CivilkollCard() {
 
       setReportComment("");
       setSubmitMessage(
-        "Tack! Registreringsnumret har skickats för granskning."
+        data.message ??
+          (data.isTest
+            ? "Testanmälan skickad — inget riktigt Civilkoll-flöde påverkas."
+            : "Tack! Registreringsnumret har skickats för granskning.")
       );
     } catch {
       setSubmitMessage("Nätverksfel. Försök igen.");

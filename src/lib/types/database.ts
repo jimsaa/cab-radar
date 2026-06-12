@@ -43,6 +43,10 @@ export interface Profile {
   last_known_latitude: number | null;
   last_known_longitude: number | null;
   last_known_at: string | null;
+  driver_city: string | null;
+  show_national_emergencies: boolean;
+  welcome_pending: boolean;
+  test_mode_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +117,7 @@ export interface DriverAlert {
   emergency_last_speed_mps: number | null;
   emergency_last_movement_at: string | null;
   updated_at: string;
+  is_test?: boolean;
 }
 
 export interface TaxiDeal {
@@ -183,6 +188,7 @@ export interface CreateAlertInput {
   road_address?: string | null;
   city?: string | null;
   is_major?: boolean;
+  is_test?: boolean;
 }
 
 export interface ReverseGeocodeResult {
