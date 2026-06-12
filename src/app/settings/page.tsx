@@ -158,6 +158,7 @@ export default function SettingsPage() {
         <PushNotificationsSection
           userId={userId}
           pushEnabled={profile.push_enabled}
+          isAdmin={profile.is_admin}
           disabled={saving}
           onChange={(enabled, prompted) =>
             setProfile((p) =>

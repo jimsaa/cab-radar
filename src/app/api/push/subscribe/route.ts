@@ -8,14 +8,32 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.error("[PUSH] Subscribe rejected: unauthorized");
+    return NextResponse.json(
+      { ok: false, step: "auth", error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
-  const body = await request.json();
+  let body: { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
+  try {
+    body = await request.json();
+  } catch (err) {
+    console.error("[PUSH] Subscribe invalid JSON:", err);
+    return NextResponse.json(
+      { ok: false, step: "validation", error: "Invalid JSON" },
+      { status: 400 }
+    );
+  }
+
   const { endpoint, keys } = body;
 
   if (!endpoint || !keys?.p256dh || !keys?.auth) {
-    return NextResponse.json({ error: "Invalid subscription" }, { status: 400 });
+    console.error("[PUSH] Subscribe invalid subscription payload:", body);
+    return NextResponse.json(
+      { ok: false, step: "validation", error: "Invalid subscription" },
+      { status: 400 }
+    );
   }
 
   const { error } = await supabase.from("push_subscriptions").upsert(
@@ -29,7 +47,11 @@ export async function POST(request: Request) {
   );
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[PUSH] Database save failed:", error);
+    return NextResponse.json(
+      { ok: false, step: "database", error: error.message },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ ok: true });

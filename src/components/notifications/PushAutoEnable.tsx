@@ -36,7 +36,7 @@ export function PushAutoEnable({
 
     async function run() {
       const result = await enablePushNotifications();
-      const enabled = result === "granted";
+      const enabled = result.ok;
 
       localStorage.setItem(promptedKey(userId), "1");
 
