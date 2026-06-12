@@ -24,7 +24,8 @@ import {
 
 import { isEmergencyReportButton } from "@/lib/report-alert-mapping";
 
-import { reportSuccessMessage, submitDriverAlert } from "@/lib/submit-alert";
+import { reportSuccessMessage, submitDriverAlert, adminReportSuccessToast } from "@/lib/submit-alert";
+import { ADMIN_REPORT_SUBMIT_ERROR, useAdminToast } from "@/components/admin/AdminToast";
 
 import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 
@@ -46,6 +47,9 @@ interface ReportEventSheetProps {
 
   activeOwnEmergency?: DriverAlert | null;
 
+  /** Tesla admin — toast on success, alert only on error. */
+  isAdmin?: boolean;
+
 }
 
 
@@ -66,7 +70,11 @@ export function ReportEventSheet({
 
   activeOwnEmergency,
 
+  isAdmin = false,
+
 }: ReportEventSheetProps) {
+
+  const showAdminToast = useAdminToast();
 
   const [step, setStep] = useState<"pick" | "confirm">(preset ? "confirm" : "pick");
 
@@ -146,19 +154,41 @@ export function ReportEventSheet({
 
   async function handleSubmit(data: CreateAlertInput) {
 
-    const alert = await submitDriverAlert(userId, data);
+    try {
 
-    onCreated?.(alert);
+      const alert = await submitDriverAlert(userId, data);
 
-    handleClose();
+      onCreated?.(alert);
+
+      handleClose();
 
 
 
-    const message = reportSuccessMessage(data.type, alert.is_test);
+      if (isAdmin) {
 
-    if (message) {
+        showAdminToast(adminReportSuccessToast(data.type, alert.is_test));
 
-      window.alert(message);
+      } else {
+
+        const message = reportSuccessMessage(data.type, alert.is_test);
+
+        if (message) {
+
+          window.alert(message);
+
+        }
+
+      }
+
+    } catch {
+
+      if (isAdmin) {
+
+        window.alert(ADMIN_REPORT_SUBMIT_ERROR);
+
+      }
+
+      throw new Error("report submit failed");
 
     }
 
@@ -272,6 +302,8 @@ export function ReportEventSheet({
 
             reportButtonId={selected.id}
 
+            isAdmin={isAdmin}
+
             onSubmit={handleSubmit}
 
             onCancel={handleCancelConfirm}
@@ -293,6 +325,8 @@ export function ReportEventSheet({
             displayLabel={selected.label}
 
             displayIcon={selected.icon}
+
+            isAdmin={isAdmin}
 
             onSubmit={handleSubmit}
 

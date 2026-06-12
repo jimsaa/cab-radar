@@ -78,6 +78,7 @@ export function TeslaQuickReportPanel({ onReported }: TeslaQuickReportPanelProps
           userId={userId}
           open={sheetOpen}
           preset={preset}
+          isAdmin
           onClose={() => {
             setSheetOpen(false);
             setPreset(null);

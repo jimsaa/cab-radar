@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AdminCommandCenterProvider } from "@/contexts/AdminCommandCenterContext";
+import { AdminToastProvider } from "@/components/admin/AdminToast";
 import { AdminWideScreenGate } from "@/components/admin/AdminWideScreenGate";
 import {
   ADMIN_COMMAND_CENTER_HEADER_HEIGHT,
@@ -35,17 +36,19 @@ export function AdminCommandCenterShell({
 
   return (
     <AdminCommandCenterProvider>
-      <div className="admin-command-center-root min-h-dvh bg-background text-foreground">
-        <TeslaCommandCenterHeader />
-        <div
-          className="admin-command-center-body min-h-dvh"
-          style={{ paddingTop: ADMIN_COMMAND_CENTER_HEADER_HEIGHT }}
-        >
-          <AdminWideScreenGate isFullAdmin={isFullAdmin}>
-            {children}
-          </AdminWideScreenGate>
+      <AdminToastProvider>
+        <div className="admin-command-center-root min-h-dvh bg-background text-foreground">
+          <TeslaCommandCenterHeader />
+          <div
+            className="admin-command-center-body min-h-dvh"
+            style={{ paddingTop: ADMIN_COMMAND_CENTER_HEADER_HEIGHT }}
+          >
+            <AdminWideScreenGate isFullAdmin={isFullAdmin}>
+              {children}
+            </AdminWideScreenGate>
+          </div>
         </div>
-      </div>
+      </AdminToastProvider>
     </AdminCommandCenterProvider>
   );
 }

@@ -18,6 +18,7 @@ interface QuickReportConfirmProps {
   displayIcon: string;
   onSubmit: (data: CreateAlertInput) => Promise<void>;
   onCancel: () => void;
+  isAdmin?: boolean;
 }
 
 export function QuickReportConfirm({
@@ -27,6 +28,7 @@ export function QuickReportConfirm({
   displayIcon,
   onSubmit,
   onCancel,
+  isAdmin = false,
 }: QuickReportConfirmProps) {
   const location = useAutoLocation(true);
   const [commentOpen, setCommentOpen] = useState(false);
@@ -65,7 +67,9 @@ export function QuickReportConfirm({
         is_major: false,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte skicka");
+      if (!isAdmin) {
+        setError(err instanceof Error ? err.message : "Kunde inte skicka");
+      }
       setSubmitting(false);
     }
   }

@@ -107,4 +107,29 @@ export function reportSuccessMessage(
 
 }
 
+/** Non-blocking Tesla admin toast after a successful report. */
+export function adminReportSuccessToast(
+  type: CreateAlertInput["type"],
+  isTest?: boolean
+): string {
+  if (isTest) return "✅ Testrapport skickad";
+
+  switch (type) {
+    case "traffic_control":
+      return "✅ Taxikontroll rapporterad";
+    case "laser":
+      return "✅ Laser rapporterad";
+    case "slow_traffic":
+      return "✅ Kö rapporterad";
+    case "total_stop":
+      return "✅ Stopp rapporterad";
+    case "accident":
+      return "✅ Olycka rapporterad";
+    case "taxi_emergency":
+      return "✅ Taxi i nöd aktiverad";
+    default:
+      return "✅ Rapport skickad";
+  }
+}
+
 

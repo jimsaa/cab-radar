@@ -12,12 +12,14 @@ interface EmergencyActivateConfirmProps {
   reportButtonId: ReportButtonId;
   onSubmit: (data: CreateAlertInput) => Promise<void>;
   onCancel: () => void;
+  isAdmin?: boolean;
 }
 
 export function EmergencyActivateConfirm({
   reportButtonId,
   onSubmit,
   onCancel,
+  isAdmin = false,
 }: EmergencyActivateConfirmProps) {
   const location = useAutoLocation(true);
   const [submitting, setSubmitting] = useState(false);
@@ -46,7 +48,9 @@ export function EmergencyActivateConfirm({
         is_major: false,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte fortsätta");
+      if (!isAdmin) {
+        setError(err instanceof Error ? err.message : "Kunde inte fortsätta");
+      }
       setSubmitting(false);
     }
   }
