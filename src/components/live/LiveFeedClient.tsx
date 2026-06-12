@@ -16,6 +16,7 @@ import {
 import type { DriverAlert } from "@/lib/types/database";
 import { formatDriverCityLabel } from "@/lib/driver-city";
 import { formatTestAlertTypeLabel } from "@/lib/test-mode";
+import { ReportCommentPreview } from "@/components/reports/ReportCommentPreview";
 import { cn } from "@/lib/utils";
 
 interface LiveFeedClientProps {
@@ -108,6 +109,7 @@ export function LiveFeedClient({
                     <p className="mt-1 text-xs text-muted/80">
                       {formatRelativeSwedish(alert.created_at)}
                     </p>
+                    <ReportCommentPreview comment={alert.description} />
                   </div>
                 </div>
               </button>

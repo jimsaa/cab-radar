@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import type { LiveFeedItem } from "@/lib/admin-command-center";
+import { ReportCommentPreview } from "@/components/reports/ReportCommentPreview";
 import { formatCoordinate } from "@/lib/tesla-navigation";
 import { cn } from "@/lib/utils";
 
@@ -142,11 +143,15 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
                 )}
               >
                 <p className="text-lg font-bold text-white">{item.type_label}</p>
-                <p className="mt-1 text-base text-[#B0B6BE]">{item.driver_name}</p>
-                <p className="mt-0.5 text-base text-[#B0B6BE]">{item.location}</p>
-                <p className="mt-1 text-sm font-mono text-[#8A9099]">
+                <p className="mt-1 text-base text-[#B0B6BE]">{item.location}</p>
+                <p className="mt-0.5 text-sm font-mono text-[#8A9099]">
                   {item.time_label}
                 </p>
+                <ReportCommentPreview
+                  comment={item.description}
+                  variant="tesla"
+                  className="mt-1 text-sm"
+                />
               </button>
             </li>
           );
