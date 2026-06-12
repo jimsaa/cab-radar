@@ -9,6 +9,7 @@ import {
 } from "@/lib/datetime";
 
 const REFRESH_MS = 60_000;
+const HEADER_HEIGHT_PX = 76;
 
 function SwedishDateTimeDisplay() {
   const [time, setTime] = useState("");
@@ -37,10 +38,13 @@ function SwedishDateTimeDisplay() {
   );
 }
 
-/** Fixed Tesla dispatch header — branding, LIVE status, Swedish clock. */
+/** Fixed admin dashboard header — branding, LIVE status, Swedish clock. */
 export function TeslaCommandCenterHeader() {
   return (
-    <header className="flex h-[76px] min-h-[70px] max-h-[80px] w-full shrink-0 items-center border-b border-[#3A4048] bg-[#1E2125] px-6">
+    <header
+      className="admin-command-center-header fixed top-0 left-0 right-0 z-[110] flex h-[76px] min-h-[70px] max-h-[80px] w-full shrink-0 items-center border-b border-[#3A4048] bg-[#1E2125] px-6"
+      style={{ height: HEADER_HEIGHT_PX }}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-4">
         <Image
           src="/logo.png"
@@ -57,14 +61,14 @@ export function TeslaCommandCenterHeader() {
               {APP_NAME}
             </p>
             <p className="text-sm font-medium text-[#B0B6BE]">
-              Kommandocentral
+              Admin Command Center
             </p>
           </div>
 
           <div className="mt-1.5">
             <div className="flex items-center gap-1.5">
               <span
-                className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#22C55E]"
+                className="admin-live-dot h-2 w-2 shrink-0 rounded-full bg-[#22C55E]"
                 aria-hidden
               />
               <span className="text-[11px] font-bold uppercase tracking-wide text-[#22C55E]">
@@ -84,3 +88,5 @@ export function TeslaCommandCenterHeader() {
     </header>
   );
 }
+
+export const ADMIN_COMMAND_CENTER_HEADER_HEIGHT = HEADER_HEIGHT_PX;

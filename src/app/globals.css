@@ -385,8 +385,26 @@ body {
   animation: admin-pulse-tesla-green 3.5s ease-in-out infinite;
 }
 
-/* Tesla full-screen dispatch center — hide app chrome */
-body.tesla-command-center-active header {
+.admin-command-center .admin-live-dot {
+  animation: admin-live-dot-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes admin-live-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.12);
+    box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.35);
+  }
+}
+
+/* Tesla full-screen dispatch center — hide driver app chrome only */
+body.tesla-command-center-active header:not(.admin-command-center-header) {
   display: none !important;
 }
 

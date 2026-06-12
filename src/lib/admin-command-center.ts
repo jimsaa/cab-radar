@@ -17,7 +17,7 @@ import {
   type EmergencyAlertWithDriver,
 } from "./emergency";
 import { isPresenceFresh, PRESENCE_STALE_MS } from "./emergency-privacy";
-import { NETWORK_POSITION_FRESH_MS } from "./driver-activity";
+import { fetchActiveDriverNetwork } from "./driver-activity";
 import { fetchAllHelpArticles } from "./help";
 import { fetchAllBanners, fetchAllDeals } from "./deals";
 import {
@@ -116,21 +116,14 @@ export interface AdminCommandCenterSnapshot {
 }
 
 async function countActiveDrivers(supabase: SupabaseClient): Promise<number> {
-  const since = new Date(Date.now() - NETWORK_POSITION_FRESH_MS).toISOString();
   try {
-    const { count, error } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("verification_status", "verified")
-      .eq("is_admin", false)
-      .gte("last_known_at", since);
-
-    if (error) {
-      if (isMissingSchemaError(error)) return 0;
+    const network = await fetchActiveDriverNetwork(supabase);
+    return network.activeDriverCount;
+  } catch (err) {
+    if (isMissingSchemaError(err as { code?: string; message?: string })) {
       return 0;
     }
-    return count ?? 0;
-  } catch {
+    console.error("[ADMIN CC] active drivers count failed:", err);
     return 0;
   }
 }

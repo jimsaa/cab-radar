@@ -20,7 +20,6 @@ import {
 } from "@/components/admin/AdminDashboardCards";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminRecentEvents } from "@/components/admin/AdminRecentEvents";
-import { AdminRefreshIndicator } from "@/components/admin/AdminRefreshIndicator";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import {
   adminFirstName,
@@ -57,7 +56,6 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
       <div className="flex items-start justify-between gap-3 py-2">
         <AdminDashboardHeader firstName={firstName} actionLines={actionLines} />
       </div>
-      <AdminRefreshIndicator className="-mt-3 mb-4" />
 
       <AdminNav />
 

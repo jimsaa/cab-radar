@@ -43,11 +43,7 @@ export async function submitDriverAlert(
 
   const alert = await createAlert(supabase, userId, { ...data, is_test: isTest });
 
-  if (
-    data.latitude != null &&
-    data.longitude != null &&
-    !isTest
-  ) {
+  if (data.latitude != null && data.longitude != null) {
     void recordDriverActivityAt(
       data.latitude,
       data.longitude,

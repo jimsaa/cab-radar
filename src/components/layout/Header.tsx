@@ -101,6 +101,10 @@ export function Header({
     return null;
   }
 
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   const dashboardHome =
     isLoggedIn && (pathname === "/" || pathname === "/live");
 

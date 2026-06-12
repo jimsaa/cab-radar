@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NETWORK_MAP_REFRESH_MS } from "@/lib/driver-activity";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
+import { networkMapEmptyMessage } from "@/lib/network-map-messages";
 import { cn } from "@/lib/utils";
 
 const NetworkMapCanvas = dynamic(
@@ -34,6 +35,8 @@ export function TeslaNetworkMap({
   className?: string;
 }) {
   const [points, setPoints] = useState<AnonymizedActivityPoint[]>([]);
+  const [activeDriverCount, setActiveDriverCount] = useState(0);
+  const [positionCount, setPositionCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const signatureRef = useRef("");
@@ -43,6 +46,8 @@ export function TeslaNetworkMap({
       const res = await fetch("/api/admin/activity-map", { cache: "no-store" });
       const data = (await res.json()) as {
         points?: AnonymizedActivityPoint[];
+        activeDriverCount?: number;
+        positionCount?: number;
         error?: string;
       };
 
@@ -57,6 +62,8 @@ export function TeslaNetworkMap({
         signatureRef.current = nextSignature;
         setPoints(next);
       }
+      setActiveDriverCount(data.activeDriverCount ?? 0);
+      setPositionCount(data.positionCount ?? 0);
       setError(null);
     } catch {
       setError("Kunde inte ladda nätverkskarta.");
@@ -70,6 +77,8 @@ export function TeslaNetworkMap({
     const interval = window.setInterval(() => void load(), NETWORK_MAP_REFRESH_MS);
     return () => window.clearInterval(interval);
   }, [load]);
+
+  const emptyMessage = networkMapEmptyMessage(activeDriverCount, positionCount);
 
   return (
     <div className={cn("shrink-0 px-4 py-3", className)}>
@@ -102,7 +111,7 @@ export function TeslaNetworkMap({
             className="flex items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-sm text-[#8A9099]"
             style={{ height }}
           >
-            Inga aktiva förare att visa
+            {emptyMessage}
           </div>
         ) : (
           <NetworkMapCanvas points={points} height={height} />

@@ -3,6 +3,10 @@
 import { useEffect } from "react";
 import { AdminCommandCenterProvider } from "@/contexts/AdminCommandCenterContext";
 import { AdminWideScreenGate } from "@/components/admin/AdminWideScreenGate";
+import {
+  ADMIN_COMMAND_CENTER_HEADER_HEIGHT,
+  TeslaCommandCenterHeader,
+} from "@/components/admin/TeslaCommandCenterHeader";
 
 const ADMIN_THEME_COLOR = "#1E2125";
 const DRIVER_THEME_COLOR = "#0a1628";
@@ -31,10 +35,16 @@ export function AdminCommandCenterShell({
 
   return (
     <AdminCommandCenterProvider>
-      <div className="admin-command-center-root min-h-full bg-background text-foreground">
-        <AdminWideScreenGate isFullAdmin={isFullAdmin}>
-          {children}
-        </AdminWideScreenGate>
+      <div className="admin-command-center-root min-h-dvh bg-background text-foreground">
+        <TeslaCommandCenterHeader />
+        <div
+          className="admin-command-center-body min-h-dvh"
+          style={{ paddingTop: ADMIN_COMMAND_CENTER_HEADER_HEIGHT }}
+        >
+          <AdminWideScreenGate isFullAdmin={isFullAdmin}>
+            {children}
+          </AdminWideScreenGate>
+        </div>
       </div>
     </AdminCommandCenterProvider>
   );

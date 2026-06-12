@@ -2,10 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { Phone } from "lucide-react";
-import { TeslaCommandCenterHeader } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaLiveFeedPanel } from "@/components/admin/TeslaLiveFeedPanel";
 import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
+import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { formatDriverCityLabel } from "@/lib/driver-city";
@@ -216,9 +216,10 @@ export function TeslaCommandCenter() {
   const stats = snapshot?.stats;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#1E2125] text-white">
-      <TeslaCommandCenterHeader />
-
+    <div
+      className="flex flex-col overflow-hidden bg-[#1E2125] text-white"
+      style={{ height: `calc(100dvh - ${ADMIN_COMMAND_CENTER_HEADER_HEIGHT}px)` }}
+    >
       {/* Emergency — only when active (no empty state) */}
       {hasLiveEmergencies && (
         <section className="admin-pulse-emergency shrink-0 border-b-2 border-[#FF3B30]/50 bg-[#FF3B30]/[0.07] px-4 py-4">

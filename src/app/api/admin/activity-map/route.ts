@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isFullAdmin } from "@/lib/admin-access";
-import { fetchAnonymizedActivityPoints } from "@/lib/driver-activity";
-import { createClient } from "@/lib/supabase/server";
+import { fetchActiveDriverNetwork } from "@/lib/driver-activity";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export async function GET() {
   const supabase = await createClient();
@@ -24,8 +24,21 @@ export async function GET() {
   }
 
   try {
-    const points = await fetchAnonymizedActivityPoints(supabase);
-    return NextResponse.json({ points });
+    const service = await createServiceClient();
+    const network = await fetchActiveDriverNetwork(service);
+
+    console.log("[NETWORK MAP DEBUG]", {
+      activeDriverCount: network.activeDriverCount,
+      positionCount: network.positionCount,
+      activeDriverIds: network.activeDriverIds,
+      positionedDriverIds: network.positionedDriverIds,
+    });
+
+    return NextResponse.json({
+      points: network.points,
+      activeDriverCount: network.activeDriverCount,
+      positionCount: network.positionCount,
+    });
   } catch (err) {
     console.error("[ACTIVITY MAP]", err);
     return NextResponse.json(

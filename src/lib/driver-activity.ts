@@ -17,6 +17,16 @@ export interface AnonymizedActivityPoint {
   longitude: number;
 }
 
+export interface ActiveDriverNetworkData {
+  /** Verified non-admin drivers with last_known_at within 15 minutes. */
+  activeDriverCount: number;
+  /** Subset with valid coordinates to plot on the map. */
+  positionCount: number;
+  points: AnonymizedActivityPoint[];
+  activeDriverIds: string[];
+  positionedDriverIds: string[];
+}
+
 export function isValidActivityCoordinate(
   latitude: number,
   longitude: number
@@ -87,30 +97,56 @@ export async function recordDriverActivityPoint(
     });
 }
 
-/** One anonymized dot per recently active verified driver (no PII). */
-export async function fetchAnonymizedActivityPoints(
+/** Shared source for active-driver counter and admin network map. */
+export async function fetchActiveDriverNetwork(
   supabase: SupabaseClient
-): Promise<AnonymizedActivityPoint[]> {
+): Promise<ActiveDriverNetworkData> {
   const since = networkPositionSince();
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("last_known_latitude, last_known_longitude")
+    .select("id, last_known_latitude, last_known_longitude, last_known_at")
     .eq("verification_status", "verified")
     .eq("is_admin", false)
     .gte("last_known_at", since)
-    .not("last_known_latitude", "is", null)
-    .not("last_known_longitude", "is", null)
     .limit(500);
 
   if (error) {
     throw error;
   }
 
-  return (data ?? [])
-    .map((row) => ({
-      latitude: row.last_known_latitude as number,
-      longitude: row.last_known_longitude as number,
-    }))
-    .filter((point) => isValidActivityCoordinate(point.latitude, point.longitude));
+  const rows = data ?? [];
+  const activeDriverIds = rows.map((row) => row.id as string);
+  const positionedRows = rows.filter(
+    (row) =>
+      row.last_known_latitude != null &&
+      row.last_known_longitude != null &&
+      isValidActivityCoordinate(
+        row.last_known_latitude as number,
+        row.last_known_longitude as number
+      )
+  );
+
+  const points = positionedRows.map((row) => ({
+    latitude: row.last_known_latitude as number,
+    longitude: row.last_known_longitude as number,
+  }));
+
+  const positionedDriverIds = positionedRows.map((row) => row.id as string);
+
+  return {
+    activeDriverCount: rows.length,
+    positionCount: points.length,
+    points,
+    activeDriverIds,
+    positionedDriverIds,
+  };
+}
+
+/** One anonymized dot per recently active verified driver (no PII). */
+export async function fetchAnonymizedActivityPoints(
+  supabase: SupabaseClient
+): Promise<AnonymizedActivityPoint[]> {
+  const network = await fetchActiveDriverNetwork(supabase);
+  return network.points;
 }
