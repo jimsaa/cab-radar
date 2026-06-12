@@ -60,12 +60,15 @@ export function ModalShell({
 export function ModalActions({
   onCancel,
   loading,
+  submitDisabled,
   submitLabel = "Skicka",
 }: {
   onCancel: () => void;
   loading: boolean;
+  submitDisabled?: boolean;
   submitLabel?: string;
 }) {
+  const disabled = loading || submitDisabled;
   return (
     <div className="flex gap-2 pt-1">
       <button
@@ -76,7 +79,7 @@ export function ModalActions({
       >
         Avbryt
       </button>
-      <button type="submit" disabled={loading} className="btn-primary flex-1">
+      <button type="submit" disabled={disabled} className="btn-primary flex-1">
         {loading ? "Skickar…" : submitLabel}
       </button>
     </div>
