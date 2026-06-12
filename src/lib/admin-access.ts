@@ -5,6 +5,7 @@ export interface AdminRoleProfile {
   is_admin: boolean;
   is_co_admin?: boolean | null;
   co_admin_emergency_call?: boolean | null;
+  co_admin_manage_offers?: boolean | null;
 }
 
 export function isFullAdmin(
@@ -35,6 +36,22 @@ export function canViewEmergencyPhone(
   return Boolean(profile.is_co_admin && profile.co_admin_emergency_call);
 }
 
+/** Full admin or co-admin with Manage Offers permission. */
+export function canManageOffers(
+  profile: AdminRoleProfile | null | undefined
+): boolean {
+  if (!profile) return false;
+  if (profile.is_admin) return true;
+  return Boolean(profile.is_co_admin && profile.co_admin_manage_offers);
+}
+
+/** Full admin or any co-admin — legacy deals admin nav visibility. */
+export function hasOffersAdminAccess(
+  profile: AdminRoleProfile | null | undefined
+): boolean {
+  return Boolean(profile?.is_admin || profile?.is_co_admin);
+}
+
 /** Fetch role fields; falls back when is_co_admin column is missing. */
 export async function fetchAdminRoleProfile<
   T extends AdminRoleProfile = AdminRoleProfile,
@@ -43,7 +60,7 @@ export async function fetchAdminRoleProfile<
   userId: string,
   extraColumns: string[] = []
 ): Promise<T | null> {
-  const fullSelect = ["is_admin", "is_co_admin", "co_admin_emergency_call", ...extraColumns].join(", ");
+  const fullSelect = ["is_admin", "is_co_admin", "co_admin_emergency_call", "co_admin_manage_offers", ...extraColumns].join(", ");
   const full = await supabase
     .from("profiles")
     .select(fullSelect)
@@ -73,6 +90,7 @@ export async function fetchAdminRoleProfile<
       is_admin: Boolean(row.is_admin),
       is_co_admin: false,
       co_admin_emergency_call: false,
+      co_admin_manage_offers: false,
     } as unknown as T;
   }
 

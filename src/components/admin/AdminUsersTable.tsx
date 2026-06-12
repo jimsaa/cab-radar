@@ -197,6 +197,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
         error?: string;
         coAdmin?: boolean;
         coAdminEmergencyCall?: boolean;
+        coAdminManageOffers?: boolean;
       } = await res.json();
 
       if (!res.ok || !data.ok) {
@@ -215,6 +216,9 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                 is_co_admin: Boolean(data.coAdmin),
                 co_admin_emergency_call: data.coAdmin
                   ? u.co_admin_emergency_call
+                  : false,
+                co_admin_manage_offers: data.coAdmin
+                  ? u.co_admin_manage_offers
                   : false,
               }
             : u
@@ -292,6 +296,70 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
       router.refresh();
     } catch (err) {
       console.error("[ADMIN] set-co-admin-emergency-call error:", err);
+      setFeedback({
+        type: "error",
+        message: "Kunde inte uppdatera behörigheten.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function setCoAdminManageOffers(
+    userId: string,
+    manageOffers: boolean
+  ) {
+    if (!isAdmin) {
+      setFeedback({
+        type: "error",
+        message: "Endast administratörer kan ändra erbjudandebehörigheter.",
+      });
+      return;
+    }
+
+    setBusyId(userId);
+    setFeedback(null);
+
+    try {
+      const res = await fetch("/api/admin/set-co-admin-manage-offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ driverId: userId, manageOffers }),
+      });
+
+      const data: {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+        manageOffers?: boolean;
+      } = await res.json();
+
+      if (!res.ok || !data.ok) {
+        setFeedback({
+          type: "error",
+          message: data.error ?? "Kunde inte uppdatera behörigheten.",
+        });
+        return;
+      }
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                co_admin_manage_offers: Boolean(data.manageOffers),
+              }
+            : u
+        )
+      );
+
+      setFeedback({
+        type: "success",
+        message: data.message ?? "Behörighet uppdaterad.",
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("[ADMIN] set-co-admin-manage-offers error:", err);
       setFeedback({
         type: "error",
         message: "Kunde inte uppdatera behörigheten.",
@@ -499,6 +567,33 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                                   <span className="mt-0.5 block text-[10px] text-muted">
                                     Får se mobilnummer och ringa vid aktiva
                                     Taxi i nöd-larm.
+                                  </span>
+                                </span>
+                              </label>
+                            </div>
+                          )}
+                          {u.is_co_admin && (
+                            <div className="rounded-lg border border-card-border/80 bg-background/40 p-2">
+                              <label className="flex cursor-pointer items-start gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={u.co_admin_manage_offers}
+                                  disabled={isBusy}
+                                  onChange={(e) =>
+                                    void setCoAdminManageOffers(
+                                      u.id,
+                                      e.target.checked
+                                    )
+                                  }
+                                  className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                                />
+                                <span className="text-xs leading-snug">
+                                  <span className="font-medium">
+                                    Hantera erbjudanden
+                                  </span>
+                                  <span className="mt-0.5 block text-[10px] text-muted">
+                                    Får skapa, redigera och ladda upp banners
+                                    för förarerbjudanden.
                                   </span>
                                 </span>
                               </label>

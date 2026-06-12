@@ -26,6 +26,7 @@ export interface Profile {
   is_admin: boolean;
   is_co_admin: boolean;
   co_admin_emergency_call: boolean;
+  co_admin_manage_offers: boolean;
   beta_user: boolean;
   fab_enabled: boolean;
   alert_chime_enabled: boolean;
@@ -120,9 +121,38 @@ export interface TaxiDeal {
   offer_title: string;
   offer_description: string;
   address: string;
-  valid_until: string;
+  valid_until: string | null;
   image_url: string | null;
   is_active: boolean;
+  monthly_partner_fee: number;
+  start_date?: string | null;
+  banner_a_url?: string | null;
+  banner_b_url?: string | null;
+  redemption_text?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Driver-visible offer — no admin fields. */
+export interface DriverOffer {
+  id: string;
+  business_name: string;
+  offer_title: string;
+  banner_a_url: string | null;
+  banner_b_url: string | null;
+  redemption_text: string;
+  start_date: string | null;
+  valid_until: string | null;
+  is_active: boolean;
+}
+
+/** Admin offer view — includes private notes. */
+export interface DriverOfferAdmin extends DriverOffer {
+  offer_description: string;
+  address: string;
+  admin_notes: string;
+  image_url: string | null;
   monthly_partner_fee: number;
   created_at: string;
   updated_at: string;

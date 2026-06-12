@@ -1,22 +1,16 @@
-import { HelpPageClient } from "@/components/help/HelpPageClient";
+import { CabRadarGuideView } from "@/components/help/CabRadarGuideView";
 import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
-import {
-  fetchMostViewedHelpArticles,
-  fetchPublishedHelpArticles,
-} from "@/lib/help";
+import { CABRADAR_GUIDE_TITLE } from "@/lib/cabradar-guide";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
 import { syncMembershipProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
-import type { HelpArticle, Profile } from "@/lib/types/database";
+import type { Profile } from "@/lib/types/database";
 import Link from "next/link";
-import { NAV } from "@/lib/constants";
 
-export const metadata = { title: "Hjälp" };
+export const metadata = { title: CABRADAR_GUIDE_TITLE };
 
-export default async function HelpPage() {
-  let articles: HelpArticle[] = [];
-  let mostViewed: HelpArticle[] = [];
+export default async function HelpInformationPage() {
   let profile: Profile | null = null;
   let userId: string | null = null;
 
@@ -30,15 +24,6 @@ export default async function HelpPage() {
     if (user) {
       profile = await syncMembershipProfile(supabase, user.id);
     }
-
-    const hasAccess = profile ? hasCabRadarAccess(profile) : false;
-
-    if (hasAccess) {
-      [articles, mostViewed] = await Promise.all([
-        fetchPublishedHelpArticles(supabase),
-        fetchMostViewedHelpArticles(supabase),
-      ]);
-    }
   } catch {
     // Supabase not configured
   }
@@ -48,33 +33,13 @@ export default async function HelpPage() {
 
   return (
     <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
-      <section className="border-b border-card-border bg-gradient-to-b from-accent/10 to-background py-4 -mx-4 px-4 mb-4">
-        <h1 className="text-xl font-bold">{NAV.help}</h1>
-        <p className="mt-1 text-sm text-muted">
-          Guider, radar-funktioner och information om CabRadar.
-        </p>
-      </section>
-
-      {hasAccess && (
-        <Link
-          href="/help/information"
-          className="mb-4 block rounded-2xl border border-accent/30 bg-accent/10 p-4 transition hover:border-accent/50"
-        >
-          <p className="font-semibold">📖 CabRadar – Hjälp & Information</p>
-          <p className="mt-1 text-sm text-muted leading-relaxed">
-            Radar, Taxi i nöd, Civilkoll, medlemskap och mer — komplett guide
-            för taxiförare.
-          </p>
-        </Link>
-      )}
-
       {!userId && (
         <div className="mb-4 rounded-2xl border border-card-border bg-card p-4 text-center">
           <p className="text-sm text-muted">
             <Link href="/login" className="font-semibold text-accent">
               Logga in
             </Link>{" "}
-            för hjälpartiklar.
+            för att läsa guiden.
           </p>
         </div>
       )}
@@ -98,9 +63,7 @@ export default async function HelpPage() {
         </div>
       )}
 
-      {hasAccess && (
-        <HelpPageClient articles={articles} mostViewed={mostViewed} />
-      )}
+      {hasAccess && <CabRadarGuideView />}
     </div>
   );
 }

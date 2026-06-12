@@ -65,6 +65,7 @@ export async function POST(request: Request) {
 
   if (!body.coAdmin) {
     updates.co_admin_emergency_call = false;
+    updates.co_admin_manage_offers = false;
   }
 
   const { error: updateError } = await supabase

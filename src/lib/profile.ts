@@ -8,7 +8,7 @@ import type { Profile } from "./types/database";
 
 /** Columns safe for client reads — excludes licence hash and plaintext */
 export const PROFILE_SAFE_COLUMNS =
-  "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, beta_user, fab_enabled, alert_chime_enabled, push_enabled, push_prompted, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, last_monthly_reset, reputation_score, report_usefulness_score, total_approved_reports, reward_points_balance, taxi_company_name, taxi_operator, taxi_number, taximeter_type, created_at, updated_at";
+  "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, fab_enabled, alert_chime_enabled, push_enabled, push_prompted, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, last_monthly_reset, reputation_score, report_usefulness_score, total_approved_reports, reward_points_balance, taxi_company_name, taxi_operator, taxi_number, taximeter_type, created_at, updated_at";
 
 export const PROFILE_CORE_COLUMNS =
   "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, fab_enabled, alert_chime_enabled, created_at, updated_at";
@@ -24,7 +24,7 @@ export const PROFILE_REPUTATION_COLUMNS =
 
 /** Optional groups fetched separately so one missing column does not drop taxi data. */
 const PROFILE_OPTIONAL_GROUPS = [
-  "is_co_admin, co_admin_emergency_call, beta_user",
+  "is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user",
   "push_enabled, push_prompted",
   PROFILE_MEMBERSHIP_COLUMNS,
   PROFILE_REPUTATION_COLUMNS,
@@ -41,7 +41,7 @@ export const PROFILE_BASE_COLUMNS =
   "id, display_name, verification_status, is_admin, created_at, updated_at";
 
 export const ADMIN_PROFILE_COLUMNS =
-  "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, beta_user, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, created_at";
+  "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, created_at";
 
 export function normalizeProfileRow(row: Record<string, unknown>): Profile {
   const isAdmin = Boolean(row.is_admin);
@@ -80,6 +80,12 @@ export function normalizeProfileRow(row: Record<string, unknown>): Profile {
       "co_admin_emergency_call"
     )
       ? Boolean(row.co_admin_emergency_call)
+      : false,
+    co_admin_manage_offers: Object.prototype.hasOwnProperty.call(
+      row,
+      "co_admin_manage_offers"
+    )
+      ? Boolean(row.co_admin_manage_offers)
       : false,
     beta_user: Object.prototype.hasOwnProperty.call(row, "beta_user")
       ? Boolean(row.beta_user)

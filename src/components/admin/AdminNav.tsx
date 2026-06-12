@@ -39,6 +39,10 @@ const EMERGENCY_ONLY_LINKS = [
   { href: "/admin/emergency", label: "Nödlägen", icon: ShieldAlert },
 ];
 
+const OFFERS_ONLY_LINKS = [
+  { href: "/admin/deals", label: "Erbjudanden", icon: Tag },
+];
+
 function badgeStyles(key: AdminBadgeKey): string {
   switch (key) {
     case "emergency":
@@ -77,16 +81,21 @@ function badgeDotStyles(key: AdminBadgeKey): string {
   }
 }
 
-export function AdminNav({ mode = "full" }: { mode?: "full" | "emergency" }) {
+export function AdminNav({ mode = "full" }: { mode?: "full" | "emergency" | "offers" }) {
   const pathname = usePathname();
   const { isUnread, isOverviewUnread, unreadCount } = useAdminBadges();
-  const links = mode === "emergency" ? EMERGENCY_ONLY_LINKS : FULL_LINKS;
+  const links =
+    mode === "emergency"
+      ? EMERGENCY_ONLY_LINKS
+      : mode === "offers"
+        ? OFFERS_ONLY_LINKS
+        : FULL_LINKS;
 
   return (
     <nav
       className={cn(
         "mb-6 grid gap-2",
-        mode === "emergency" ? "grid-cols-1" : "grid-cols-3 sm:grid-cols-4"
+        mode === "emergency" ? "grid-cols-1" : mode === "offers" ? "grid-cols-1" : "grid-cols-3 sm:grid-cols-4"
       )}
     >
       {links.map(({ href, label, icon: Icon }) => {

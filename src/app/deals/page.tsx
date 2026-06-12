@@ -1,20 +1,21 @@
-import { DealCard } from "@/components/deals/DealCard";
+import { OfferRevealBanner } from "@/components/deals/OfferRevealBanner";
 import { BannerSlot } from "@/components/layout/BannerSlot";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 import { MembershipGateBanner } from "@/components/membership/MembershipCard";
-import { fetchActiveDeals, fetchBannerForSlot } from "@/lib/deals";
+import { fetchBannerForSlot } from "@/lib/deals";
+import { fetchActiveOffersForDrivers } from "@/lib/offers";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
 import { syncMembershipProfile } from "@/lib/profile";
 import type { DriverVerificationStatus } from "@/lib/verification";
 import { createClient } from "@/lib/supabase/server";
-import type { BannerAd, Profile, TaxiDeal } from "@/lib/types/database";
+import type { BannerAd, DriverOffer, Profile } from "@/lib/types/database";
 import Link from "next/link";
 import { NAV } from "@/lib/constants";
 
 export const metadata = { title: "Erbjudanden" };
 
 export default async function DealsPage() {
-  let deals: TaxiDeal[] = [];
+  let offers: DriverOffer[] = [];
   let banner: BannerAd | null = null;
   let profile: Profile | null = null;
   let verificationStatus: DriverVerificationStatus | null = null;
@@ -38,8 +39,8 @@ export default async function DealsPage() {
     const hasAccess = profile ? hasCabRadarAccess(profile) : false;
 
     if (hasAccess) {
-      [deals, banner] = await Promise.all([
-        fetchActiveDeals(supabase),
+      [offers, banner] = await Promise.all([
+        fetchActiveOffersForDrivers(supabase),
         fetchBannerForSlot(supabase, "deals_page"),
       ]);
     } else if (user) {
@@ -56,7 +57,10 @@ export default async function DealsPage() {
     <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
       <section className="py-4">
         <h1 className="text-xl font-bold">{NAV.deals}</h1>
-        <p className="mt-1 text-sm text-muted">Visa skärmen för att lösa in.</p>
+        <p className="mt-1 text-sm text-muted leading-relaxed">
+          Exklusiva förmåner för CabRadar-förare — förhandlade specifikt för dig.
+          Tryck på ett erbjudande för att avslöja din kod eller inlösen.
+        </p>
       </section>
 
       {!userId && (
@@ -81,7 +85,7 @@ export default async function DealsPage() {
           <p className="text-3xl mb-2">🔒</p>
           <p className="font-medium">Medlemskap krävs</p>
           <Link href="/settings" className="mt-3 inline-block btn-primary text-sm">
-            Köp årsmedlemskap
+            Se medlemskap
           </Link>
         </div>
       )}
@@ -89,17 +93,19 @@ export default async function DealsPage() {
       {userId && hasAccess && (
         <>
           <BannerSlot banner={banner} />
-          {deals.length === 0 ? (
+          {offers.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-card-border p-8 text-center">
-              <p className="text-4xl mb-2">🏷️</p>
-              <p className="font-medium">Inga erbjudanden</p>
-              <p className="mt-1 text-sm text-muted">Kom tillbaka snart.</p>
+              <p className="text-4xl mb-2">🎁</p>
+              <p className="font-medium">Inga erbjudanden just nu</p>
+              <p className="mt-1 text-sm text-muted">
+                Nya exklusiva förmåner publiceras här löpande.
+              </p>
             </div>
           ) : (
             <ul className="mt-4 flex flex-col gap-4">
-              {deals.map((deal) => (
-                <li key={deal.id}>
-                  <DealCard deal={deal} />
+              {offers.map((offer) => (
+                <li key={offer.id}>
+                  <OfferRevealBanner offer={offer} />
                 </li>
               ))}
             </ul>
