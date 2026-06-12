@@ -384,3 +384,16 @@ body {
 .admin-command-center .admin-pulse-success {
   animation: admin-pulse-tesla-green 3.5s ease-in-out infinite;
 }
+
+/* Tesla full-screen dispatch center — hide app chrome */
+body.tesla-command-center-active header {
+  display: none !important;
+}
+
+body.tesla-command-center-active nav.fixed.bottom-0 {
+  display: none !important;
+}
+
+body.tesla-command-center-active main {
+  padding: 0 !important;
+}

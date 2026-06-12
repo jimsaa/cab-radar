@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AdminCommandCenterProvider } from "@/contexts/AdminCommandCenterContext";
+import { AdminWideScreenGate } from "@/components/admin/AdminWideScreenGate";
 
 const ADMIN_THEME_COLOR = "#1E2125";
 const DRIVER_THEME_COLOR = "#0a1628";
@@ -9,8 +10,10 @@ const DRIVER_THEME_COLOR = "#0a1628";
 /** Applies Tesla-inspired graphite theme while Admin Command Center is active. */
 export function AdminCommandCenterShell({
   children,
+  isFullAdmin,
 }: {
   children: React.ReactNode;
+  isFullAdmin: boolean;
 }) {
   useEffect(() => {
     const root = document.documentElement;
@@ -29,7 +32,9 @@ export function AdminCommandCenterShell({
   return (
     <AdminCommandCenterProvider>
       <div className="admin-command-center-root min-h-full bg-background text-foreground">
-        {children}
+        <AdminWideScreenGate isFullAdmin={isFullAdmin}>
+          {children}
+        </AdminWideScreenGate>
       </div>
     </AdminCommandCenterProvider>
   );
