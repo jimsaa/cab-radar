@@ -17,6 +17,13 @@ COMMENT ON TABLE public.driver_activity_points IS
 
 ALTER TABLE public.driver_activity_points ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Verified drivers insert own activity"
+  ON public.driver_activity_points;
+DROP POLICY IF EXISTS "Admins read activity points"
+  ON public.driver_activity_points;
+DROP POLICY IF EXISTS "Drivers cannot read activity points"
+  ON public.driver_activity_points;
+
 -- Verified drivers insert their own activity (event-driven, never polled).
 CREATE POLICY "Verified drivers insert own activity"
   ON public.driver_activity_points FOR INSERT TO authenticated
