@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { MapPin } from "lucide-react";
 import { useState } from "react";
+import { offerGoogleMapsUrl } from "@/lib/offers";
 import type { DriverOffer } from "@/lib/types/database";
 
 interface OfferRevealBannerProps {
@@ -11,6 +13,7 @@ interface OfferRevealBannerProps {
 /** Driver offer card — tap Banner 1A to reveal Banner 1B + redemption. */
 export function OfferRevealBanner({ offer }: OfferRevealBannerProps) {
   const [open, setOpen] = useState(false);
+  const mapsUrl = offerGoogleMapsUrl(offer);
 
   function handleTap() {
     setOpen(true);
@@ -80,10 +83,28 @@ export function OfferRevealBanner({ offer }: OfferRevealBannerProps) {
               </p>
             )}
 
+            {offer.business_name && (
+              <p className="mt-4 text-center text-sm font-medium">
+                {offer.business_name}
+              </p>
+            )}
+
+            {mapsUrl && (
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary mt-4 flex w-full items-center justify-center gap-2 !min-h-[48px]"
+              >
+                <MapPin className="h-4 w-4" />
+                📍 Öppna i Google Maps
+              </a>
+            )}
+
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="btn-primary mt-4 w-full"
+              className={mapsUrl ? "btn-secondary mt-3 w-full" : "btn-primary mt-4 w-full"}
             >
               Stäng
             </button>

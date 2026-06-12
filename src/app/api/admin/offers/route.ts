@@ -30,6 +30,10 @@ interface OfferBody {
   id?: string;
   business_name?: string;
   offer_title?: string;
+  address?: string;
+  google_maps_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   start_date?: string | null;
   valid_until?: string | null;
   banner_a_url?: string | null;
@@ -37,6 +41,18 @@ interface OfferBody {
   redemption_text?: string;
   admin_notes?: string;
   is_active?: boolean;
+}
+
+function parseOptionalCoord(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseOptionalUrl(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = String(value).trim();
+  return trimmed || null;
 }
 
 export async function POST(request: Request) {
@@ -64,7 +80,10 @@ export async function POST(request: Request) {
       business_name: body.business_name.trim(),
       offer_title: body.offer_title.trim(),
       offer_description: "",
-      address: "",
+      address: body.address?.trim() ?? "",
+      google_maps_url: parseOptionalUrl(body.google_maps_url),
+      latitude: parseOptionalCoord(body.latitude),
+      longitude: parseOptionalCoord(body.longitude),
       start_date: body.start_date || null,
       valid_until: body.valid_until || null,
       banner_a_url: body.banner_a_url || null,
@@ -105,6 +124,12 @@ export async function PATCH(request: Request) {
 
   if (body.business_name !== undefined) updates.business_name = body.business_name.trim();
   if (body.offer_title !== undefined) updates.offer_title = body.offer_title.trim();
+  if (body.address !== undefined) updates.address = body.address.trim();
+  if (body.google_maps_url !== undefined) {
+    updates.google_maps_url = parseOptionalUrl(body.google_maps_url);
+  }
+  if (body.latitude !== undefined) updates.latitude = parseOptionalCoord(body.latitude);
+  if (body.longitude !== undefined) updates.longitude = parseOptionalCoord(body.longitude);
   if (body.start_date !== undefined) updates.start_date = body.start_date || null;
   if (body.valid_until !== undefined) updates.valid_until = body.valid_until || null;
   if (body.banner_a_url !== undefined) updates.banner_a_url = body.banner_a_url;

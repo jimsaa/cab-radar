@@ -142,6 +142,10 @@ export interface DriverOffer {
   banner_a_url: string | null;
   banner_b_url: string | null;
   redemption_text: string;
+  address: string;
+  google_maps_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
   start_date: string | null;
   valid_until: string | null;
   is_active: boolean;

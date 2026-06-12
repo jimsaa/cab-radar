@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   isOfferVisibleToDrivers,
+  offerGoogleMapsUrl,
   OFFER_BANNER_ACCEPT,
   OFFER_BANNER_RECOMMENDED,
 } from "@/lib/offers";
@@ -15,6 +16,10 @@ import { Eye, Pencil, Trash2 } from "lucide-react";
 interface OfferFormState {
   business_name: string;
   offer_title: string;
+  address: string;
+  google_maps_url: string;
+  latitude: string;
+  longitude: string;
   start_date: string;
   valid_until: string;
   redemption_text: string;
@@ -27,6 +32,10 @@ interface OfferFormState {
 const emptyForm = (): OfferFormState => ({
   business_name: "",
   offer_title: "",
+  address: "",
+  google_maps_url: "",
+  latitude: "",
+  longitude: "",
   start_date: "",
   valid_until: "",
   redemption_text: "",
@@ -85,6 +94,10 @@ export function AdminOffersManager({ offers, canDelete }: AdminOffersManagerProp
       const payload = {
         business_name: form.business_name,
         offer_title: form.offer_title,
+        address: form.address,
+        google_maps_url: form.google_maps_url || null,
+        latitude: form.latitude ? Number(form.latitude) : null,
+        longitude: form.longitude ? Number(form.longitude) : null,
         start_date: form.start_date || null,
         valid_until: form.valid_until || null,
         redemption_text: form.redemption_text,
@@ -138,6 +151,10 @@ export function AdminOffersManager({ offers, canDelete }: AdminOffersManagerProp
     setForm({
       business_name: offer.business_name,
       offer_title: offer.offer_title,
+      address: offer.address,
+      google_maps_url: offer.google_maps_url ?? "",
+      latitude: offer.latitude != null ? String(offer.latitude) : "",
+      longitude: offer.longitude != null ? String(offer.longitude) : "",
       start_date: offer.start_date ?? "",
       valid_until: offer.valid_until ?? "",
       redemption_text: offer.redemption_text,
@@ -210,6 +227,36 @@ export function AdminOffersManager({ offers, canDelete }: AdminOffersManagerProp
           onChange={(e) => setForm({ ...form, offer_title: e.target.value })}
           required
         />
+
+        <input
+          className="field"
+          placeholder="Adress (valfritt, t.ex. Storgatan 1, Malmö)"
+          value={form.address}
+          onChange={(e) => setForm({ ...form, address: e.target.value })}
+        />
+        <input
+          className="field"
+          placeholder="Google Maps-länk (valfritt)"
+          value={form.google_maps_url}
+          onChange={(e) => setForm({ ...form, google_maps_url: e.target.value })}
+          inputMode="url"
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            className="field"
+            placeholder="Latitud (valfritt)"
+            value={form.latitude}
+            onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+            inputMode="decimal"
+          />
+          <input
+            className="field"
+            placeholder="Longitud (valfritt)"
+            value={form.longitude}
+            onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+            inputMode="decimal"
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-2">
           <label className="text-xs text-muted">
@@ -409,6 +456,8 @@ export function AdminOffersManager({ offers, canDelete }: AdminOffersManagerProp
               bannerA={previewOffer.banner_a_url}
               bannerB={previewOffer.banner_b_url}
               redemptionText={previewOffer.redemption_text}
+              businessName={previewOffer.business_name}
+              mapsUrl={offerGoogleMapsUrl(previewOffer)}
               revealed={previewRevealed}
               onReveal={() => setPreviewRevealed(true)}
             />
@@ -433,12 +482,16 @@ function OfferPreview({
   bannerA,
   bannerB,
   redemptionText,
+  businessName,
+  mapsUrl,
   revealed,
   onReveal,
 }: {
   bannerA: string | null;
   bannerB: string | null;
   redemptionText: string;
+  businessName: string;
+  mapsUrl: string | null;
   revealed: boolean;
   onReveal: () => void;
 }) {
@@ -476,6 +529,19 @@ function OfferPreview({
         <p className="rounded-xl border border-accent/30 bg-accent/10 p-4 text-center text-base font-semibold">
           {redemptionText}
         </p>
+      )}
+      {businessName && (
+        <p className="text-center text-sm font-medium">{businessName}</p>
+      )}
+      {mapsUrl && (
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary flex w-full items-center justify-center gap-2 !min-h-[48px]"
+        >
+          📍 Öppna i Google Maps
+        </a>
       )}
     </div>
   );

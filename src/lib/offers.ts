@@ -4,10 +4,10 @@ import type { DriverOffer, DriverOfferAdmin, TaxiDeal } from "./types/database";
 
 /** Columns safe for driver reads — excludes admin_notes and partner fees. */
 export const DRIVER_OFFER_COLUMNS =
-  "id, business_name, offer_title, banner_a_url, banner_b_url, redemption_text, start_date, valid_until, is_active";
+  "id, business_name, offer_title, banner_a_url, banner_b_url, redemption_text, address, google_maps_url, latitude, longitude, start_date, valid_until, is_active";
 
 export const ADMIN_OFFER_COLUMNS =
-  "id, business_name, offer_title, offer_description, address, start_date, valid_until, banner_a_url, banner_b_url, redemption_text, admin_notes, image_url, is_active, monthly_partner_fee, created_at, updated_at";
+  "id, business_name, offer_title, offer_description, address, google_maps_url, latitude, longitude, start_date, valid_until, banner_a_url, banner_b_url, redemption_text, admin_notes, image_url, is_active, monthly_partner_fee, created_at, updated_at";
 
 export const OFFER_BANNER_MAX_BYTES = 5 * 1024 * 1024;
 export const OFFER_BANNER_ACCEPT = "image/jpeg,image/png,image/webp";
@@ -15,6 +15,37 @@ export const OFFER_BANNER_RECOMMENDED = "320×100 px";
 
 export function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+export type OfferMapsInput = {
+  google_maps_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+};
+
+/** Resolve Google Maps link: direct URL → coordinates → address. */
+export function offerGoogleMapsUrl(offer: OfferMapsInput): string | null {
+  const direct = offer.google_maps_url?.trim();
+  if (direct) return direct;
+
+  const lat = offer.latitude;
+  const lng = offer.longitude;
+  if (
+    lat != null &&
+    lng != null &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng)
+  ) {
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+
+  const address = offer.address?.trim();
+  if (address) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  }
+
+  return null;
 }
 
 /** Active for drivers: enabled + within optional start/end window + has Banner A. */
@@ -41,6 +72,16 @@ export function mapRowToDriverOffer(row: Record<string, unknown>): DriverOffer {
     banner_a_url: (row.banner_a_url as string | null) ?? null,
     banner_b_url: (row.banner_b_url as string | null) ?? null,
     redemption_text: (row.redemption_text as string) ?? "",
+    address: (row.address as string) ?? "",
+    google_maps_url: (row.google_maps_url as string | null) ?? null,
+    latitude:
+      row.latitude != null && row.latitude !== ""
+        ? Number(row.latitude)
+        : null,
+    longitude:
+      row.longitude != null && row.longitude !== ""
+        ? Number(row.longitude)
+        : null,
     start_date: (row.start_date as string | null) ?? null,
     valid_until: (row.valid_until as string | null) ?? null,
     is_active: Boolean(row.is_active),
@@ -108,7 +149,7 @@ export async function fetchActiveDeals(
     business_name: o.business_name,
     offer_title: o.offer_title,
     offer_description: "",
-    address: "",
+    address: o.address,
     valid_until: o.valid_until ?? todayIsoDate(),
     image_url: o.banner_a_url,
     is_active: o.is_active,
