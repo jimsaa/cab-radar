@@ -13,6 +13,7 @@ import {
   Tag,
   Users,
 } from "lucide-react";
+import { AdminActivityMap } from "@/components/admin/AdminActivityMap";
 import {
   AdminDashboardHeader,
   AdminStatCard,
@@ -67,6 +68,8 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
         <p className="mt-1 text-2xl font-bold">{stats.activeDrivers}</p>
         <p className="mt-0.5 text-xs text-muted">Online senaste 30 min</p>
       </div>
+
+      <AdminActivityMap />
 
       <div className="grid grid-cols-2 gap-3">
         <AdminStatCard

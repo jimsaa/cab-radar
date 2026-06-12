@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { DriverActivityShell } from "@/components/driver/DriverActivityShell";
 import { Header, BottomNav } from "@/components/layout/Header";
 import { TestModeBanner } from "@/components/test-mode/TestModeBanner";
 import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
@@ -73,6 +74,7 @@ export default async function RootLayout({
           isLoggedIn={isLoggedIn}
         />
         <TestModeBanner active={testModeEnabled} />
+        <DriverActivityShell enabled={isLoggedIn && !isAdmin} />
         <main className="flex-1">{children}</main>
         <BottomNav />
       </body>

@@ -6,7 +6,6 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { isVerifiedDriver } from "@/lib/verification";
 
-/** @deprecated Use POST /api/profile/activity — kept for backward compatibility. */
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -27,14 +26,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Kräver verifierad förare." }, { status: 403 });
   }
 
-  let body: { latitude?: number; longitude?: number };
+  let body: { latitude?: number; longitude?: number; source?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Ogiltig begäran." }, { status: 400 });
   }
 
-  const { latitude, longitude } = body;
+  const { latitude, longitude, source } = body;
   if (
     latitude == null ||
     longitude == null ||
@@ -46,8 +45,8 @@ export async function POST(request: Request) {
   try {
     await recordDriverActivityPoint(supabase, user.id, latitude, longitude);
   } catch (err) {
-    console.error("[PRESENCE] update failed", err);
-    return NextResponse.json({ error: "Kunde inte spara plats." }, { status: 500 });
+    console.error("[ACTIVITY] record failed", { source, err });
+    return NextResponse.json({ error: "Kunde inte spara aktivitet." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

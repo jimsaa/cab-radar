@@ -16,7 +16,6 @@ import { ReportEventSheet } from "@/components/dashboard/ReportEventSheet";
 import { useAlertValidationPrompt } from "@/hooks/useAlertValidationPrompt";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useEmergencyGpsTracking } from "@/hooks/useEmergencyGpsTracking";
-import { useDriverPresence } from "@/hooks/useDriverPresence";
 import type { DashboardReportType } from "@/lib/dashboard-report-types";
 import {
   filterAlertsForDriverFeed,
@@ -107,8 +106,6 @@ export function DashboardClient({
     userId,
     enabled: Boolean(userId && canReport),
   });
-
-  useDriverPresence(Boolean(userId && isVerified));
 
   useEffect(() => {
     if (!sheetOpen) {

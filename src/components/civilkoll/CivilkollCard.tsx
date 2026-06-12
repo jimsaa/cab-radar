@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { normalizeRegistrationNumber } from "@/lib/civilkoll";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 
@@ -101,6 +102,7 @@ export function CivilkollCard() {
         status: "done",
         found: Boolean(data.found),
       });
+      void recordDriverActivityFromDevice("civilkoll_lookup");
     } catch {
       setLookup({ status: "error", message: "Nätverksfel. Försök igen." });
     }
@@ -138,6 +140,7 @@ export function CivilkollCard() {
             ? "Testanmälan skickad — inget riktigt Civilkoll-flöde påverkas."
             : "Tack! Registreringsnumret har skickats för granskning.")
       );
+      void recordDriverActivityFromDevice("civilkoll_submit");
     } catch {
       setSubmitMessage("Nätverksfel. Försök igen.");
     } finally {
