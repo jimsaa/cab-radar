@@ -5,8 +5,8 @@ import {
   ALERT_RESOLVED_LABEL,
   rejectionVoteLabel,
 } from "@/lib/alert-validation";
+import { AlertTypeIconDisplay } from "@/components/icons/AlertTypeIconDisplay";
 import {
-  alertTypeIcon,
   alertTypeLabel,
   googleMapsLink,
   isCurrentAlertType,
@@ -93,7 +93,7 @@ export function AlertCard({
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <span className={cn("alert-chip", chipColor(alert.type))}>
-          <span aria-hidden>{alertTypeIcon(alert.type)}</span>{" "}
+          <AlertTypeIconDisplay type={alert.type} />{" "}
           {alertTypeLabel(alert.type)}
           {alert.is_major && alert.type === "slow_traffic" && " · STOR"}
         </span>
@@ -173,7 +173,7 @@ export function AlertCard({
 export function AlertTypeBadge({ type }: { type: string }) {
   return (
     <span className={cn("alert-chip", chipColor(type))}>
-      <span aria-hidden>{alertTypeIcon(type)}</span> {alertTypeLabel(type)}
+      <AlertTypeIconDisplay type={type} /> {alertTypeLabel(type)}
     </span>
   );
 }

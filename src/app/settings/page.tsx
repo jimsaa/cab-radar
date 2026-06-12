@@ -16,7 +16,7 @@ import { isVerifiedDriver, isBetaUser } from "@/lib/membership";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
 import { syncMembershipProfile } from "@/lib/profile";
 import { AdditionalProfileInfo } from "@/components/profile/AdditionalProfileInfo";
-import { AlertRegionSettings } from "@/components/profile/AlertRegionSettings";
+import { DriverCitySettings } from "@/components/profile/DriverCitySettings";
 import { TestModeSettings } from "@/components/test-mode/TestModeSettings";
 import { PushNotificationsSection } from "@/components/notifications/PushNotificationsSection";
 import { NAV } from "@/lib/constants";
@@ -143,9 +143,9 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {profile && userId && isVerifiedDriver(profile) && (
+      {profile && userId && (
         <div className="mb-4">
-          <AlertRegionSettings
+          <DriverCitySettings
             userId={userId}
             profile={profile}
             disabled={saving}
@@ -154,7 +154,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {profile && userId && (
+      {profile && userId && isVerifiedDriver(profile) && (
         <PushNotificationsSection
           userId={userId}
           pushEnabled={profile.push_enabled}

@@ -1,3 +1,5 @@
+import { QUEUE_TRAFFIC_ICON } from "./alert-types";
+
 /** CabRadar – Hjälp & Information (driver guide content). */
 
 export const CABRADAR_GUIDE_TITLE = "CabRadar – Hjälp & Information";
@@ -61,7 +63,7 @@ export const CABRADAR_GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         title: "Kö",
-        icon: "🐢",
+        icon: QUEUE_TRAFFIC_ICON,
         body: "Används vid:",
         bullets: ["Trafikstockning", "Långsam trafik", "Tillfälliga köer"],
       },

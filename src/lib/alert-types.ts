@@ -26,6 +26,9 @@ export type LegacyAlertType = (typeof LEGACY_ALERT_TYPES)[number];
 
 export type StoredAlertType = AlertType | LegacyAlertType;
 
+/** Three cars in a row — traffic queue / Kö */
+export const QUEUE_TRAFFIC_ICON = "🚗🚗🚗";
+
 export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   total_stop: "Stopp",
   slow_traffic: "Kö",
@@ -38,7 +41,7 @@ export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
 
 export const ALERT_TYPE_ICONS: Record<AlertType, string> = {
   total_stop: "🚧",
-  slow_traffic: "🐢",
+  slow_traffic: QUEUE_TRAFFIC_ICON,
   accident: "🚑",
   taxi_emergency: "🆘",
   taxi_info: "📋",

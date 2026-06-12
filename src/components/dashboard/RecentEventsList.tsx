@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import { ChevronRight, MapPin, Shield } from "lucide-react";
 import {
-  alertTypeIcon,
   alertTypeLabel,
   googleMapsLink,
 } from "@/lib/constants";
+import { AlertTypeIconDisplay } from "@/components/icons/AlertTypeIconDisplay";
 import { isTaxiEmergencyAlert, publicEmergencyLocationLabel } from "@/lib/emergency-privacy";
 import { filterAlertsForDriverFeed } from "@/lib/emergency-driver";
 import { logAlertFeedRender } from "@/lib/report-alert-mapping";
@@ -56,7 +56,7 @@ function RecentEventRow({ alert }: { alert: DriverAlert }) {
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-background text-xl"
         aria-hidden
       >
-        {alertTypeIcon(alert.type)}
+        <AlertTypeIconDisplay type={alert.type} variant="badge" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold leading-tight">

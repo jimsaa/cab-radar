@@ -6,6 +6,7 @@ import {
   type DashboardReportType,
 } from "@/lib/dashboard-report-types";
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
+import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { cn } from "@/lib/utils";
 
 interface ReportEventGridProps {
@@ -65,6 +66,8 @@ export function ReportEventGrid({
                 strokeWidth={1.25}
                 aria-hidden
               />
+            ) : item.id === "ko" ? (
+              <QueueTrafficIcon />
             ) : (
               <span className="text-3xl leading-none" aria-hidden>
                 {item.icon}

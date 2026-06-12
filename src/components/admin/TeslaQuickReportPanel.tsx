@@ -7,6 +7,7 @@ import {
   DASHBOARD_REPORT_TYPES,
   type DashboardReportType,
 } from "@/lib/dashboard-report-types";
+import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
 import { createClient } from "@/lib/supabase/client";
 
@@ -18,7 +19,6 @@ const TESLA_REPORT_BUTTON_CLASS =
 const TESLA_ICONS: Record<string, string> = {
   taxikontroll: "🚕",
   laser: "📡",
-  ko: "🚗",
   stopp: "⛔",
   olycka: "🚑",
 };
@@ -61,6 +61,8 @@ export function TeslaQuickReportPanel({ onReported }: TeslaQuickReportPanelProps
                 strokeWidth={1.5}
                 aria-hidden
               />
+            ) : item.id === "ko" ? (
+              <QueueTrafficIcon className="h-9 w-10" />
             ) : (
               <span className="text-3xl leading-none" aria-hidden>
                 {TESLA_ICONS[item.id] ?? item.icon}

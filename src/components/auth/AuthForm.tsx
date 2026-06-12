@@ -124,7 +124,11 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
-    if (!isValidDriverCitySelection(driverCity, customCity)) {
+    if (
+      !isValidDriverCitySelection(driverCity, customCity, {
+        requireCustomForOther: true,
+      })
+    ) {
       setError(
         driverCity === "Annan"
           ? "Ange din stad när du valt Annan."

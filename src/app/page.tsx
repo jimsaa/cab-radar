@@ -42,6 +42,8 @@ import type { DriverVerificationStatus } from "@/lib/verification";
 
 import { syncMembershipProfile } from "@/lib/profile";
 
+import { CitySelectionGate } from "@/components/profile/CitySelectionGate";
+
 import { filterAlertsForDriverFeed } from "@/lib/emergency-driver";
 
 
@@ -200,31 +202,35 @@ export default async function HomePage() {
 
 
 
-        <DashboardClient
+        {profile && (
+          <CitySelectionGate userId={userId} profile={profile}>
+            <DashboardClient
 
-          initialAlerts={filteredAlerts}
+              initialAlerts={filteredAlerts}
 
-          feedBanner={feedBanner}
+              feedBanner={feedBanner}
 
-          userId={userId}
+              userId={userId}
 
-          chimeEnabled={chimeEnabled}
+              chimeEnabled={chimeEnabled}
 
-          canVote={canContribute}
+              canVote={canContribute}
 
-          canValidate={isVerified && hasAccess}
+              canValidate={isVerified && hasAccess}
 
-          canReport={canContribute}
+              canReport={canContribute}
 
-          isVerified={isVerified}
+              isVerified={isVerified}
 
-          driverCity={profile?.driver_city ?? null}
+              driverCity={profile.driver_city ?? null}
 
-          showNationalEmergencies={profile?.show_national_emergencies ?? false}
+              showNationalEmergencies={profile.show_national_emergencies ?? false}
 
-          isAdmin={profile?.is_admin ?? false}
+              isAdmin={profile.is_admin ?? false}
 
-        />
+            />
+          </CitySelectionGate>
+        )}
 
       </div>
 
