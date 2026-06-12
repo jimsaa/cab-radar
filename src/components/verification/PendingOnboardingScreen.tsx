@@ -29,14 +29,14 @@ export function PendingOnboardingScreen() {
         <div className="mt-5 rounded-xl border border-card-border bg-background/80 px-4 py-3 text-left text-sm text-muted">
           <p className="font-medium text-foreground">Medan du väntar</p>
           <ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-relaxed">
-            <li>Du kan logga in och se inställningar</li>
-            <li>Live rapportering aktiveras efter onboarding</li>
+            <li>Du kan logga in och se profilen</li>
+            <li>LIVE och rapportering aktiveras efter godkännande</li>
             <li>CabRadar är ett slutet nätverk för verifierade förare</li>
           </ul>
         </div>
 
         <Link href="/settings" className="btn-secondary mt-6 inline-block w-full">
-          Inställningar
+          Profil
         </Link>
       </div>
 

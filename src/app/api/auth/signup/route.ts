@@ -320,7 +320,7 @@ export async function POST(request: Request) {
     console.log("[AUTH] Signup completed");
     return NextResponse.json({
       ok: true,
-      message: "Kontot har skapats och väntar på onboarding.",
+      message: "Kontot har skapats och väntar på godkännande.",
       cabradarUserId: profileResult.cabradarUserId,
       needsEmailConfirm: false,
     });

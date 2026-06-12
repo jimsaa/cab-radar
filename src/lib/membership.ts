@@ -89,7 +89,7 @@ export function membershipStatusIcon(profile: MembershipProfile): string {
 
 export function membershipStatusLine(profile: MembershipProfile): string {
   if (!isVerifiedDriver(profile)) return "Verifiering krävs";
-  if (isBetaUser(profile)) return "🧪 Beta — full tillgång";
+  if (isBetaUser(profile)) return "🧪 Betatest — full tillgång";
   if (profile.membership_type === "annual_member" && hasAnnualMembership(profile)) {
     return `✓ ${MEMBERSHIP_TYPE_LABELS.annual_member}`;
   }

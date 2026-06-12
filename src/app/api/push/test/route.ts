@@ -19,7 +19,7 @@ function configureWebPush(): boolean {
 export async function POST(request: Request) {
   if (!configureWebPush()) {
     return NextResponse.json(
-      { error: "VAPID not configured" },
+      { error: "VAPID är inte konfigurerat." },
       { status: 503 }
     );
   }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Du måste vara inloggad." }, { status: 401 });
   }
 
   const { data: profile } = await supabase
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Endast administratörer." }, { status: 403 });
   }
 
   let endpoint: string | undefined;
@@ -69,13 +69,13 @@ export async function POST(request: Request) {
 
   if (!subs?.length) {
     return NextResponse.json(
-      { ok: true, sent: 0, error: "No subscription found for this device" },
+      { ok: true, sent: 0, error: "Ingen prenumeration hittades på den här enheten." },
       { status: 404 }
     );
   }
 
   const payload = JSON.stringify({
-    title: "CabRadar test",
+    title: "CabRadar-test",
     body: "Push-notiser fungerar på den här enheten.",
     url: "/settings",
   });
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
 
   if (sent === 0) {
     return NextResponse.json(
-      { error: "Could not deliver test notification" },
+      { error: "Kunde inte skicka testnotis." },
       { status: 502 }
     );
   }

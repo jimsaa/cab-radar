@@ -329,7 +329,7 @@ export function AdminEmergencyDetail({
 
             <MapPin className="h-4 w-4" />
 
-            📍 Öppna i Google Maps
+            📍 Öppna i karta
 
           </a>
 

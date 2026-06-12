@@ -14,7 +14,7 @@ export function AdminFeedbackTable({
       items={feedback}
       table="user_feedback"
       searchPlaceholder="Sök ämne eller användar-ID…"
-      emptyMessage="Ingen feedback ännu."
+      emptyMessage="Inga synpunkter ännu."
       searchFilter={(item, q) => {
         const upper = q.toUpperCase();
         return (

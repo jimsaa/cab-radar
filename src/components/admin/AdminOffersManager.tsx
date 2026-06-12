@@ -236,7 +236,7 @@ export function AdminOffersManager({ offers, canDelete }: AdminOffersManagerProp
         />
         <input
           className="field"
-          placeholder="Google Maps-länk (valfritt)"
+          placeholder="Kartlänk (valfritt)"
           value={form.google_maps_url}
           onChange={(e) => setForm({ ...form, google_maps_url: e.target.value })}
           inputMode="url"
@@ -540,7 +540,7 @@ function OfferPreview({
           rel="noopener noreferrer"
           className="btn-primary flex w-full items-center justify-center gap-2 !min-h-[48px]"
         >
-          📍 Öppna i Google Maps
+          📍 Öppna i karta
         </a>
       )}
     </div>

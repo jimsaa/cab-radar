@@ -10,16 +10,16 @@ import {
   VerificationStatusBadge,
 } from "@/components/verification/VerificationStatusBanner";
 import { MembershipCard } from "@/components/membership/MembershipCard";
-import { CommunicationHub, SupportLink, PartnerLink } from "@/components/communication/CommunicationHub";
+import { CommunicationHub, PartnerLink } from "@/components/communication/CommunicationHub";
 import { canParticipateInRewards } from "@/lib/verification";
 import { isVerifiedDriver, isBetaUser } from "@/lib/membership";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
 import { syncMembershipProfile } from "@/lib/profile";
 import { AdditionalProfileInfo } from "@/components/profile/AdditionalProfileInfo";
 import { DriverCitySettings } from "@/components/profile/DriverCitySettings";
+import { ProfileResourcesSection } from "@/components/profile/ProfileResourcesSection";
 import { TestModeSettings } from "@/components/test-mode/TestModeSettings";
 import { PushNotificationsSection } from "@/components/notifications/PushNotificationsSection";
-import { NAV } from "@/lib/constants";
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -64,7 +64,7 @@ export default function SettingsPage() {
   if (!userId) {
     return (
       <div className="safe-bottom mx-auto max-w-lg px-4 py-8 text-center">
-        <p className="text-muted">Logga in för inställningar.</p>
+        <p className="text-muted">Logga in för att se profilen.</p>
         <Link href="/login" className="mt-4 inline-block btn-primary">
           Logga in
         </Link>
@@ -74,7 +74,7 @@ export default function SettingsPage() {
 
   return (
     <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
-      <h1 className="py-4 text-xl font-bold">{NAV.settings}</h1>
+      <h1 className="py-4 text-xl font-bold">Profil</h1>
 
       {profile && (
         <div className="mb-4 rounded-2xl border border-card-border bg-card p-4">
@@ -103,8 +103,7 @@ export default function SettingsPage() {
                   🧪 Beta-testare
                 </p>
               )}
-              <div className="mt-3 flex flex-wrap gap-4">
-                <SupportLink variant="link" className="text-xs" />
+              <div className="mt-3">
                 <PartnerLink className="text-xs" />
               </div>
             </div>
@@ -242,7 +241,9 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="mt-8 border-t border-card-border pt-5">
+      <ProfileResourcesSection className="mt-6" />
+
+      <div className="mt-6 border-t border-card-border pt-5">
         <CommunicationHub isLoggedIn />
       </div>
 

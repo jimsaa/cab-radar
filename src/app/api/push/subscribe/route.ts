@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (!user) {
     console.error("[PUSH] Subscribe rejected: unauthorized");
     return NextResponse.json(
-      { ok: false, step: "auth", error: "Unauthorized" },
+      { ok: false, step: "auth", error: "Du måste vara inloggad." },
       { status: 401 }
     );
   }
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("[PUSH] Subscribe invalid JSON:", err);
     return NextResponse.json(
-      { ok: false, step: "validation", error: "Invalid JSON" },
+      { ok: false, step: "validation", error: "Ogiltig begäran." },
       { status: 400 }
     );
   }
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   if (!endpoint || !keys?.p256dh || !keys?.auth) {
     console.error("[PUSH] Subscribe invalid subscription payload:", body);
     return NextResponse.json(
-      { ok: false, step: "validation", error: "Invalid subscription" },
+      { ok: false, step: "validation", error: "Ogiltig prenumeration." },
       { status: 400 }
     );
   }

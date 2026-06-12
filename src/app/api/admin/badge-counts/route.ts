@@ -20,13 +20,13 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Du måste vara inloggad." }, { status: 401 });
   }
 
   const profile = await fetchAdminRoleProfile(supabase, user.id);
 
   if (!hasEmergencyAdminAccess(profile ?? undefined)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Åtkomst nekad." }, { status: 403 });
   }
 
   try {
@@ -40,7 +40,7 @@ export async function GET() {
   } catch (err) {
     console.error("[ADMIN] Badge counts failed:", err);
     return NextResponse.json(
-      { error: "Could not load notifications" },
+      { error: "Kunde inte ladda notiser." },
       { status: 500 }
     );
   }

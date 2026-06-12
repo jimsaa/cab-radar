@@ -54,8 +54,6 @@ export default async function HomePage() {
 
   let topBanner: BannerAd | null = null;
 
-  let feedBanner: BannerAd | null = null;
-
   let userId: string | null = null;
 
   let chimeEnabled = true;
@@ -104,13 +102,11 @@ export default async function HomePage() {
 
     if (hasAccess) {
 
-      [alerts, topBanner, feedBanner] = await Promise.all([
+      [alerts, topBanner] = await Promise.all([
 
         fetchActiveAlerts(supabase),
 
         fetchBannerForSlot(supabase, "dashboard_top"),
-
-        fetchBannerForSlot(supabase, "alert_feed"),
 
       ]);
 
@@ -208,13 +204,9 @@ export default async function HomePage() {
 
               initialAlerts={filteredAlerts}
 
-              feedBanner={feedBanner}
-
               userId={userId}
 
               chimeEnabled={chimeEnabled}
-
-              canVote={canContribute}
 
               canValidate={isVerified && hasAccess}
 

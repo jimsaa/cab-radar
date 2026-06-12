@@ -4,13 +4,16 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NETWORK_MAP_REFRESH_MS } from "@/lib/driver-activity";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
+import { cn } from "@/lib/utils";
 
 const NetworkMapCanvas = dynamic(
   () => import("./ActivityMapCanvas").then((m) => m.NetworkMapCanvas),
   {
     ssr: false,
     loading: () => (
-      <div className="h-[148px] animate-pulse rounded-[12px] bg-[#1B1E22]/80" />
+      <div
+        className="h-[280px] animate-pulse rounded-[12px] bg-[#1B1E22]/80"
+      />
     ),
   }
 );
@@ -23,7 +26,13 @@ function pointsSignature(points: AnonymizedActivityPoint[]): string {
 }
 
 /** Tesla dispatch network overview — approximate driver presence, not live tracking. */
-export function TeslaNetworkMap() {
+export function TeslaNetworkMap({
+  height = 280,
+  className,
+}: {
+  height?: number;
+  className?: string;
+}) {
   const [points, setPoints] = useState<AnonymizedActivityPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +72,7 @@ export function TeslaNetworkMap() {
   }, [load]);
 
   return (
-    <div className="shrink-0 border-t border-[#3A4048] px-4 py-3">
+    <div className={cn("shrink-0 px-4 py-3", className)}>
       <div className="mb-2">
         <h3 className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
           Nätverkskarta
@@ -75,19 +84,28 @@ export function TeslaNetworkMap() {
 
       <div className="overflow-hidden rounded-[12px] border border-[#3A4048]">
         {loading ? (
-          <div className="flex h-[148px] items-center justify-center bg-[#1B1E22]/80 text-xs text-[#8A9099]">
+          <div
+            className="flex items-center justify-center bg-[#1B1E22]/80 text-xs text-[#8A9099]"
+            style={{ height }}
+          >
             Laddar karta…
           </div>
         ) : error ? (
-          <div className="flex h-[148px] items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-xs text-[#8A9099]">
+          <div
+            className="flex items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-xs text-[#8A9099]"
+            style={{ height }}
+          >
             {error}
           </div>
         ) : points.length === 0 ? (
-          <div className="flex h-[148px] items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-sm text-[#8A9099]">
+          <div
+            className="flex items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-sm text-[#8A9099]"
+            style={{ height }}
+          >
             Inga aktiva förare att visa
           </div>
         ) : (
-          <NetworkMapCanvas points={points} height={148} />
+          <NetworkMapCanvas points={points} height={height} />
         )}
       </div>
     </div>

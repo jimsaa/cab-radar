@@ -97,7 +97,7 @@ export function OfferRevealBanner({ offer }: OfferRevealBannerProps) {
                 className="btn-primary mt-4 flex w-full items-center justify-center gap-2 !min-h-[48px]"
               >
                 <MapPin className="h-4 w-4" />
-                📍 Öppna i Google Maps
+                📍 Öppna i karta
               </a>
             )}
 

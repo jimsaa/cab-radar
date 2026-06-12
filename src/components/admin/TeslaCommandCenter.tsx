@@ -256,9 +256,9 @@ export function TeslaCommandCenter() {
         </section>
       )}
 
-      {/* 2. Main operation area — 3 columns */}
+      {/* Main operation area — 25% · 50% · 25% */}
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 overflow-hidden p-3">
-        {/* Left — quick report */}
+        {/* Left — Snabbrapport */}
         <section className="col-span-3 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <h2 className="shrink-0 border-b border-[#3A4048] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8A9099]">
             Snabbrapport
@@ -268,8 +268,8 @@ export function TeslaCommandCenter() {
           </div>
         </section>
 
-        {/* Center — live feed + network map */}
-        <section className="relative col-span-6 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
+        {/* Center — Live flöde (primary focus) */}
+        <section className="col-span-6 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <div className="shrink-0 border-b border-[#3A4048] px-4 py-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-[#B0B6BE]">
               Live flöde
@@ -279,169 +279,171 @@ export function TeslaCommandCenter() {
             </p>
           </div>
           <TeslaLiveFeedPanel items={snapshot?.liveFeed ?? []} />
-          <TeslaNetworkMap />
         </section>
 
-        {/* Right — active driver summary */}
-        <section className="col-span-3 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31] p-5">
-          <p className="text-xl font-bold text-white">
-            🚖 Aktiva förare: {stats?.activeDrivers ?? 0}
-          </p>
-        </section>
-      </div>
+        {/* Right — network status + admin queues */}
+        <section className="col-span-3 flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[#3A4048] bg-[#262B31]">
+          <div className="shrink-0 border-b border-[#3A4048] px-4 py-3">
+            <p className="text-lg font-bold text-white">
+              🚖 Aktiva förare: {stats?.activeDrivers ?? 0}
+            </p>
+          </div>
 
-      {/* 3. Lower section — admin tasks + testläge */}
-      <div className="grid shrink-0 grid-cols-3 gap-3 border-t border-[#3A4048] bg-[#1B1E22] px-4 py-3">
-        {/* Civilkoll */}
-        <section className="rounded-[16px] border border-[#3A4048] bg-[#262B31] p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-[#8B5CF6]">
-            🔍 Civilkoll — väntar granskning
-          </h3>
-          <ul className="mt-3 max-h-[140px] space-y-2 overflow-y-auto">
-            {(snapshot?.pendingCivil ?? []).length === 0 ? (
-              <li className="text-sm text-[#8A9099]">Inget att granska</li>
-            ) : (
-              snapshot!.pendingCivil.map((c) => (
-                <li
-                  key={c.id}
-                  className="flex items-center justify-between gap-2 rounded-[12px] bg-[#1B1E22] px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="font-mono font-semibold text-white">
-                      {c.registration_number}
-                    </p>
-                    {c.submitter_display_name && (
-                      <p className="truncate text-xs text-[#8A9099]">
-                        {c.submitter_display_name}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => void reviewCivil(c.id, "approve")}
-                      className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
+          <TeslaNetworkMap height={280} className="border-b border-[#3A4048]" />
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+            {/* Civilkoll */}
+            <section className="rounded-[16px] border border-[#3A4048] bg-[#1B1E22]/60 p-3">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-[#8B5CF6]">
+                🔍 Civilkoll — väntar granskning
+              </h3>
+              <ul className="mt-2 max-h-[120px] space-y-2 overflow-y-auto">
+                {(snapshot?.pendingCivil ?? []).length === 0 ? (
+                  <li className="text-sm text-[#8A9099]">Inget att granska</li>
+                ) : (
+                  snapshot!.pendingCivil.map((c) => (
+                    <li
+                      key={c.id}
+                      className="flex items-center justify-between gap-2 rounded-[12px] bg-[#262B31] px-3 py-2"
                     >
-                      ✓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void reviewCivil(c.id, "reject")}
-                      className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </li>
-              ))
-            )}
-          </ul>
-        </section>
-
-        {/* Pending driver onboarding */}
-        <section className="rounded-[16px] border border-[#3A4048] bg-[#262B31] p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-[#F4C430]">
-            👤 Väntar onboarding
-          </h3>
-          <ul className="mt-3 max-h-[180px] space-y-2 overflow-y-auto">
-            {(snapshot?.pendingUsers ?? []).length === 0 ? (
-              <li className="text-sm text-[#8A9099]">Inga väntande</li>
-            ) : (
-              snapshot!.pendingUsers.map((u) => {
-                const phone = u.phone_number?.replace(/\s/g, "");
-                return (
-                  <li
-                    key={u.id}
-                    className="rounded-[12px] bg-[#1B1E22] px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-white">
-                        {u.display_name ?? u.cabradar_user_id ?? "Ny förare"}
-                      </p>
-                      <p className="text-xs text-[#8A9099]">
-                        {u.phone_number ?? "—"} ·{" "}
-                        {formatDriverCityLabel(u.driver_city)}
-                      </p>
-                      <p className="truncate text-xs text-[#8A9099]">
-                        {u.taxi_company_name ?? "—"}
-                        {u.taxi_number ? ` · Taxi ${u.taxi_number}` : ""}
-                      </p>
-                      <p className="text-[10px] text-[#8A9099]">
-                        {formatSwedishDate(u.created_at)}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex shrink-0 flex-wrap gap-1">
-                      {phone && (
-                        <a
-                          href={`tel:${phone}`}
-                          className="inline-flex items-center gap-1 rounded-lg border border-[#3A4048] bg-[#262B31] px-2 py-1 text-xs font-semibold text-white"
+                      <div className="min-w-0">
+                        <p className="font-mono font-semibold text-white">
+                          {c.registration_number}
+                        </p>
+                        {c.submitter_display_name && (
+                          <p className="truncate text-xs text-[#8A9099]">
+                            {c.submitter_display_name}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => void reviewCivil(c.id, "approve")}
+                          className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
                         >
-                          <Phone className="h-3 w-3" />
-                          Ring upp
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => void verifyDriver(u.id, "approve")}
-                        className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
-                      >
-                        ✅ Aktivera
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void verifyDriver(u.id, "reject")}
-                        className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
-                      >
-                        ❌ Avvisa
-                      </button>
-                    </div>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        </section>
+                          ✓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void reviewCivil(c.id, "reject")}
+                          className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </section>
 
-        {/* Testläge — training reports & civilkoll */}
-        <section className="rounded-[16px] border border-amber-500/40 bg-amber-500/5 p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-amber-300">
-            🧪 Testläge
-          </h3>
-          <ul className="mt-3 max-h-[120px] space-y-2 overflow-y-auto">
-            {(snapshot?.testLiveFeed ?? []).length === 0 &&
-            (snapshot?.testPendingCivil ?? []).length === 0 ? (
-              <li className="text-sm text-amber-200/70">Inga testhändelser</li>
-            ) : (
-              <>
-                {(snapshot?.testLiveFeed ?? []).slice(0, 6).map((item) => (
-                  <li
-                    key={item.id}
-                    className="rounded-[12px] bg-[#1B1E22]/80 px-3 py-2"
-                  >
-                    <p className="text-sm font-semibold text-amber-100">
-                      {item.type_label}
-                    </p>
-                    <p className="truncate text-xs text-amber-200/80">
-                      {item.driver_name} · {item.location}
-                    </p>
-                  </li>
-                ))}
-                {(snapshot?.testPendingCivil ?? []).map((c) => (
-                  <li
-                    key={c.id}
-                    className="rounded-[12px] bg-[#1B1E22]/80 px-3 py-2"
-                  >
-                    <p className="text-sm font-semibold text-amber-100">
-                      🧪 TEST – Civilkoll
-                    </p>
-                    <p className="font-mono text-xs text-amber-200/80">
-                      {c.registration_number}
-                    </p>
-                  </li>
-                ))}
-              </>
-            )}
-          </ul>
+            {/* Pending driver onboarding */}
+            <section className="rounded-[16px] border border-[#3A4048] bg-[#1B1E22]/60 p-3">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-[#F4C430]">
+                👤 Väntar godkännande
+              </h3>
+              <ul className="mt-2 max-h-[160px] space-y-2 overflow-y-auto">
+                {(snapshot?.pendingUsers ?? []).length === 0 ? (
+                  <li className="text-sm text-[#8A9099]">Inga väntande</li>
+                ) : (
+                  snapshot!.pendingUsers.map((u) => {
+                    const phone = u.phone_number?.replace(/\s/g, "");
+                    return (
+                      <li
+                        key={u.id}
+                        className="rounded-[12px] bg-[#262B31] px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-white">
+                            {u.display_name ?? u.cabradar_user_id ?? "Ny förare"}
+                          </p>
+                          <p className="text-xs text-[#8A9099]">
+                            {u.phone_number ?? "—"} ·{" "}
+                            {formatDriverCityLabel(u.driver_city)}
+                          </p>
+                          <p className="truncate text-xs text-[#8A9099]">
+                            {u.taxi_company_name ?? "—"}
+                            {u.taxi_number ? ` · Taxi ${u.taxi_number}` : ""}
+                          </p>
+                          <p className="text-[10px] text-[#8A9099]">
+                            {formatSwedishDate(u.created_at)}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex shrink-0 flex-wrap gap-1">
+                          {phone && (
+                            <a
+                              href={`tel:${phone}`}
+                              className="inline-flex items-center gap-1 rounded-lg border border-[#3A4048] bg-[#1B1E22] px-2 py-1 text-xs font-semibold text-white"
+                            >
+                              <Phone className="h-3 w-3" />
+                              Ring upp
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => void verifyDriver(u.id, "approve")}
+                            className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
+                          >
+                            ✅ Aktivera
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void verifyDriver(u.id, "reject")}
+                            className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
+                          >
+                            ❌ Avvisa
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </section>
+
+            {/* Testläge */}
+            <section className="rounded-[16px] border border-amber-500/40 bg-amber-500/5 p-3">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-amber-300">
+                🧪 Testläge
+              </h3>
+              <ul className="mt-2 max-h-[120px] space-y-2 overflow-y-auto">
+                {(snapshot?.testLiveFeed ?? []).length === 0 &&
+                (snapshot?.testPendingCivil ?? []).length === 0 ? (
+                  <li className="text-sm text-amber-200/70">Inga testhändelser</li>
+                ) : (
+                  <>
+                    {(snapshot?.testLiveFeed ?? []).slice(0, 6).map((item) => (
+                      <li
+                        key={item.id}
+                        className="rounded-[12px] bg-[#1B1E22]/80 px-3 py-2"
+                      >
+                        <p className="text-sm font-semibold text-amber-100">
+                          {item.type_label}
+                        </p>
+                        <p className="truncate text-xs text-amber-200/80">
+                          {item.driver_name} · {item.location}
+                        </p>
+                      </li>
+                    ))}
+                    {(snapshot?.testPendingCivil ?? []).map((c) => (
+                      <li
+                        key={c.id}
+                        className="rounded-[12px] bg-[#1B1E22]/80 px-3 py-2"
+                      >
+                        <p className="text-sm font-semibold text-amber-100">
+                          🧪 TEST – Civilkoll
+                        </p>
+                        <p className="font-mono text-xs text-amber-200/80">
+                          {c.registration_number}
+                        </p>
+                      </li>
+                    ))}
+                  </>
+                )}
+              </ul>
+            </section>
+          </div>
         </section>
       </div>
     </div>

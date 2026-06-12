@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/ModalShell";
 
 const SUCCESS =
-  "✅ Tack för din feedback!\nDina synpunkter hjälper oss att göra CabRadar bättre.";
+  "✅ Tack för din synpunkt!\nDina synpunkter hjälper oss att göra CabRadar bättre.";
 
 interface FeedbackModalProps {
   open: boolean;
@@ -51,7 +51,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Det gick inte att skicka feedback.");
+        setError(data.error ?? "Det gick inte att skicka synpunkten.");
         return;
       }
       setSuccess(true);
@@ -69,7 +69,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
       ) : (
         <>
           <h2 id="feedback-title" className="text-lg font-bold">
-            Skicka feedback
+            Lämna synpunkt
           </h2>
           <p className="mt-1 text-sm text-muted">
             Hjälp oss att göra CabRadar bättre.

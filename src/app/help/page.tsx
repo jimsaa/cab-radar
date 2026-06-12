@@ -5,6 +5,7 @@ import {
   fetchMostViewedHelpArticles,
   fetchPublishedHelpArticles,
 } from "@/lib/help";
+import { CABRADAR_GUIDE_TITLE } from "@/lib/cabradar-guide";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
 import { syncMembershipProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
@@ -60,7 +61,7 @@ export default async function HelpPage() {
           href="/help/information"
           className="mb-4 block rounded-2xl border border-accent/30 bg-accent/10 p-4 transition hover:border-accent/50"
         >
-          <p className="font-semibold">📖 CabRadar – Hjälp & Information</p>
+          <p className="font-semibold">📖 {CABRADAR_GUIDE_TITLE}</p>
           <p className="mt-1 text-sm text-muted leading-relaxed">
             Radar, Taxi i nöd, Civilkoll, medlemskap och mer — komplett guide
             för taxiförare.

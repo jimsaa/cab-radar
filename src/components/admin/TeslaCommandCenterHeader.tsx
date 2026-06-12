@@ -57,7 +57,7 @@ export function TeslaCommandCenterHeader() {
               {APP_NAME}
             </p>
             <p className="text-sm font-medium text-[#B0B6BE]">
-              Admin Command Center
+              Kommandocentral
             </p>
           </div>
 

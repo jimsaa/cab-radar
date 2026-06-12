@@ -129,10 +129,10 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
         <AdminStatCard
           href="/admin/feedback"
           icon={MessageSquare}
-          label="Feedback"
+          label="Synpunkter"
           subtitle={
             counts.feedback > 0
-              ? `${counts.feedback} ny${counts.feedback > 1 ? "a" : "tt"} feedback`
+              ? `${counts.feedback} ny${counts.feedback > 1 ? "a" : ""} synpunkt`
               : undefined
           }
           attention="purple"
@@ -142,7 +142,7 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
         <AdminStatCard
           href="/admin/partner"
           icon={Handshake}
-          label="Partner"
+          label="Samarbetspartner"
           subtitle={
             counts.partner > 0
               ? `${counts.partner} ny${counts.partner > 1 ? "a" : "tt"} förfrågan`

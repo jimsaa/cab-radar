@@ -116,7 +116,7 @@ export function AlertMap({ alerts, height = "240px" }: AlertMapProps) {
                   rel="noopener noreferrer"
                   className="mt-2 inline-block text-accent"
                 >
-                  📍 Öppna i Google Maps →
+                  📍 Öppna i karta →
                 </a>
                 )}
               </div>

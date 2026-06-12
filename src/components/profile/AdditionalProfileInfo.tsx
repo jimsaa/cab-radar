@@ -112,7 +112,7 @@ export function AdditionalProfileInfo({
             className="field"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            placeholder="Ex. Saari Taxi AB"
+            placeholder="T.ex. Saari Taxi AB"
             disabled={saving}
           />
           <span className="text-xs text-muted">Ditt eget taxiföretag.</span>
@@ -153,7 +153,7 @@ export function AdditionalProfileInfo({
             className="field"
             value={taxiNumber}
             onChange={(e) => setTaxiNumber(e.target.value)}
-            placeholder="Ex. 123"
+            placeholder="T.ex. 123"
             disabled={saving}
           />
           <span className="text-xs text-muted">Bilens taxinummer.</span>

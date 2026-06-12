@@ -83,6 +83,7 @@ export const NAV = {
   radar: APP_NAME,
   map: "Karta",
   feed: "Flöde",
+  live: "LIVE",
   deals: "Erbjudanden",
   help: "Hjälp",
   settings: "Inställningar",

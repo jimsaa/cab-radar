@@ -7,13 +7,13 @@ export const VERIFICATION_STATUS_LABELS: Record<
   DriverVerificationStatus,
   string
 > = {
-  pending_verification: "Väntar onboarding",
+  pending_verification: "Väntar godkännande",
   verified: "Aktiv",
   rejected: "Avvisad",
 };
 
 export const ONBOARDING_PENDING_MESSAGE =
-  "Tack för din registrering. En administratör kommer kontakta dig från ett nummer som börjar med 0735 för onboarding och verifiering.";
+  "Tack för din registrering. En administratör kommer kontakta dig från ett nummer som börjar med 0735 för aktivering och verifiering.";
 
 export const LICENCE_PRIVACY_MESSAGE =
   "Endast för taxiförare. Ditt taxiförarleg. används endast för verifiering.";

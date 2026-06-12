@@ -77,7 +77,7 @@ export function PublicEmergencyAlertView({
             compact ? "text-xs" : "text-sm"
           )}
         >
-          📍 Öppna i Google Maps
+          📍 Öppna i karta
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
       )}

@@ -10,7 +10,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Du måste vara inloggad." }, { status: 401 });
   }
 
   const { data: profile } = await supabase
@@ -20,7 +20,7 @@ export async function GET() {
     .maybeSingle();
 
   if (!isFullAdmin(profile ?? undefined)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Åtkomst nekad." }, { status: 403 });
   }
 
   try {

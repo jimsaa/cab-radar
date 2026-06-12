@@ -193,7 +193,7 @@ export function buildAdminActionSummary(
   if (counts.feedback > 0) {
     lines.push({
       key: "feedback",
-      message: `${counts.feedback} ny${counts.feedback > 1 ? "a" : "tt"} feedback`,
+      message: `${counts.feedback} ny${counts.feedback > 1 ? "a" : ""} synpunkt`,
     });
   }
   if (counts.partner > 0) {

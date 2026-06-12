@@ -1,4 +1,4 @@
--- CabRadar – Hjälp & Information (overview article for help search).
+-- CabRadar – Hjälp & guider (overview article for help search).
 -- Requires help_articles (migration-driver-help.sql). Safe to re-run.
 
 do $$
@@ -8,22 +8,27 @@ begin
     return;
   end if;
 
+  -- Rename legacy title if present
+  update public.help_articles
+  set title = 'CabRadar – Hjälp & guider'
+  where title = 'CabRadar – Hjälp & Information';
+
   update public.help_articles
   set
     category = 'quick_guides'::public.help_category,
     short_summary = 'Komplett guide: Radar, Taxi i nöd, Civilkoll, medlemskap och mer.',
-    body_content = 'Öppna guiden i appen under Hjälp → CabRadar – Hjälp & Information.
+    body_content = 'Öppna guiden i appen under Hjälp → CabRadar – Hjälp & guider.
 
 Innehåller:
 • Radar — Laser, Taxikontroll, Stopp, Kö, Olycka
 • Taxi i nöd — trygghet, telefonnummer, 112
 • Civilkoll — KÄND CIVIL / EJ KÄND
-• Erbjudanden, Support, Partner, Medlemskap och Beta',
+• Erbjudanden, Support, Samarbetspartner, Medlemskap och Betatest',
     tags = array['guide', 'radar', 'nödläge', 'civilkoll', 'medlemskap'],
     published = true,
     admin_verified = true,
     updated_at = now()
-  where title = 'CabRadar – Hjälp & Information';
+  where title = 'CabRadar – Hjälp & guider';
 
   insert into public.help_articles (
     title,
@@ -37,19 +42,19 @@ Innehåller:
     view_count
   )
   select
-    'CabRadar – Hjälp & Information',
+    'CabRadar – Hjälp & guider',
     'quick_guides'::public.help_category,
     'Komplett guide: Radar, Taxi i nöd, Civilkoll, medlemskap och mer.',
-    'Öppna guiden i appen under Hjälp → CabRadar – Hjälp & Information.
+    'Öppna guiden i appen under Hjälp → CabRadar – Hjälp & guider.
 
 Innehåller:
 • Radar — Laser, Taxikontroll, Stopp, Kö, Olycka
 • Taxi i nöd — trygghet, telefonnummer, 112
 • Civilkoll — KÄND CIVIL / EJ KÄND
-• Erbjudanden, Support, Partner, Medlemskap och Beta',
+• Erbjudanden, Support, Samarbetspartner, Medlemskap och Betatest',
     array[
       'Öppna Hjälp i menyn.',
-      'Tryck på CabRadar – Hjälp & Information.',
+      'Tryck på CabRadar – Hjälp & guider.',
       'Använd innehållsförteckningen för att hoppa till avsnitt.'
     ],
     array['guide', 'radar', 'nödläge', 'civilkoll', 'medlemskap'],
@@ -57,6 +62,6 @@ Innehåller:
     true,
     0
   where not exists (
-    select 1 from public.help_articles where title = 'CabRadar – Hjälp & Information'
+    select 1 from public.help_articles where title = 'CabRadar – Hjälp & guider'
   );
 end $$;

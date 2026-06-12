@@ -537,7 +537,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
 
       {pendingCount > 0 && (
         <p className="rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm">
-          👤 {pendingCount} förare väntar onboarding
+          👤 {pendingCount} förare väntar godkännande
         </p>
       )}
 
@@ -744,7 +744,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                             )}
                           >
                             {u.beta_user
-                              ? "🧪 Beta — full tillgång"
+                              ? "🧪 Betatest — full tillgång"
                               : meetsContributionRequirements(u)
                                 ? "✓ Aktiv förare"
                                 : "⚠ Inaktiv"}

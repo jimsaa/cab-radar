@@ -30,9 +30,9 @@ const FULL_LINKS = [
   { href: "/admin/banners", label: "Banners", icon: Image },
   { href: "/admin/users", label: "Förare", icon: Users },
   { href: "/admin/waitlist", label: "Intresse", icon: Mail },
-  { href: "/admin/feedback", label: "Feedback", icon: MessageSquare },
+  { href: "/admin/feedback", label: "Synpunkter", icon: MessageSquare },
   { href: "/admin/support", label: "Support", icon: Headphones },
-  { href: "/admin/partner", label: "Partner", icon: Handshake },
+  { href: "/admin/partner", label: "Samarbetspartner", icon: Handshake },
 ];
 
 const EMERGENCY_ONLY_LINKS = [

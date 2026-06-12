@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radio, Tag, BookOpen, User, Shield, ShieldAlert, ScanSearch } from "lucide-react";
+import { Radio, ScanSearch, User, Shield, ShieldAlert, Signal } from "lucide-react";
 import { APP_NAME, APP_HEADER_TAGLINE, NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -17,9 +17,8 @@ function isMarketingPath(pathname: string): boolean {
 
 const NAV_ITEMS = [
   { href: "/", label: "Radar", icon: Radio },
+  { href: "/live", label: "LIVE", icon: Signal },
   { href: "/civilkoll", label: NAV.civilkoll, icon: ScanSearch },
-  { href: "/deals", label: NAV.deals, icon: Tag },
-  { href: "/help", label: NAV.help, icon: BookOpen },
   { href: "/settings", label: "Profil", icon: User },
 ];
 
@@ -102,7 +101,8 @@ export function Header({
     return null;
   }
 
-  const dashboardHome = isLoggedIn && pathname === "/";
+  const dashboardHome =
+    isLoggedIn && (pathname === "/" || pathname === "/live");
 
   if (dashboardHome) {
     return (

@@ -57,7 +57,7 @@ export function TeslaNavigationButtons({
           )}
         >
           <MapPin className={large ? "h-4 w-4" : "h-3.5 w-3.5"} />
-          Google Maps
+          Öppna i karta
         </a>
       )}
     </div>

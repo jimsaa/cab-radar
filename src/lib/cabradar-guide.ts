@@ -1,8 +1,8 @@
 import { QUEUE_TRAFFIC_ICON } from "./alert-types";
 
-/** CabRadar – Hjälp & Information (driver guide content). */
+/** CabRadar – Hjälp & guider (driver guide content). */
 
-export const CABRADAR_GUIDE_TITLE = "CabRadar – Hjälp & Information";
+export const CABRADAR_GUIDE_TITLE = "CabRadar – Hjälp & guider";
 
 export const CABRADAR_GUIDE_INTRO =
   "CabRadar är utvecklad av taxiförare för taxiförare med målet att göra arbetsdagen tryggare, smartare och mer effektiv.";
@@ -158,17 +158,17 @@ export const CABRADAR_GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "partner",
-    title: "Partner",
+    title: "Samarbetspartner",
     icon: "🤝",
     intro:
-      "Företag som vill samarbeta med CabRadar kan kontakta oss via Partner-funktionen. Exempel:",
+      "Företag som vill samarbeta med CabRadar kan kontakta oss via samarbetsformuläret i appen. Exempel:",
     bullets: ["Rabatter", "Samarbeten", "Tjänster för taxiförare"],
   },
   {
     id: "medlemskap",
     title: "Medlemskap",
     icon: "👑",
-    intro: "CabRadar bygger på att förare hjälper varandra. Aktiva förare får fortsatt tillgång till premiumfunktioner genom att bidra till communityn. Om du blir inaktiv:",
+    intro: "CabRadar bygger på att förare hjälper varandra. Aktiva förare får fortsatt tillgång till premiumfunktioner genom att bidra till nätverket. Om du blir inaktiv:",
     bullets: [
       "Du kan fortfarande logga in om du blir inaktiv.",
       "Du kan fortfarande rapportera.",
@@ -177,10 +177,10 @@ export const CABRADAR_GUIDE_SECTIONS: GuideSection[] = [
   },
   {
     id: "beta",
-    title: "Beta",
+    title: "Betatest",
     icon: "🧪",
     intro:
-      "Under betaperioden kan vissa användare ha utökad tillgång. Funktioner kan förändras och förbättras innan den officiella lanseringen.",
+      "Under betatestperioden kan vissa användare ha utökad tillgång. Funktioner kan förändras och förbättras innan den officiella lanseringen.",
   },
 ];
 

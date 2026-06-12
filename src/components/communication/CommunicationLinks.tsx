@@ -21,7 +21,7 @@ export function CommunicationLinks({
   return (
     <div className={cn("flex flex-wrap items-center justify-center gap-x-6 gap-y-2", className)}>
       <button type="button" onClick={isLoggedIn ? onSupport : onFeedback} className={linkClass}>
-        {isLoggedIn ? "Support" : "Skicka feedback"}
+        {isLoggedIn ? "Support" : "Lämna synpunkt"}
       </button>
       <button type="button" onClick={onPartner} className={linkClass}>
         Bli partner
