@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { formatSwedishDateTime, formatSwedishObservedDate } from "./datetime";
 import { isMissingSchemaError } from "./db-errors";
 
-export type CivilSource = "user_submission" | "admin_manual";
+export type CivilSource = "user_submission" | "admin_manual" | "admin_quick";
 export type CivilRegistryStatus = "approved" | "removed";
 export type CivilSubmissionStatus = "pending" | "approved" | "rejected";
 
@@ -63,7 +63,17 @@ export function isValidRegistrationNumber(normalized: string): boolean {
 }
 
 export function civilSourceLabel(source: CivilSource): string {
+  if (source === "admin_quick") return "Snabb Civil";
   return source === "admin_manual" ? "Admin manuellt" : "Föraranmälan";
+}
+
+export type QuickCivilAddResult =
+  | { status: "created" }
+  | { status: "exists"; lastObservedAt: string | null };
+
+function buildQuickCivilAdminNote(city?: string | null): string {
+  const cityPart = city?.trim();
+  return cityPart ? `Snabb Civil · ${cityPart}` : "Snabb Civil";
 }
 
 type RawSubmissionRow = Record<string, unknown>;
@@ -604,6 +614,78 @@ export async function createManualRegistryEntry(
   }
 
   if (error) throw error;
+}
+
+/** Tesla quick-add — no duplicate when already approved in civil_registry. */
+export async function quickAddCivilRegistryEntry(
+  supabase: SupabaseClient,
+  adminUserId: string,
+  registrationNumber: string,
+  options?: { city?: string | null }
+): Promise<QuickCivilAddResult> {
+  const normalized = normalizeRegistrationNumber(registrationNumber);
+  if (!isValidRegistrationNumber(normalized)) {
+    throw new Error("Ogiltigt registreringsnummer.");
+  }
+
+  const { data: existing, error: fetchError } = await supabase
+    .from(REGISTRY_TABLE)
+    .select("id, status, last_observed_at")
+    .eq("registration_number", normalized)
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+
+  if (existing?.status === "approved") {
+    return {
+      status: "exists",
+      lastObservedAt: (existing.last_observed_at as string | null) ?? null,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const observedDate = now.slice(0, 10);
+  const adminNote = buildQuickCivilAdminNote(options?.city);
+
+  const fullInsert = {
+    registration_number: normalized,
+    admin_note: adminNote,
+    observation_count: 1,
+    last_observed_at: observedDate,
+    approved_by: adminUserId,
+    approved_at: now,
+    source: "admin_quick" as const,
+    status: "approved" as const,
+  };
+
+  let { error: insertError } = await supabase
+    .from(REGISTRY_TABLE)
+    .insert(fullInsert);
+
+  if (insertError) {
+    const message =
+      insertError.message?.toLowerCase() ?? "";
+    const sourceRejected =
+      message.includes("source") || insertError.code === "23514";
+
+    if (sourceRejected || isMissingSchemaError(insertError)) {
+      ({ error: insertError } = await supabase.from(REGISTRY_TABLE).insert({
+        ...fullInsert,
+        source: "admin_manual" as const,
+      }));
+    }
+
+    if (insertError && isMissingSchemaError(insertError)) {
+      ({ error: insertError } = await supabase.from(REGISTRY_TABLE).insert({
+        registration_number: normalized,
+        last_observed_at: observedDate,
+      }));
+    }
+  }
+
+  if (insertError) throw insertError;
+
+  return { status: "created" };
 }
 
 export function formatCivilkollObservedDate(isoDate: string): string {
