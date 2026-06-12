@@ -1,0 +1,19 @@
+{
+  "name": "CabRadar",
+  "short_name": "CabRadar",
+  "description": "Den digitala co-piloten för taxiförare.",
+  "lang": "sv",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#1e88e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
