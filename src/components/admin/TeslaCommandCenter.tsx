@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { MapPin, Phone, Shield } from "lucide-react";
+import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import {
   emergencyDriverName,
@@ -40,61 +41,18 @@ function ClockDisplay() {
   return <span className="font-mono text-lg text-white">{time}</span>;
 }
 
-function SummaryChip({
-  icon,
-  label,
-  value,
-  alert,
-}: {
-  icon: string;
-  label: string;
-  value: number;
-  alert?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex min-w-[120px] flex-1 flex-col rounded-[14px] border bg-[#262B31] px-4 py-3",
-        alert && value > 0
-          ? "border-[#FF3B30]/60 admin-pulse-emergency"
-          : "border-[#3A4048]"
-      )}
-    >
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A9099]">
-        {icon} {label}
-      </span>
-      <span className="mt-1 text-2xl font-bold text-white">{value}</span>
-    </div>
-  );
-}
-
-function TeslaEmergencyPanel({
+function TeslaEmergencyCard({
   emergency,
   isNew,
   canViewPhone,
   onResolve,
 }: {
-  emergency: EmergencyAlertWithDriver | null;
+  emergency: EmergencyAlertWithDriver;
   isNew: boolean;
   canViewPhone: boolean;
   onResolve: (id: string) => Promise<void>;
 }) {
   const [closing, setClosing] = useState(false);
-
-  if (!emergency) {
-    return (
-      <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-[18px] border border-[#3A4048] bg-[#262B31] p-8 text-center">
-        <p className="text-4xl">✅</p>
-        <p className="mt-3 text-lg font-semibold text-[#22C55E]">
-          Inga aktiva nödlägen
-        </p>
-        <p className="mt-1 text-sm text-[#8A9099]">
-          Taxi i nöd visas här automatiskt
-        </p>
-      </div>
-    );
-  }
-
   const driverName = emergencyDriverName(emergency);
   const mapLink = emergencyMapsUrl(emergency);
   const phoneTel = canViewPhone ? emergencyPhoneTel(emergency.driver) : null;
@@ -102,7 +60,6 @@ function TeslaEmergencyPanel({
   const gps = getEmergencyGpsStatus(emergency);
 
   async function handleResolve() {
-    if (!emergency) return;
     if (!window.confirm("Markera nödläget som löst?")) return;
     setClosing(true);
     await onResolve(emergency.id);
@@ -112,64 +69,51 @@ function TeslaEmergencyPanel({
   return (
     <div
       className={cn(
-        "rounded-[18px] border border-[#FF3B30]/50 bg-[#262B31] p-5",
+        "grid gap-4 rounded-[18px] border border-[#FF3B30]/50 bg-[#262B31] p-5 lg:grid-cols-[1fr_auto]",
         isNew && "admin-pulse-emergency ring-2 ring-[#FF3B30]/40"
       )}
     >
-      <p className="text-xs font-bold uppercase tracking-widest text-[#FF3B30]">
-        🆘 Aktiv nödsituation
-      </p>
-      <h2 className="mt-2 text-2xl font-bold text-white">{driverName}</h2>
-      <p className="mt-1 text-sm text-[#B0B6BE]">
-        {emergencyTaxiCompany(emergency.driver)}
-      </p>
-      <p className="text-sm font-semibold text-white">
-        🚕 Taxi {emergencyTaxiNumber(emergency.driver)}
-      </p>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-widest text-[#FF3B30]">
+          🆘 Aktiv nödsituation
+        </p>
+        <h2 className="mt-1 text-2xl font-bold text-white">{driverName}</h2>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <InfoCell label="Taxibolag" value={emergencyTaxiCompany(emergency.driver)} />
+          <InfoCell
+            label="Taxinummer"
+            value={`Taxi ${emergencyTaxiNumber(emergency.driver)}`}
+          />
+          {canViewPhone && phoneDisplay !== "Ej angivet" && (
+            <InfoCell label="Telefon" value={phoneDisplay} mono />
+          )}
+          <InfoCell label="Plats" value={emergencyLocationLabel(emergency)} />
+          <InfoCell label="GPS" value={gps.label} />
+          <InfoCell
+            label="Aktiverad"
+            value={formatEmergencyActivatedAgo(emergency.created_at)}
+          />
+        </div>
+      </div>
 
-      <dl className="mt-4 space-y-2 text-sm">
-        {canViewPhone && phoneDisplay !== "Ej angivet" && (
-          <div className="flex justify-between gap-4">
-            <dt className="text-[#8A9099]">📞 Telefon</dt>
-            <dd className="font-mono font-semibold text-white">{phoneDisplay}</dd>
-          </div>
-        )}
-        <div className="flex justify-between gap-4">
-          <dt className="text-[#8A9099]">📍 Plats</dt>
-          <dd className="text-right font-medium text-white">
-            {emergencyLocationLabel(emergency)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-[#8A9099]">🛰 GPS</dt>
-          <dd className="font-medium text-white">{gps.label}</dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-[#8A9099]">🕒 Aktiverad</dt>
-          <dd className="text-white">
-            {formatEmergencyActivatedAgo(emergency.created_at)}
-          </dd>
-        </div>
-      </dl>
-
-      <div className="mt-5 space-y-2">
+      <div className="flex min-w-[200px] flex-col justify-center gap-2 lg:w-56">
         {mapLink && (
           <a
             href={mapLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary flex w-full items-center justify-center gap-2 !min-h-[52px] !bg-[#FF3B30] !text-white hover:!bg-[#e0342b]"
+            className="flex items-center justify-center gap-2 rounded-[14px] bg-[#FF3B30] px-4 py-3.5 text-sm font-bold text-white hover:bg-[#e0342b]"
           >
-            <MapPin className="h-5 w-5" />
-            📍 Öppna i Google Maps
+            <MapPin className="h-4 w-4" />
+            Google Maps
           </a>
         )}
         {phoneTel && (
           <a
             href={`tel:${phoneTel}`}
-            className="flex w-full items-center justify-center gap-2 rounded-[16px] border border-[#3A4048] bg-[#1B1E22] py-3.5 text-base font-semibold text-white"
+            className="flex items-center justify-center gap-2 rounded-[14px] border border-[#3A4048] bg-[#1B1E22] px-4 py-3 text-sm font-semibold text-white"
           >
-            <Phone className="h-5 w-5" />
+            <Phone className="h-4 w-4" />
             Ring förare
           </a>
         )}
@@ -177,7 +121,7 @@ function TeslaEmergencyPanel({
           type="button"
           disabled={closing}
           onClick={() => void handleResolve()}
-          className="w-full rounded-[16px] border border-[#22C55E]/40 bg-[#22C55E]/15 py-3.5 text-base font-semibold text-[#22C55E] disabled:opacity-50"
+          className="rounded-[14px] border border-[#22C55E]/40 bg-[#22C55E]/15 px-4 py-3 text-sm font-semibold text-[#22C55E] disabled:opacity-50"
         >
           {closing ? "Markerar…" : "✅ Markera som löst"}
         </button>
@@ -186,7 +130,33 @@ function TeslaEmergencyPanel({
   );
 }
 
-/** Full-screen Tesla / desktop dispatch center — no navigation required. */
+function InfoCell({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="rounded-[12px] bg-[#1B1E22]/80 px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#8A9099]">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-0.5 text-sm font-medium text-white",
+          mono && "font-mono"
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/** Full-screen Tesla dispatch center — emergencies top, ops below. */
 export function TeslaCommandCenter() {
   const { snapshot, refreshLabel, newEmergencyIds, refresh } =
     useAdminCommandCenter();
@@ -208,12 +178,36 @@ export function TeslaCommandCenter() {
     [refresh]
   );
 
-  const counts = snapshot?.counts;
+  async function verifyDriver(driverId: string, action: "approve" | "reject") {
+    const res = await fetch("/api/admin/verify-driver", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ driverId, action }),
+    });
+    if (!res.ok) {
+      const data = (await res.json()) as { error?: string };
+      window.alert(data.error ?? "Kunde inte uppdatera föraren.");
+      return;
+    }
+    void refresh();
+  }
+
+  async function reviewCivil(submissionId: string, action: "approve" | "reject") {
+    const res = await fetch("/api/admin/civilkoll/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ submissionId, action, adminNotes: "" }),
+    });
+    if (!res.ok) {
+      const data = (await res.json()) as { error?: string };
+      window.alert(data.error ?? "Kunde inte granska.");
+      return;
+    }
+    void refresh();
+  }
+
+  const emergencies = snapshot?.emergencies ?? [];
   const stats = snapshot?.stats;
-  const primaryEmergency = snapshot?.emergencies[0] ?? null;
-  const emergencyIsNew = primaryEmergency
-    ? newEmergencyIds.has(primaryEmergency.id)
-    : false;
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-[#1E2125] text-white">
@@ -248,108 +242,79 @@ export function TeslaCommandCenter() {
         </div>
       </header>
 
-      {/* Summary bar */}
-      <div className="flex shrink-0 gap-3 overflow-x-auto border-b border-[#3A4048] px-6 py-3">
-        <SummaryChip
-          icon="🚕"
-          label="Aktiva förare"
-          value={stats?.activeDrivers ?? 0}
-        />
-        <SummaryChip
-          icon="🆘"
-          label="Nödlägen"
-          value={counts?.emergency ?? 0}
-          alert
-        />
-        <SummaryChip
-          icon="⚠️"
-          label="Aktiva rapporter"
-          value={stats?.activeReports ?? 0}
-        />
-        <SummaryChip
-          icon="🔍"
-          label="Civilkoll"
-          value={counts?.civilkoll ?? 0}
-        />
-        <SummaryChip
-          icon="👤"
-          label="Väntar godk."
-          value={counts?.users ?? 0}
-        />
-        <SummaryChip
-          icon="🎁"
-          label="Erbjudanden"
-          value={stats?.activeDeals ?? 0}
-        />
-      </div>
+      {/* 1. Emergency — full width, top priority */}
+      <section className="shrink-0 border-b border-[#3A4048] px-4 py-3">
+        {emergencies.length === 0 ? (
+          <div className="flex items-center justify-center gap-3 rounded-[18px] border border-[#3A4048] bg-[#262B31] px-6 py-4">
+            <span className="text-2xl">✅</span>
+            <p className="text-lg font-semibold text-[#22C55E]">
+              Inga aktiva nödlägen
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {emergencies.map((e) => (
+              <TeslaEmergencyCard
+                key={e.id}
+                emergency={e}
+                isNew={newEmergencyIds.has(e.id)}
+                canViewPhone={snapshot?.canViewEmergencyPhone ?? false}
+                onResolve={resolveEmergency}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-      {/* Main 3-column grid */}
-      <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-hidden p-4">
-        {/* Live feed */}
-        <section className="col-span-4 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
+      {/* 2. Main operation area — 3 columns */}
+      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 overflow-hidden p-3">
+        {/* Left — quick report */}
+        <section className="col-span-3 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <h2 className="shrink-0 border-b border-[#3A4048] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8A9099]">
-            Live flöde — alla rapporter
+            Snabbrapport
+          </h2>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <TeslaQuickReportPanel onReported={() => void refresh()} />
+          </div>
+        </section>
+
+        {/* Center — live feed */}
+        <section className="col-span-6 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
+          <h2 className="shrink-0 border-b border-[#3A4048] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#B0B6BE]">
+            Live flöde
           </h2>
           <ul className="min-h-0 flex-1 overflow-y-auto">
             {(snapshot?.liveFeed ?? []).length === 0 ? (
-              <li className="p-6 text-center text-sm text-[#8A9099]">
+              <li className="p-8 text-center text-sm text-[#8A9099]">
                 Inga aktiva rapporter
               </li>
             ) : (
               snapshot!.liveFeed.map((item) => (
                 <li
                   key={item.id}
-                  className="border-b border-[#3A4048]/60 px-4 py-3 last:border-0"
+                  className="border-b border-[#3A4048]/60 px-5 py-4 last:border-0"
                 >
-                  <p className="font-semibold text-white">{item.type_label}</p>
-                  <p className="mt-0.5 text-sm text-[#B0B6BE]">
+                  <p className="text-lg font-bold text-white">{item.type_label}</p>
+                  <p className="mt-1 text-base text-[#B0B6BE]">
                     {item.driver_name} · {item.location}
                   </p>
-                  <p className="mt-0.5 text-xs text-[#8A9099]">{item.time_label}</p>
+                  <p className="mt-0.5 text-sm text-[#8A9099]">{item.time_label}</p>
                 </li>
               ))
             )}
           </ul>
         </section>
 
-        {/* Emergency */}
-        <section className="col-span-4 flex min-h-0 flex-col">
-          <h2 className="mb-3 shrink-0 text-xs font-bold uppercase tracking-widest text-[#FF3B30]">
-            Nödsituation — högsta prioritet
-          </h2>
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <TeslaEmergencyPanel
-              emergency={primaryEmergency}
-              isNew={emergencyIsNew}
-              canViewPhone={snapshot?.canViewEmergencyPhone ?? false}
-              onResolve={resolveEmergency}
-            />
-            {(snapshot?.emergencies.length ?? 0) > 1 && (
-              <ul className="mt-3 space-y-2">
-                {snapshot!.emergencies.slice(1).map((e) => (
-                  <li
-                    key={e.id}
-                    className={cn(
-                      "rounded-[14px] border border-[#FF3B30]/30 bg-[#FF3B30]/5 px-3 py-2 text-sm",
-                      newEmergencyIds.has(e.id) && "admin-pulse-emergency"
-                    )}
-                  >
-                    🆘 {emergencyDriverName(e)} ·{" "}
-                    {formatEmergencyActivatedAgo(e.created_at)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        {/* Active drivers */}
-        <section className="col-span-4 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
+        {/* Right — active drivers */}
+        <section className="col-span-3 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <h2 className="shrink-0 border-b border-[#3A4048] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8A9099]">
-            Aktiva förare ({stats?.verifiedDrivers ?? 0} verifierade)
+            Aktiva förare
+            <span className="ml-2 font-normal text-[#8A9099]">
+              ({stats?.activeDrivers ?? 0} online)
+            </span>
           </h2>
           <ul className="min-h-0 flex-1 overflow-y-auto">
-            {(snapshot?.drivers ?? []).slice(0, 20).map((driver) => (
+            {(snapshot?.drivers ?? []).slice(0, 25).map((driver) => (
               <li
                 key={driver.id}
                 className="flex items-start gap-3 border-b border-[#3A4048]/60 px-4 py-3 last:border-0"
@@ -373,10 +338,10 @@ export function TeslaCommandCenter() {
                     )}
                   </p>
                   <p className="text-xs text-[#8A9099]">
-                    {driver.reports_count} rapporter ·{" "}
                     {driver.verification_status === "verified"
-                      ? "Verifierad"
-                      : "Väntar"}
+                      ? "✓ Verifierad"
+                      : "⏳ Väntar"}{" "}
+                    · {driver.reports_count} rapporter
                   </p>
                   <p className="text-xs text-[#8A9099]">
                     {formatDriverActivity(driver.last_known_at)}
@@ -388,61 +353,97 @@ export function TeslaCommandCenter() {
         </section>
       </div>
 
-      {/* Bottom attention strip */}
-      <div className="shrink-0 border-t border-[#3A4048] bg-[#1B1E22] px-6 py-3">
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wide text-[#8B5CF6]">
-              🔍 Civilkoll — väntar
-            </h3>
-            <ul className="mt-2 space-y-1">
-              {(snapshot?.pendingCivil ?? []).length === 0 ? (
-                <li className="text-sm text-[#8A9099]">Inget att granska</li>
-              ) : (
-                snapshot!.pendingCivil.slice(0, 4).map((c) => (
-                  <li key={c.id} className="text-sm text-[#B0B6BE]">
-                    {c.registration_number}
-                    {c.submitter_display_name
-                      ? ` · ${c.submitter_display_name}`
-                      : ""}
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wide text-[#F4C430]">
-              👤 Nya registreringar
-            </h3>
-            <ul className="mt-2 space-y-1">
-              {(snapshot?.pendingUsers ?? []).length === 0 ? (
-                <li className="text-sm text-[#8A9099]">Inga väntande</li>
-              ) : (
-                snapshot!.pendingUsers.slice(0, 4).map((u) => (
-                  <li key={u.id} className="text-sm text-[#B0B6BE]">
-                    {u.display_name ?? u.cabradar_user_id ?? "Ny förare"}
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wide text-[#22C55E]">
-              🎁 Aktiva erbjudanden
-            </h3>
-            <ul className="mt-2 space-y-1">
-              {(snapshot?.activeOffers ?? []).length === 0 ? (
-                <li className="text-sm text-[#8A9099]">Inga aktiva</li>
-              ) : (
-                snapshot!.activeOffers.slice(0, 4).map((o) => (
-                  <li key={o.id} className="text-sm text-[#B0B6BE]">
-                    {o.offer_title || o.business_name}
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        </div>
+      {/* 3. Lower section — admin tasks */}
+      <div className="grid shrink-0 grid-cols-2 gap-3 border-t border-[#3A4048] bg-[#1B1E22] px-4 py-3">
+        {/* Civilkoll */}
+        <section className="rounded-[16px] border border-[#3A4048] bg-[#262B31] p-4">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-[#8B5CF6]">
+            🔍 Civilkoll — väntar granskning
+          </h3>
+          <ul className="mt-3 max-h-[140px] space-y-2 overflow-y-auto">
+            {(snapshot?.pendingCivil ?? []).length === 0 ? (
+              <li className="text-sm text-[#8A9099]">Inget att granska</li>
+            ) : (
+              snapshot!.pendingCivil.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-center justify-between gap-2 rounded-[12px] bg-[#1B1E22] px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="font-mono font-semibold text-white">
+                      {c.registration_number}
+                    </p>
+                    {c.submitter_display_name && (
+                      <p className="truncate text-xs text-[#8A9099]">
+                        {c.submitter_display_name}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => void reviewCivil(c.id, "approve")}
+                      className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void reviewCivil(c.id, "reject")}
+                      className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </section>
+
+        {/* Pending driver approvals */}
+        <section className="rounded-[16px] border border-[#3A4048] bg-[#262B31] p-4">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-[#F4C430]">
+            👤 Nya förare — väntar godkännande
+          </h3>
+          <ul className="mt-3 max-h-[140px] space-y-2 overflow-y-auto">
+            {(snapshot?.pendingUsers ?? []).length === 0 ? (
+              <li className="text-sm text-[#8A9099]">Inga väntande</li>
+            ) : (
+              snapshot!.pendingUsers.map((u) => (
+                <li
+                  key={u.id}
+                  className="flex items-center justify-between gap-2 rounded-[12px] bg-[#1B1E22] px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white">
+                      {u.display_name ?? u.cabradar_user_id ?? "Ny förare"}
+                    </p>
+                    <p className="text-xs text-[#8A9099]">
+                      {new Date(u.created_at).toLocaleDateString("sv-SE")}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => void verifyDriver(u.id, "approve")}
+                      className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
+                    >
+                      Godkänn
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void verifyDriver(u.id, "reject")}
+                      className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
+                    >
+                      Avslå
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </section>
       </div>
 
       {/* Footer */}
