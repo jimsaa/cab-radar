@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { AdminActivityMap } from "@/components/admin/AdminActivityMap";
+import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import {
   AdminDashboardHeader,
   AdminStatCard,
@@ -47,6 +48,7 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
     activeBanners: 0,
     liveHelp: 0,
     activeDrivers: 0,
+    lastDriverActivityAt: null,
   };
 
   const { lines: actionLines } = buildAdminActionSummary(counts);
@@ -60,8 +62,10 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
       <AdminNav />
 
       <div className="mb-4 rounded-[18px] border border-card-border bg-card px-4 py-3">
-        <p className="text-lg font-bold">🚖 Aktiva förare: {stats.activeDrivers}</p>
-        <p className="mt-0.5 text-xs text-muted">Senaste 15 min</p>
+        <ActiveDriversNetworkStatus
+          activeDrivers={stats.activeDrivers}
+          lastDriverActivityAt={stats.lastDriverActivityAt}
+        />
       </div>
 
       <AdminActivityMap />

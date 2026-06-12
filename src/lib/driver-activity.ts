@@ -25,6 +25,10 @@ export interface ActiveDriverNetworkData {
   points: AnonymizedActivityPoint[];
   activeDriverIds: string[];
   positionedDriverIds: string[];
+  /** Latest activity among currently active drivers (empty → null). */
+  lastActiveDriverActivityAt: string | null;
+  /** Latest activity from any verified non-admin driver. */
+  lastNetworkActivityAt: string | null;
 }
 
 export function isValidActivityCoordinate(
@@ -97,6 +101,82 @@ export async function recordDriverActivityPoint(
     });
 }
 
+function maxIsoTimestamp(
+  ...values: (string | null | undefined)[]
+): string | null {
+  let max: string | null = null;
+  for (const value of values) {
+    if (!value) continue;
+    const ms = new Date(value).getTime();
+    if (!Number.isFinite(ms)) continue;
+    if (!max || ms > new Date(max).getTime()) max = value;
+  }
+  return max;
+}
+
+/** Latest heartbeat from verified drivers — profiles, activity points, and reports. */
+export async function fetchLatestVerifiedDriverActivityAt(
+  supabase: SupabaseClient,
+  options?: { restrictToUserIds?: string[] }
+): Promise<string | null> {
+  const restrictIds = options?.restrictToUserIds?.filter(Boolean);
+  const hasRestrict = Boolean(restrictIds?.length);
+
+  let profileQuery = supabase
+    .from("profiles")
+    .select("last_known_at")
+    .eq("verification_status", "verified")
+    .eq("is_admin", false)
+    .not("last_known_at", "is", null)
+    .order("last_known_at", { ascending: false })
+    .limit(1);
+
+  if (hasRestrict) {
+    profileQuery = profileQuery.in("id", restrictIds!);
+  }
+
+  let pointsQuery = supabase
+    .from("driver_activity_points")
+    .select("recorded_at")
+    .order("recorded_at", { ascending: false })
+    .limit(1);
+
+  if (hasRestrict) {
+    pointsQuery = pointsQuery.in("user_id", restrictIds!);
+  }
+
+  const [profileRes, pointsRes, alertRes] = await Promise.all([
+    profileQuery.maybeSingle(),
+    pointsQuery.maybeSingle(),
+    hasRestrict
+      ? supabase
+          .from("driver_alerts")
+          .select("created_at")
+          .in("user_id", restrictIds!)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : supabase
+          .from("driver_alerts")
+          .select("created_at, profiles!inner(verification_status, is_admin)")
+          .eq("profiles.verification_status", "verified")
+          .eq("profiles.is_admin", false)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+  ]);
+
+  if (profileRes.error) throw profileRes.error;
+  if (pointsRes.error) throw pointsRes.error;
+  if (alertRes.error) throw alertRes.error;
+
+  return maxIsoTimestamp(
+    profileRes.data?.last_known_at as string | null | undefined,
+    pointsRes.data?.recorded_at as string | null | undefined,
+    alertRes.data?.created_at as string | null | undefined
+  );
+}
+
 /** Shared source for active-driver counter and admin network map. */
 export async function fetchActiveDriverNetwork(
   supabase: SupabaseClient
@@ -134,12 +214,23 @@ export async function fetchActiveDriverNetwork(
 
   const positionedDriverIds = positionedRows.map((row) => row.id as string);
 
+  const [lastNetworkActivityAt, lastActiveDriverActivityAt] = await Promise.all([
+    fetchLatestVerifiedDriverActivityAt(supabase),
+    activeDriverIds.length > 0
+      ? fetchLatestVerifiedDriverActivityAt(supabase, {
+          restrictToUserIds: activeDriverIds,
+        })
+      : Promise.resolve(null),
+  ]);
+
   return {
     activeDriverCount: rows.length,
     positionCount: points.length,
     points,
     activeDriverIds,
     positionedDriverIds,
+    lastActiveDriverActivityAt,
+    lastNetworkActivityAt,
   };
 }
 

@@ -38,6 +38,8 @@ export interface AdminCommandCenterStats {
   activeBanners: number;
   liveHelp: number;
   activeDrivers: number;
+  /** Latest network heartbeat — among active drivers when count > 0, else network-wide. */
+  lastDriverActivityAt: string | null;
   verifiedDrivers: number;
   activeReports: number;
 }
@@ -138,16 +140,25 @@ export function formatCommandCenterDriverLabel(driver: {
   return "Okänd förare";
 }
 
-async function countActiveDrivers(supabase: SupabaseClient): Promise<number> {
+async function fetchDriverNetworkStats(
+  supabase: SupabaseClient
+): Promise<{ activeDrivers: number; lastDriverActivityAt: string | null }> {
   try {
     const network = await fetchActiveDriverNetwork(supabase);
-    return network.activeDriverCount;
+    const lastDriverActivityAt =
+      network.activeDriverCount > 0
+        ? network.lastActiveDriverActivityAt
+        : network.lastNetworkActivityAt;
+    return {
+      activeDrivers: network.activeDriverCount,
+      lastDriverActivityAt,
+    };
   } catch (err) {
     if (isMissingSchemaError(err as { code?: string; message?: string })) {
-      return 0;
+      return { activeDrivers: 0, lastDriverActivityAt: null };
     }
-    console.error("[ADMIN CC] active drivers count failed:", err);
-    return 0;
+    console.error("[ADMIN CC] active drivers stats failed:", err);
+    return { activeDrivers: 0, lastDriverActivityAt: null };
   }
 }
 
@@ -394,6 +405,7 @@ export async function fetchAdminCommandCenterSnapshot(
         activeBanners: 0,
         liveHelp: 0,
         activeDrivers: 0,
+        lastDriverActivityAt: null,
         verifiedDrivers: 0,
         activeReports: 0,
       },
@@ -421,7 +433,7 @@ export async function fetchAdminCommandCenterSnapshot(
     helpArticles,
     activeAlerts,
     pendingAlerts,
-    activeDrivers,
+    driverNetworkStats,
     verifiedDrivers,
     drivers,
     pendingUsers,
@@ -434,7 +446,7 @@ export async function fetchAdminCommandCenterSnapshot(
     fetchAllHelpArticles(serviceSupabase),
     fetchAllActiveAlertsForAdmin(serviceSupabase),
     fetchPendingAlerts(serviceSupabase),
-    countActiveDrivers(serviceSupabase),
+    fetchDriverNetworkStats(serviceSupabase),
     countVerifiedDrivers(serviceSupabase),
     fetchCommandCenterDrivers(serviceSupabase),
     fetchPendingUsers(serviceSupabase),
@@ -442,6 +454,8 @@ export async function fetchAdminCommandCenterSnapshot(
     fetchActiveOffersList(serviceSupabase),
     fetchTestModeDrivers(serviceSupabase),
   ]);
+
+  const { activeDrivers, lastDriverActivityAt } = driverNetworkStats;
 
   const creatorNames = await loadCreatorNames(serviceSupabase, activeAlerts);
   const allFeed = buildLiveFeed(activeAlerts, creatorNames);
@@ -464,6 +478,7 @@ export async function fetchAdminCommandCenterSnapshot(
       liveHelp: helpArticles.filter((a) => a.published && a.admin_verified)
         .length,
       activeDrivers,
+      lastDriverActivityAt,
       verifiedDrivers,
       activeReports,
     },
@@ -502,4 +517,15 @@ export function formatAdminRefreshLabel(seconds: number | null): string {
 export function formatDriverActivity(lastKnownAt: string | null): string {
   if (!lastKnownAt) return "Ingen aktivitet";
   return formatRelativeSwedish(lastKnownAt);
+}
+
+/** Secondary line for admin active-driver widget. */
+export function formatActiveDriverActivityLine(
+  lastDriverActivityAt: string | null
+): string {
+  if (!lastDriverActivityAt) return "Ingen aktivitet registrerad";
+  const relative = formatRelativeSwedish(lastDriverActivityAt);
+  const lowered =
+    relative.charAt(0).toLowerCase() + relative.slice(1);
+  return `Senaste aktivitet: ${lowered}`;
 }

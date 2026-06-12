@@ -7,6 +7,7 @@ import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
+import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { formatCommandCenterDriverLabel } from "@/lib/admin-command-center";
 import {
@@ -287,9 +288,11 @@ export function TeslaCommandCenter() {
         {/* Right — network status + admin queues */}
         <section className="col-span-3 flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <div className="shrink-0 border-b border-[#3A4048] px-4 py-3">
-            <p className="text-lg font-bold text-white">
-              🚖 Aktiva förare: {stats?.activeDrivers ?? 0}
-            </p>
+            <ActiveDriversNetworkStatus
+              activeDrivers={stats?.activeDrivers ?? 0}
+              lastDriverActivityAt={stats?.lastDriverActivityAt}
+              variant="tesla"
+            />
           </div>
 
           <TeslaNetworkMap height={280} className="border-b border-[#3A4048]" />
