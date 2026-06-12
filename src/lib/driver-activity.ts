@@ -1,10 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Minimum age before a point appears on the admin map (privacy delay). */
-export const ACTIVITY_DISPLAY_DELAY_MS = 15 * 60 * 1000;
+/** Positions older than this are hidden from the admin network map. */
+export const NETWORK_POSITION_FRESH_MS = 15 * 60 * 1000;
 
-/** Activity older than this is hidden and eligible for cleanup. */
+/** Activity older than this is eligible for cleanup in driver_activity_points. */
 export const ACTIVITY_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+/** Admin map polling interval — lightweight, not live tracking. */
+export const NETWORK_MAP_REFRESH_MS = 5 * 60 * 1000;
 
 /** Minimum gap between browser-initiated activity recordings. */
 export const ACTIVITY_RECORD_COOLDOWN_MS = 15 * 60 * 1000;
@@ -28,15 +31,8 @@ export function isValidActivityCoordinate(
   );
 }
 
-export function activityDisplayWindow(): {
-  oldest: string;
-  newest: string;
-} {
-  const now = Date.now();
-  return {
-    oldest: new Date(now - ACTIVITY_RETENTION_MS).toISOString(),
-    newest: new Date(now - ACTIVITY_DISPLAY_DELAY_MS).toISOString(),
-  };
+export function networkPositionSince(): string {
+  return new Date(Date.now() - NETWORK_POSITION_FRESH_MS).toISOString();
 }
 
 /** Persist activity for admin map + emergency proximity push targeting. */
@@ -91,25 +87,30 @@ export async function recordDriverActivityPoint(
     });
 }
 
+/** One anonymized dot per recently active verified driver (no PII). */
 export async function fetchAnonymizedActivityPoints(
   supabase: SupabaseClient
 ): Promise<AnonymizedActivityPoint[]> {
-  const { oldest, newest } = activityDisplayWindow();
+  const since = networkPositionSince();
 
   const { data, error } = await supabase
-    .from("driver_activity_points")
-    .select("latitude, longitude")
-    .gte("recorded_at", oldest)
-    .lte("recorded_at", newest)
-    .order("recorded_at", { ascending: false })
+    .from("profiles")
+    .select("last_known_latitude, last_known_longitude")
+    .eq("verification_status", "verified")
+    .eq("is_admin", false)
+    .gte("last_known_at", since)
+    .not("last_known_latitude", "is", null)
+    .not("last_known_longitude", "is", null)
     .limit(500);
 
   if (error) {
     throw error;
   }
 
-  return (data ?? []).map((row) => ({
-    latitude: row.latitude as number,
-    longitude: row.longitude as number,
-  }));
+  return (data ?? [])
+    .map((row) => ({
+      latitude: row.last_known_latitude as number,
+      longitude: row.last_known_longitude as number,
+    }))
+    .filter((point) => isValidActivityCoordinate(point.latitude, point.longitude));
 }

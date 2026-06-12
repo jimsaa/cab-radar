@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DISABLE_TEST_MODE_CONFIRM } from "@/lib/test-mode";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import type { Profile } from "@/lib/types/database";
 
 interface TestModeSettingsProps {
@@ -35,6 +36,7 @@ export function TestModeSettings({
     if (!error) {
       onChange({ ...profile, test_mode_enabled: enabled });
       setConfirmOff(false);
+      void recordDriverActivityFromDevice("test_mode");
     }
     setSaving(false);
   }

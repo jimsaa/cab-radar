@@ -11,6 +11,7 @@ import {
   resolveDriverCity,
   splitDriverCityStored,
 } from "@/lib/driver-city";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import type { Profile } from "@/lib/types/database";
 
 interface CitySelectionModalProps {
@@ -70,6 +71,7 @@ export function CitySelectionModal({
 
     const updated = { ...profile, driver_city: resolvedCity };
     onSaved(updated);
+    void recordDriverActivityFromDevice("profile_update");
     router.refresh();
   }
 

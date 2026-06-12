@@ -1,36 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
-import { CircleMarker, MapContainer, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import L from "leaflet";
+import { CircleMarker, MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
+import { clusterMapPoints, type MapCluster } from "@/lib/map-clustering";
 
 const DEFAULT_CENTER: [number, number] = [59.33, 18.07];
 const DEFAULT_ZOOM = 5;
 
-function FitActivityBounds({ points }: { points: AnonymizedActivityPoint[] }) {
+function FitNetworkBounds({ clusters }: { clusters: MapCluster[] }) {
   const map = useMap();
 
   useEffect(() => {
-    if (points.length === 0) {
+    if (clusters.length === 0) {
       map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
       return;
     }
 
-    if (points.length === 1) {
-      map.setView([points[0].latitude, points[0].longitude], 11);
+    if (clusters.length === 1) {
+      map.setView([clusters[0].latitude, clusters[0].longitude], 11);
       return;
     }
 
-    let minLat = points[0].latitude;
-    let maxLat = points[0].latitude;
-    let minLng = points[0].longitude;
-    let maxLng = points[0].longitude;
+    let minLat = clusters[0].latitude;
+    let maxLat = clusters[0].latitude;
+    let minLng = clusters[0].longitude;
+    let maxLng = clusters[0].longitude;
 
-    for (const point of points) {
-      minLat = Math.min(minLat, point.latitude);
-      maxLat = Math.max(maxLat, point.latitude);
-      minLng = Math.min(minLng, point.longitude);
-      maxLng = Math.max(maxLng, point.longitude);
+    for (const cluster of clusters) {
+      minLat = Math.min(minLat, cluster.latitude);
+      maxLat = Math.max(maxLat, cluster.latitude);
+      minLng = Math.min(minLng, cluster.longitude);
+      maxLng = Math.max(maxLng, cluster.longitude);
     }
 
     map.fitBounds(
@@ -40,42 +42,80 @@ function FitActivityBounds({ points }: { points: AnonymizedActivityPoint[] }) {
       ],
       { padding: [28, 28], maxZoom: 12 }
     );
-  }, [map, points]);
+  }, [map, clusters]);
 
   return null;
 }
 
-interface ActivityMapCanvasProps {
-  points: AnonymizedActivityPoint[];
+function clusterMarkerIcon(count: number) {
+  const size = count >= 10 ? 34 : count >= 5 ? 30 : 26;
+  return L.divIcon({
+    className: "",
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:rgba(59,130,246,0.92);border:2px solid rgba(147,197,253,0.95);color:#fff;font-size:12px;font-weight:700;box-shadow:0 0 12px rgba(59,130,246,0.45);">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 }
 
-export function ActivityMapCanvas({ points }: ActivityMapCanvasProps) {
+interface NetworkMapCanvasProps {
+  points: AnonymizedActivityPoint[];
+  height?: number;
+  interactive?: boolean;
+}
+
+export function NetworkMapCanvas({
+  points,
+  height = 180,
+  interactive = true,
+}: NetworkMapCanvasProps) {
+  const clusters = useMemo(() => clusterMapPoints(points), [points]);
+
   return (
     <MapContainer
       center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
-      scrollWheelZoom={false}
-      className="h-[180px] w-full"
-      style={{ height: "180px" }}
+      scrollWheelZoom={interactive}
+      dragging={interactive}
+      zoomControl={interactive}
+      className="w-full"
+      style={{ height }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
-      <FitActivityBounds points={points} />
-      {points.map((point, index) => (
-        <CircleMarker
-          key={`${point.latitude}-${point.longitude}-${index}`}
-          center={[point.latitude, point.longitude]}
-          radius={5}
-          pathOptions={{
-            color: "#93c5fd",
-            fillColor: "#60a5fa",
-            fillOpacity: 0.75,
-            weight: 1,
-          }}
-        />
-      ))}
+      <FitNetworkBounds clusters={clusters} />
+      {clusters.map((cluster, index) =>
+        cluster.count > 1 ? (
+          <Marker
+            key={`cluster-${cluster.latitude}-${cluster.longitude}-${index}`}
+            position={[cluster.latitude, cluster.longitude]}
+            icon={clusterMarkerIcon(cluster.count)}
+            interactive={false}
+          />
+        ) : (
+          <CircleMarker
+            key={`dot-${cluster.latitude}-${cluster.longitude}-${index}`}
+            center={[cluster.latitude, cluster.longitude]}
+            radius={5}
+            pathOptions={{
+              color: "#93c5fd",
+              fillColor: "#3B82F6",
+              fillOpacity: 0.85,
+              weight: 1,
+            }}
+          />
+        )
+      )}
     </MapContainer>
   );
+}
+
+/** @deprecated Use NetworkMapCanvas */
+export function ActivityMapCanvas({
+  points,
+}: {
+  points: AnonymizedActivityPoint[];
+}) {
+  return <NetworkMapCanvas points={points} />;
 }

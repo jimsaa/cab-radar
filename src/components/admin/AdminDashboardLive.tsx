@@ -62,11 +62,8 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
       <AdminNav />
 
       <div className="mb-4 rounded-[18px] border border-card-border bg-card px-4 py-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">
-          Aktiva förare
-        </p>
-        <p className="mt-1 text-2xl font-bold">{stats.activeDrivers}</p>
-        <p className="mt-0.5 text-xs text-muted">Online senaste 30 min</p>
+        <p className="text-lg font-bold">🚖 Aktiva förare: {stats.activeDrivers}</p>
+        <p className="mt-0.5 text-xs text-muted">Senaste 15 min</p>
       </div>
 
       <AdminActivityMap />

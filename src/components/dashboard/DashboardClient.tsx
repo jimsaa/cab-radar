@@ -22,6 +22,7 @@ import {
   getOwnActiveEmergency,
 } from "@/lib/emergency-driver";
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import { voteOnAlert } from "@/lib/alerts";
 import { createClient } from "@/lib/supabase/client";
 import type { BannerAd, DriverAlert } from "@/lib/types/database";
@@ -112,6 +113,19 @@ export function DashboardClient({
       setReportPreset(null);
     }
   }, [sheetOpen]);
+
+  useEffect(() => {
+    if (!isVerified) return;
+
+    function onPageShow(event: PageTransitionEvent) {
+      if (event.persisted) {
+        void recordDriverActivityFromDevice("radar_refresh");
+      }
+    }
+
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [isVerified]);
 
   function openReport(item: DashboardReportType) {
     if (!canReport || !userId) return;

@@ -120,7 +120,7 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col">
       <ul
         className={cn(
           "min-h-0 overflow-y-auto",

@@ -7,6 +7,7 @@ import {
   TAXIMETER_TYPE_OPTIONS,
   TAXI_OPERATOR_OPTIONS,
 } from "@/lib/profile-taxi-info";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 
 interface AdditionalProfileInfoProps {
   userId: string;
@@ -85,6 +86,7 @@ export function AdditionalProfileInfo({
       }
 
       setSuccessMessage(data.message ?? "Profilen har uppdaterats.");
+      void recordDriverActivityFromDevice("profile_update");
       window.setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       console.error("[PROFILE] Save failed:", err);

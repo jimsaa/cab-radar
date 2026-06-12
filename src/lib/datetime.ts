@@ -123,6 +123,20 @@ export function formatSwedishClockNow(): string {
   return formatSwedishTime(new Date());
 }
 
+/** Long weekday date in Swedish local time, e.g. "Fredag 12 juni". */
+export function formatSwedishWeekdayDateLong(
+  value: string | Date | number = new Date()
+): string {
+  const formatted = new Intl.DateTimeFormat(SWEDISH_LOCALE, {
+    timeZone: STOCKHOLM_TIMEZONE,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(parseInstant(value));
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
 /** Observed date from ISO date or timestamp. */
 export function formatSwedishObservedDate(
   value: string | null | undefined

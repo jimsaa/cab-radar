@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Phone } from "lucide-react";
+import { TeslaCommandCenterHeader } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaLiveFeedPanel } from "@/components/admin/TeslaLiveFeedPanel";
+import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
@@ -19,27 +20,10 @@ import {
   getEmergencyGpsStatus,
   type EmergencyAlertWithDriver,
 } from "@/lib/emergency";
-import { formatSwedishClockNow, formatSwedishDate } from "@/lib/datetime";
-import { APP_NAME } from "@/lib/constants";
-import { formatDriverActivity } from "@/lib/admin-command-center";
+import { formatSwedishDate } from "@/lib/datetime";
 import { TEST_EMERGENCY_DISCLAIMER } from "@/lib/test-mode";
 import { TestBadge } from "@/components/test-mode/TestModeBanner";
 import { cn } from "@/lib/utils";
-
-function ClockDisplay() {
-  const [time, setTime] = useState("");
-
-  useEffect(() => {
-    function tick() {
-      setTime(formatSwedishClockNow());
-    }
-    tick();
-    const id = window.setInterval(tick, 30_000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  return <span className="font-mono text-lg text-white">{time}</span>;
-}
 
 function TeslaEmergencyCard({
   emergency,
@@ -233,42 +217,7 @@ export function TeslaCommandCenter() {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-[#1E2125] text-white">
-      {/* Header */}
-      <header className="flex shrink-0 items-center justify-between border-b border-[#3A4048] px-6 py-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <Image
-            src="/logo.png"
-            alt={APP_NAME}
-            width={44}
-            height={44}
-            className="shrink-0 rounded-xl"
-          />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span
-                className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#22C55E]"
-                aria-hidden
-              />
-              <span className="text-[11px] font-bold uppercase tracking-wide text-[#22C55E]">
-                LIVE
-              </span>
-            </div>
-            <p className="mt-0.5 text-[11px] font-medium text-[#8A9099]">
-              Systemet uppdateras automatiskt
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center px-4 text-center">
-          <h1 className="text-lg font-bold tracking-tight text-white">
-            ADMIN COMMAND CENTER
-          </h1>
-        </div>
-
-        <div className="shrink-0 text-right">
-          <ClockDisplay />
-        </div>
-      </header>
+      <TeslaCommandCenterHeader />
 
       {/* Emergency — only when active (no empty state) */}
       {hasLiveEmergencies && (
@@ -319,7 +268,7 @@ export function TeslaCommandCenter() {
           </div>
         </section>
 
-        {/* Center — live feed + navigation detail */}
+        {/* Center — live feed + network map */}
         <section className="relative col-span-6 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <div className="shrink-0 border-b border-[#3A4048] px-4 py-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-[#B0B6BE]">
@@ -330,53 +279,14 @@ export function TeslaCommandCenter() {
             </p>
           </div>
           <TeslaLiveFeedPanel items={snapshot?.liveFeed ?? []} />
+          <TeslaNetworkMap />
         </section>
 
-        {/* Right — active drivers */}
-        <section className="col-span-3 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
-          <h2 className="shrink-0 border-b border-[#3A4048] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#8A9099]">
-            Aktiva förare
-            <span className="ml-2 font-normal text-[#8A9099]">
-              ({stats?.activeDrivers ?? 0} online)
-            </span>
-          </h2>
-          <ul className="min-h-0 flex-1 overflow-y-auto">
-            {(snapshot?.drivers ?? []).slice(0, 25).map((driver) => (
-              <li
-                key={driver.id}
-                className="flex items-start gap-3 border-b border-[#3A4048]/60 px-4 py-3 last:border-0"
-              >
-                <span
-                  className={cn(
-                    "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
-                    driver.is_online ? "bg-[#22C55E]" : "bg-[#4A5159]"
-                  )}
-                  title={driver.is_online ? "Online" : "Offline"}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-white">
-                    {driver.display_name ??
-                      driver.cabradar_user_id ??
-                      "Okänd"}
-                    {driver.beta_user && (
-                      <span className="ml-2 text-[10px] font-bold text-[#A855F7]">
-                        BETA
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-[#8A9099]">
-                    {driver.verification_status === "verified"
-                      ? "✓ Verifierad"
-                      : "⏳ Väntar"}{" "}
-                    · {driver.reports_count} rapporter
-                  </p>
-                  <p className="text-xs text-[#8A9099]">
-                    {formatDriverActivity(driver.last_known_at)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+        {/* Right — active driver summary */}
+        <section className="col-span-3 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31] p-5">
+          <p className="text-xl font-bold text-white">
+            🚖 Aktiva förare: {stats?.activeDrivers ?? 0}
+          </p>
         </section>
       </div>
 
@@ -534,11 +444,6 @@ export function TeslaCommandCenter() {
           </ul>
         </section>
       </div>
-
-      {/* Footer */}
-      <footer className="flex shrink-0 items-center border-t border-[#3A4048] px-6 py-2 text-[11px] text-[#8A9099]">
-        <span>{APP_NAME} Admin Command Center</span>
-      </footer>
     </div>
   );
 }

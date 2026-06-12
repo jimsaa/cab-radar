@@ -11,6 +11,7 @@ import {
   saveSignupSuccess,
   signupSuccessSearchParams,
 } from "@/lib/signup-success";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import Link from "next/link";
 import { AlertCircle, Shield } from "lucide-react";
 import { LICENCE_PRIVACY_MESSAGE, ONBOARDING_PENDING_MESSAGE } from "@/lib/verification";
@@ -255,6 +256,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
 
       console.log("[AUTH] Login success");
+      void recordDriverActivityFromDevice("login");
       window.location.assign("/");
     } catch (err) {
       console.error("[AUTH] Login failed:", err);

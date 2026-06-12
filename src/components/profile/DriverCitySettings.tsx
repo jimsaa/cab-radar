@@ -10,6 +10,7 @@ import {
   resolveDriverCity,
   splitDriverCityStored,
 } from "@/lib/driver-city";
+import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import type { Profile } from "@/lib/types/database";
 
 interface DriverCitySettingsProps {
@@ -73,6 +74,7 @@ export function DriverCitySettings({
 
     onChange({ ...profile, driver_city: resolvedCity });
     setCitySaved(true);
+    void recordDriverActivityFromDevice("profile_update");
     window.setTimeout(() => setCitySaved(false), 4000);
   }
 

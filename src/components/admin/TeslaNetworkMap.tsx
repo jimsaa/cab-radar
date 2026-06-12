@@ -1,0 +1,95 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { NETWORK_MAP_REFRESH_MS } from "@/lib/driver-activity";
+import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
+
+const NetworkMapCanvas = dynamic(
+  () => import("./ActivityMapCanvas").then((m) => m.NetworkMapCanvas),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[148px] animate-pulse rounded-[12px] bg-[#1B1E22]/80" />
+    ),
+  }
+);
+
+function pointsSignature(points: AnonymizedActivityPoint[]): string {
+  return points
+    .map((point) => `${point.latitude.toFixed(4)},${point.longitude.toFixed(4)}`)
+    .sort()
+    .join("|");
+}
+
+/** Tesla dispatch network overview — approximate driver presence, not live tracking. */
+export function TeslaNetworkMap() {
+  const [points, setPoints] = useState<AnonymizedActivityPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const signatureRef = useRef("");
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/activity-map", { cache: "no-store" });
+      const data = (await res.json()) as {
+        points?: AnonymizedActivityPoint[];
+        error?: string;
+      };
+
+      if (!res.ok) {
+        setError(data.error ?? "Kunde inte ladda nätverkskarta.");
+        return;
+      }
+
+      const next = data.points ?? [];
+      const nextSignature = pointsSignature(next);
+      if (nextSignature !== signatureRef.current) {
+        signatureRef.current = nextSignature;
+        setPoints(next);
+      }
+      setError(null);
+    } catch {
+      setError("Kunde inte ladda nätverkskarta.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+    const interval = window.setInterval(() => void load(), NETWORK_MAP_REFRESH_MS);
+    return () => window.clearInterval(interval);
+  }, [load]);
+
+  return (
+    <div className="shrink-0 border-t border-[#3A4048] px-4 py-3">
+      <div className="mb-2">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
+          Nätverkskarta
+        </h3>
+        <p className="mt-0.5 text-[10px] text-[#8A9099]">
+          Ungefärlig närvaro · uppdateras var 5:e minut
+        </p>
+      </div>
+
+      <div className="overflow-hidden rounded-[12px] border border-[#3A4048]">
+        {loading ? (
+          <div className="flex h-[148px] items-center justify-center bg-[#1B1E22]/80 text-xs text-[#8A9099]">
+            Laddar karta…
+          </div>
+        ) : error ? (
+          <div className="flex h-[148px] items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-xs text-[#8A9099]">
+            {error}
+          </div>
+        ) : points.length === 0 ? (
+          <div className="flex h-[148px] items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-sm text-[#8A9099]">
+            Inga aktiva förare att visa
+          </div>
+        ) : (
+          <NetworkMapCanvas points={points} height={148} />
+        )}
+      </div>
+    </div>
+  );
+}
