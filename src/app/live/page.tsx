@@ -5,6 +5,7 @@ import { VerificationStatusBanner } from "@/components/verification/Verification
 import { fetchActiveAlerts } from "@/lib/alerts";
 import { fetchBannerForSlot } from "@/lib/deals";
 import { filterAlertsForDriverFeed } from "@/lib/emergency-driver";
+import { formatDriverCityLabel } from "@/lib/driver-city";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
 import { syncMembershipProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
@@ -67,8 +68,8 @@ export default async function LivePage() {
 
   if (!userId) {
     return (
-      <div className="safe-bottom mx-auto max-w-lg px-4 py-8 text-center">
-        <h1 className="text-xl font-bold">LIVE</h1>
+      <div className="safe-bottom mx-auto max-w-lg px-4 pt-2 pb-8 text-center">
+        <p className="mb-2 text-left text-xs opacity-60">LIVE</p>
         <p className="mt-2 text-sm text-muted">
           <Link href="/login" className="font-semibold text-accent">
             Logga in
@@ -81,8 +82,10 @@ export default async function LivePage() {
 
   if (!hasAccess) {
     return (
-      <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
-        <h1 className="py-4 text-xl font-bold">LIVE</h1>
+      <div className="safe-bottom mx-auto max-w-lg px-4 pt-1 pb-4">
+        <p className="mb-2 text-xs opacity-60">
+          LIVE • {formatDriverCityLabel(profile?.driver_city)}
+        </p>
         {verificationStatus && !isVerified && (
           <VerificationStatusBanner status={verificationStatus} className="mb-4" />
         )}

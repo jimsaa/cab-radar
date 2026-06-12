@@ -29,7 +29,6 @@ export const LIVE_FEED_FILTER_OPTIONS: LiveFeedFilterOption[] = [
   { id: "slow_traffic", label: "Kö", icon: "🚗🚗🚗" },
   { id: "total_stop", label: "Stopp", icon: "⛔" },
   { id: "accident", label: "Olycka", icon: "🚑" },
-  { id: "taxi_emergency", label: "Taxi i nöd", icon: "🆘" },
 ];
 
 export function isLiveNetworkAlert(type: string): type is LiveNetworkAlertType {

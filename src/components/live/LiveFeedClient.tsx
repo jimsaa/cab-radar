@@ -14,6 +14,7 @@ import {
   type LiveFeedFilter,
 } from "@/lib/live-feed";
 import type { DriverAlert } from "@/lib/types/database";
+import { formatDriverCityLabel } from "@/lib/driver-city";
 import { formatTestAlertTypeLabel } from "@/lib/test-mode";
 import { cn } from "@/lib/utils";
 
@@ -62,17 +63,14 @@ export function LiveFeedClient({
   }
 
   return (
-    <div className="safe-bottom mx-auto max-w-lg pb-4">
-      <section className="px-4 pt-2 pb-3">
-        <h1 className="text-xl font-bold">LIVE</h1>
-        <p className="mt-1 text-sm text-muted leading-relaxed">
-          Senaste rapporter från CabRadar-nätverket i din stad.
-        </p>
-      </section>
+    <div className="safe-bottom mx-auto max-w-lg pb-4 pt-1">
+      <p className="mb-2 px-4 text-xs opacity-60">
+        LIVE • {formatDriverCityLabel(driverCity)}
+      </p>
 
       <LiveFilterChips value={filter} onChange={setFilter} />
 
-      <ul className="mt-4 flex flex-col gap-2 px-4">
+      <ul className="mt-2 flex flex-col gap-2 px-4">
         {feedAlerts.length === 0 ? (
           <li className="rounded-2xl border border-dashed border-card-border bg-card/50 p-8 text-center">
             <p className="text-sm text-muted">
