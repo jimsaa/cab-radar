@@ -20,39 +20,39 @@ const ATTENTION_STYLES: Record<
   }
 > = {
   orange: {
-    border: "border-amber-500/70",
-    glow: "shadow-[0_0_24px_rgba(245,158,11,0.22)]",
-    badge: "bg-amber-500 text-white",
-    pulse: "admin-pulse-orange",
-    subtitle: "text-amber-200/85",
+    border: "border-[#F4C430]/70",
+    glow: "shadow-[0_0_24px_rgba(244,196,48,0.18)]",
+    badge: "bg-[#F4C430] text-[#1E2125]",
+    pulse: "admin-pulse-taxikontroll",
+    subtitle: "text-[#F4C430]",
   },
   red: {
-    border: "border-red-500/70",
-    glow: "shadow-[0_0_24px_rgba(248,113,113,0.22)]",
-    badge: "bg-red-500 text-white",
-    pulse: "admin-pulse-red",
-    subtitle: "text-red-200/85",
+    border: "border-[#FF3B30]/70",
+    glow: "shadow-[0_0_24px_rgba(255,59,48,0.2)]",
+    badge: "bg-[#FF3B30] text-white",
+    pulse: "admin-pulse-emergency",
+    subtitle: "text-[#FF3B30]",
   },
   blue: {
-    border: "border-sky-500/70",
-    glow: "shadow-[0_0_24px_rgba(56,189,248,0.2)]",
-    badge: "bg-sky-500 text-white",
-    pulse: "admin-pulse-blue",
-    subtitle: "text-sky-200/85",
+    border: "border-[#3B82F6]/70",
+    glow: "shadow-[0_0_24px_rgba(59,130,246,0.18)]",
+    badge: "bg-[#3B82F6] text-white",
+    pulse: "admin-pulse-olycka",
+    subtitle: "text-[#3B82F6]",
   },
   purple: {
-    border: "border-purple-500/70",
-    glow: "shadow-[0_0_24px_rgba(168,85,247,0.2)]",
-    badge: "bg-purple-500 text-white",
-    pulse: "admin-pulse-purple",
-    subtitle: "text-purple-200/85",
+    border: "border-[#A855F7]/70",
+    glow: "shadow-[0_0_24px_rgba(168,85,247,0.18)]",
+    badge: "bg-[#A855F7] text-white",
+    pulse: "admin-pulse-laser",
+    subtitle: "text-[#A855F7]",
   },
   green: {
-    border: "border-emerald-500/70",
-    glow: "shadow-[0_0_24px_rgba(52,211,153,0.2)]",
-    badge: "bg-emerald-500 text-white",
-    pulse: "admin-pulse-green",
-    subtitle: "text-emerald-200/85",
+    border: "border-[#22C55E]/70",
+    glow: "shadow-[0_0_24px_rgba(34,197,94,0.18)]",
+    badge: "bg-[#22C55E] text-[#1E2125]",
+    pulse: "admin-pulse-success",
+    subtitle: "text-[#22C55E]",
   },
 };
 
@@ -82,7 +82,7 @@ export function AdminStatCard({
     <Link
       href={href}
       className={cn(
-        "relative block rounded-2xl border bg-card p-4 transition hover:border-foreground/20",
+        "admin-stat-card relative block border p-4 transition hover:border-[#4A5159]",
         needsAttention && styles
           ? cn(styles.border, styles.glow, styles.pulse)
           : "border-card-border"
@@ -116,7 +116,7 @@ export function AdminStatCard({
         <>
           <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
           {subtitle && (
-            <p className="mt-0.5 text-xs text-muted">{subtitle}</p>
+            <p className="admin-stat-subtitle mt-0.5 text-xs text-muted">{subtitle}</p>
           )}
         </>
       ) : null}
@@ -140,7 +140,7 @@ export function AdminDashboardHeader({
       {actionLines.length > 0 && (
         <div className="mt-3 space-y-1.5">
           {actionLines.map((line) => (
-            <p key={line.message} className="text-sm text-muted">
+            <p key={line.message} className="text-sm text-[#B0B6BE]">
               🔔 {line.message}
             </p>
           ))}

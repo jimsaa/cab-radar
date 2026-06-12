@@ -46,38 +46,38 @@ const OFFERS_ONLY_LINKS = [
 function badgeStyles(key: AdminBadgeKey): string {
   switch (key) {
     case "emergency":
-      return "border-red-500/70 bg-red-500/10 ring-2 ring-red-500/30 text-foreground";
+      return "border-[#FF3B30]/70 bg-[#FF3B30]/10 ring-2 ring-[#FF3B30]/30 text-foreground";
     case "users":
-      return "border-amber-500/70 bg-amber-500/10 ring-2 ring-amber-500/30 text-foreground";
+      return "border-[#F4C430]/70 bg-[#F4C430]/10 ring-2 ring-[#F4C430]/30 text-foreground";
     case "support":
-      return "border-sky-500/70 bg-sky-500/10 ring-2 ring-sky-500/30 text-foreground";
+      return "border-[#3B82F6]/70 bg-[#3B82F6]/10 ring-2 ring-[#3B82F6]/30 text-foreground";
     case "feedback":
-      return "border-purple-500/70 bg-purple-500/10 ring-2 ring-purple-500/30 text-foreground";
+      return "border-[#A855F7]/70 bg-[#A855F7]/10 ring-2 ring-[#A855F7]/30 text-foreground";
     case "partner":
-      return "border-emerald-500/70 bg-emerald-500/10 ring-2 ring-emerald-500/30 text-foreground";
+      return "border-[#22C55E]/70 bg-[#22C55E]/10 ring-2 ring-[#22C55E]/30 text-foreground";
     case "alerts":
-      return "border-amber-500/60 bg-amber-500/10 ring-2 ring-amber-500/25 text-foreground";
+      return "border-[#F97316]/70 bg-[#F97316]/10 ring-2 ring-[#F97316]/25 text-foreground";
     case "civilkoll":
-      return "border-yellow-500/70 bg-yellow-500/10 ring-2 ring-yellow-500/30 text-foreground";
+      return "border-[#8B5CF6]/70 bg-[#8B5CF6]/10 ring-2 ring-[#8B5CF6]/30 text-foreground";
   }
 }
 
 function badgeDotStyles(key: AdminBadgeKey): string {
   switch (key) {
     case "emergency":
-      return "bg-red-500 text-white";
+      return "bg-[#FF3B30] text-white";
     case "users":
-      return "bg-amber-500 text-white";
+      return "bg-[#F4C430] text-[#1E2125]";
     case "support":
-      return "bg-sky-500 text-white";
+      return "bg-[#3B82F6] text-white";
     case "feedback":
-      return "bg-purple-500 text-white";
+      return "bg-[#A855F7] text-white";
     case "partner":
-      return "bg-emerald-500 text-white";
+      return "bg-[#22C55E] text-[#1E2125]";
     case "alerts":
-      return "bg-amber-500 text-white";
+      return "bg-[#F97316] text-white";
     case "civilkoll":
-      return "bg-yellow-500 text-white";
+      return "bg-[#8B5CF6] text-white";
   }
 }
 
@@ -115,14 +115,14 @@ export function AdminNav({ mode = "full" }: { mode?: "full" | "emergency" | "off
             key={href}
             href={href}
             className={cn(
-              "relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-center text-[11px] font-semibold leading-tight transition active:scale-[0.97]",
+              "relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-[18px] border px-1.5 py-2 text-center text-[11px] font-semibold leading-tight transition active:scale-[0.97]",
               active && !showUnread
-                ? "border-accent/50 bg-accent text-white shadow-lg shadow-accent/20"
+                ? "admin-nav-active"
                 : active && showUnread && badgeKey
                   ? cn(badgeStyles(badgeKey), "text-white")
                   : showUnread && badgeKey
                     ? badgeStyles(badgeKey)
-                    : "border-card-border bg-card text-muted hover:border-accent/30 hover:text-foreground"
+                    : "admin-nav-idle"
             )}
           >
             {showUnread && newCount > 0 && badgeKey && (
@@ -136,7 +136,7 @@ export function AdminNav({ mode = "full" }: { mode?: "full" | "emergency" | "off
               </span>
             )}
             {showUnread && href === "/admin" && isOverviewUnread() && (
-              <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-amber-500" />
+              <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-[#F4C430]" />
             )}
             <Icon className="h-4 w-4 shrink-0" />
             <span>{label}</span>

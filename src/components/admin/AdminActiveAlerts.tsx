@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { AlertCard } from "@/components/alerts/AlertCard";
+import { useAdminCommandCenterOptional } from "@/contexts/AdminCommandCenterContext";
 import { isEmergencyAlertType } from "@/lib/emergency-rules";
 import type { DriverAlert } from "@/lib/types/database";
 
@@ -11,7 +11,7 @@ interface AdminActiveAlertsProps {
 }
 
 export function AdminActiveAlerts({ alerts }: AdminActiveAlertsProps) {
-  const router = useRouter();
+  const commandCenter = useAdminCommandCenterOptional();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   async function removeAlert(alertId: string, isEmergency: boolean) {
@@ -34,7 +34,7 @@ export function AdminActiveAlerts({ alerts }: AdminActiveAlertsProps) {
       return;
     }
 
-    router.refresh();
+    void commandCenter?.refresh();
   }
 
   if (alerts.length === 0) {

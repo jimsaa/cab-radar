@@ -8,14 +8,17 @@ import {
   type EmergencyAlertWithDriver,
 } from "@/lib/emergency";
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AdminEmergencyListCardProps {
   alert: EmergencyAlertWithDriver;
+  isNew?: boolean;
   onSelect: () => void;
 }
 
 export function AdminEmergencyListCard({
   alert,
+  isNew = false,
   onSelect,
 }: AdminEmergencyListCardProps) {
   const driverName = emergencyDriverName(alert);
@@ -26,7 +29,10 @@ export function AdminEmergencyListCard({
     <button
       type="button"
       onClick={onSelect}
-      className="flex w-full items-center gap-3 rounded-2xl border border-danger/40 bg-danger/10 p-4 text-left transition active:scale-[0.99] hover:border-danger/60"
+      className={cn(
+        "flex w-full items-center gap-3 rounded-[18px] border border-[#FF3B30]/40 bg-[#FF3B30]/10 p-4 text-left transition active:scale-[0.99] hover:border-[#FF3B30]/60",
+        isNew && "admin-pulse-emergency ring-2 ring-[#FF3B30]/40"
+      )}
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold text-danger">

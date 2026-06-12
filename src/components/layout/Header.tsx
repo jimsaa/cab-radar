@@ -33,14 +33,22 @@ function AdminHeaderLink({
   pathname: string;
 }) {
   if (isAdmin) {
+    const inAdmin = pathname.startsWith("/admin");
+    const active = pathname === "/admin";
     return (
       <Link
         href="/admin"
         className={cn(
-          "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium",
-          pathname.startsWith("/admin")
-            ? "bg-accent/20 text-accent-bright"
-            : "text-muted hover:text-foreground"
+          "flex items-center gap-1 text-xs font-medium",
+          inAdmin
+            ? cn(
+                "rounded-[14px] px-2.5 py-1.5",
+                active ? "bg-[#32383F] text-white" : "text-[#B0B6BE] hover:text-white"
+              )
+            : cn(
+                "rounded-lg px-2 py-1",
+                active ? "bg-accent/20 text-accent-bright" : "text-muted hover:text-foreground"
+              )
         )}
       >
         <Shield className="h-4 w-4" />
@@ -50,14 +58,24 @@ function AdminHeaderLink({
   }
 
   if (isEmergencyAdmin) {
+    const inAdmin = pathname.startsWith("/admin");
+    const active = pathname.startsWith("/admin/emergency");
     return (
       <Link
         href="/admin/emergency"
         className={cn(
-          "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium",
-          pathname.startsWith("/admin/emergency")
-            ? "bg-danger/20 text-danger"
-            : "text-muted hover:text-foreground"
+          "flex items-center gap-1 text-xs font-medium",
+          inAdmin
+            ? cn(
+                "rounded-[14px] px-2.5 py-1.5",
+                active
+                  ? "bg-[#FF3B30]/15 text-[#FF3B30]"
+                  : "text-[#B0B6BE] hover:text-white"
+              )
+            : cn(
+                "rounded-lg px-2 py-1",
+                active ? "bg-danger/20 text-danger" : "text-muted hover:text-foreground"
+              )
         )}
       >
         <ShieldAlert className="h-4 w-4" />
@@ -134,7 +152,7 @@ export function Header({
 export function BottomNav() {
   const pathname = usePathname();
 
-  if (isMarketingPath(pathname)) {
+  if (isMarketingPath(pathname) || pathname.startsWith("/admin")) {
     return null;
   }
 

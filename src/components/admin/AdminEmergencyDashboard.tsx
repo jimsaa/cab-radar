@@ -1,12 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AdminEmergencyDetail } from "@/components/admin/AdminEmergencyDetail";
 import { AdminEmergencyListCard } from "@/components/admin/AdminEmergencyListCard";
+import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { type EmergencyAlertWithDriver } from "@/lib/emergency";
-import { createClient } from "@/lib/supabase/client";
-import { RefreshCw } from "lucide-react";
 
 interface AdminEmergencyDashboardProps {
   initialEmergencies: EmergencyAlertWithDriver[];
@@ -34,7 +32,9 @@ export function AdminEmergencyDashboard({
   fetchError,
   canViewPhone,
 }: AdminEmergencyDashboardProps) {
-  const router = useRouter();
+  const { snapshot, newEmergencyIds, refresh } = useAdminCommandCenter();
+  const liveEmergencies = snapshot?.emergencies ?? initialEmergencies;
+
   const [emergencies, setEmergencies] =
     useState<EmergencyAlertWithDriver[]>(initialEmergencies);
   const [selectedId, setSelectedId] = useState<string | null>(() =>
@@ -43,35 +43,14 @@ export function AdminEmergencyDashboard({
   const [closingId, setClosingId] = useState<string | null>(null);
 
   useEffect(() => {
-    setEmergencies(initialEmergencies);
+    setEmergencies(liveEmergencies);
     setSelectedId((prev) => {
-      if (prev && initialEmergencies.some((e) => e.id === prev)) {
+      if (prev && liveEmergencies.some((e) => e.id === prev)) {
         return prev;
       }
-      return defaultSelectedId(initialEmergencies, initialSelectedId);
+      return defaultSelectedId(liveEmergencies, initialSelectedId);
     });
-  }, [initialEmergencies, initialSelectedId]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel("admin_emergency_alerts")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "driver_alerts",
-          filter: "type=eq.taxi_emergency",
-        },
-        () => router.refresh()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [router]);
+  }, [liveEmergencies, initialSelectedId]);
 
   const closeEmergency = useCallback(
     async (alertId: string) => {
@@ -101,9 +80,9 @@ export function AdminEmergencyDashboard({
         });
         return next;
       });
-      router.refresh();
+      void refresh();
     },
-    [router]
+    [refresh]
   );
 
   if (fetchError) {
@@ -121,7 +100,7 @@ export function AdminEmergencyDashboard({
         <p className="text-3xl mb-2">✓</p>
         <p className="font-medium">Inga aktiva nödlägen</p>
         <p className="mt-1 text-sm text-muted">
-          Aktiva Taxi i nöd-varningar visas här i realtid.
+          Aktiva Taxi i nöd-varningar visas här automatiskt.
         </p>
       </div>
     );
@@ -146,26 +125,17 @@ export function AdminEmergencyDashboard({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">
-          {emergencies.length} aktiv{emergencies.length === 1 ? "t" : "a"}{" "}
-          nödläge{emergencies.length === 1 ? "" : "n"}
-        </p>
-        <button
-          type="button"
-          onClick={() => router.refresh()}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-muted hover:text-foreground"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Uppdatera
-        </button>
-      </div>
+      <p className="text-sm text-muted">
+        {emergencies.length} aktiv{emergencies.length === 1 ? "t" : "a"}{" "}
+        nödläge{emergencies.length === 1 ? "" : "n"}
+      </p>
 
       <ul className="flex flex-col gap-3">
         {emergencies.map((alert) => (
           <li key={alert.id}>
             <AdminEmergencyListCard
               alert={alert}
+              isNew={newEmergencyIds.has(alert.id)}
               onSelect={() => setSelectedId(alert.id)}
             />
           </li>

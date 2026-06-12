@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AdminEmergencyDashboard } from "@/components/admin/AdminEmergencyDashboard";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   canViewEmergencyPhone,
   hasEmergencyAdminAccess,
@@ -74,14 +75,16 @@ export default async function AdminEmergencyPage({
 
   return (
     <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
-      <h1 className="py-4 text-xl font-bold">Nödlägen</h1>
-      <p className="mb-4 text-sm text-muted">
-        {fullAdmin
-          ? "Identifiera föraren, ring och navigera direkt."
-          : canViewPhone
-            ? "Co-admin med behörighet att ringa förare vid nödläge."
-            : "Co-admin: plats och åtgärder — telefonnummer visas endast för behöriga Co-admins."}
-      </p>
+      <AdminPageHeader
+        title="Nödlägen"
+        description={
+          fullAdmin
+            ? "Identifiera föraren, ring och navigera direkt."
+            : canViewPhone
+              ? "Co-admin med behörighet att ringa förare vid nödläge."
+              : "Co-admin: plats och åtgärder — telefonnummer visas endast för behöriga Co-admins."
+        }
+      />
       <AdminNav mode={fullAdmin ? "full" : "emergency"} />
       <AdminEmergencyDashboard
         initialEmergencies={emergencies}

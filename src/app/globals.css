@@ -174,3 +174,213 @@ body {
 .admin-pulse-green {
   animation: admin-pulse-green 3.5s ease-in-out infinite;
 }
+
+/* ── Admin Command Center — Tesla-inspired graphite theme ── */
+.admin-command-center {
+  --background: #1e2125;
+  --background-darkest: #1b1e22;
+  --foreground: #ffffff;
+  --foreground-secondary: #b0b6be;
+  --muted: #8a9099;
+  --card: #262b31;
+  --card-border: #3a4048;
+  --accent: #4a5159;
+  --accent-dim: #3a4048;
+  --accent-bright: #ffffff;
+  --danger: #ff3b30;
+  --success: #22c55e;
+  --info: #3b82f6;
+  --glow: rgba(255, 255, 255, 0.08);
+
+  --alert-emergency: #ff3b30;
+  --alert-laser: #a855f7;
+  --alert-taxikontroll: #f4c430;
+  --alert-ko: #f97316;
+  --alert-olycka: #3b82f6;
+  --alert-civilkoll: #8b5cf6;
+
+  --admin-nav-active-bg: #32383f;
+  --admin-nav-active-border: #4a5159;
+  --admin-surface-inset: #1b1e22;
+}
+
+.admin-command-center body,
+.admin-command-center .admin-command-center-root {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.admin-command-center .field {
+  background: var(--card);
+  border-color: var(--card-border);
+  border-radius: 18px;
+}
+
+.admin-command-center .field:focus {
+  border-color: #4a5159;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+.admin-command-center .btn-primary {
+  background: #ffffff;
+  color: #1e2125;
+  border-radius: 18px;
+  min-height: 52px;
+}
+
+.admin-command-center .btn-primary:hover {
+  background: #e8eaed;
+}
+
+.admin-command-center .btn-secondary {
+  background: var(--card);
+  border-color: var(--card-border);
+  border-radius: 18px;
+  color: var(--foreground);
+}
+
+.admin-command-center .rounded-2xl {
+  border-radius: 18px;
+}
+
+.admin-command-center .rounded-xl {
+  border-radius: 16px;
+}
+
+.admin-command-center .text-muted {
+  color: var(--muted);
+}
+
+.admin-command-center .admin-nav-active {
+  border-color: var(--admin-nav-active-border);
+  background: var(--admin-nav-active-bg);
+  color: var(--foreground);
+  box-shadow: none;
+}
+
+.admin-command-center .admin-nav-idle {
+  border-color: var(--card-border);
+  background: var(--card);
+  color: var(--foreground-secondary);
+}
+
+.admin-command-center .admin-nav-idle:hover {
+  border-color: #4a5159;
+  color: var(--foreground);
+}
+
+.admin-command-center .admin-stat-card {
+  border-radius: 18px;
+  background: var(--card);
+  border-color: var(--card-border);
+}
+
+.admin-command-center .admin-stat-subtitle {
+  color: var(--foreground-secondary);
+}
+
+.admin-command-center .leaflet-container {
+  background: var(--background-darkest) !important;
+}
+
+.admin-command-center .safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+}
+
+@keyframes admin-pulse-tesla-red {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(255, 59, 48, 0.28);
+  }
+}
+
+@keyframes admin-pulse-tesla-yellow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 196, 48, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(244, 196, 48, 0.25);
+  }
+}
+
+@keyframes admin-pulse-tesla-orange {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(249, 115, 22, 0.25);
+  }
+}
+
+@keyframes admin-pulse-tesla-blue {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(59, 130, 246, 0.25);
+  }
+}
+
+@keyframes admin-pulse-tesla-purple {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(139, 92, 246, 0.25);
+  }
+}
+
+@keyframes admin-pulse-tesla-laser {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(168, 85, 247, 0.25);
+  }
+}
+
+@keyframes admin-pulse-tesla-green {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(34, 197, 94, 0.25);
+  }
+}
+
+.admin-command-center .admin-pulse-emergency {
+  animation: admin-pulse-tesla-red 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-taxikontroll {
+  animation: admin-pulse-tesla-yellow 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-ko {
+  animation: admin-pulse-tesla-orange 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-olycka {
+  animation: admin-pulse-tesla-blue 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-civilkoll {
+  animation: admin-pulse-tesla-purple 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-laser {
+  animation: admin-pulse-tesla-laser 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-success {
+  animation: admin-pulse-tesla-green 3.5s ease-in-out infinite;
+}

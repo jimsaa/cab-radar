@@ -1,13 +1,13 @@
 "use client";
 
 import { AlertCard } from "@/components/alerts/AlertCard";
+import { useAdminCommandCenterOptional } from "@/contexts/AdminCommandCenterContext";
 import { adminVerifyAlert } from "@/lib/alerts";
 import { createClient } from "@/lib/supabase/client";
 import type { DriverAlert } from "@/lib/types/database";
-import { useRouter } from "next/navigation";
 
 export function AdminAlertReview({ alerts }: { alerts: DriverAlert[] }) {
-  const router = useRouter();
+  const commandCenter = useAdminCommandCenterOptional();
 
   async function review(alertId: string, approved: boolean) {
     const supabase = createClient();
@@ -28,7 +28,7 @@ export function AdminAlertReview({ alerts }: { alerts: DriverAlert[] }) {
       }
     }
 
-    router.refresh();
+    void commandCenter?.refresh();
   }
 
   if (alerts.length === 0) {

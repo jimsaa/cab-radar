@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAdminCommandCenterOptional } from "@/contexts/AdminCommandCenterContext";
 import {
   ADMIN_HREF_BADGE,
   type AdminBadgeCounts,
@@ -25,22 +26,27 @@ const EMPTY_COUNTS: AdminBadgeCounts = {
 
 export function useAdminBadges() {
   const pathname = usePathname();
+  const commandCenter = useAdminCommandCenterOptional();
   const [adminUserId, setAdminUserId] = useState<string | null>(null);
-  const [counts, setCounts] = useState<AdminBadgeCounts>(EMPTY_COUNTS);
+  const [fallbackCounts, setFallbackCounts] =
+    useState<AdminBadgeCounts>(EMPTY_COUNTS);
   const [seen, setSeen] = useState<Partial<AdminBadgeCounts>>({});
+
+  const counts = commandCenter?.counts ?? fallbackCounts;
   const countsRef = useRef(counts);
   countsRef.current = counts;
 
-  const refresh = useCallback(async () => {
+  const refreshFallback = useCallback(async () => {
+    if (commandCenter) return;
     try {
       const res = await fetch("/api/admin/badge-counts");
       if (!res.ok) return;
       const data = (await res.json()) as { counts: AdminBadgeCounts };
-      setCounts(data.counts ?? EMPTY_COUNTS);
+      setFallbackCounts(data.counts ?? EMPTY_COUNTS);
     } catch {
       // ignore
     }
-  }, []);
+  }, [commandCenter]);
 
   useEffect(() => {
     async function init() {
@@ -51,15 +57,18 @@ export function useAdminBadges() {
       if (!user) return;
       setAdminUserId(user.id);
       setSeen(readSeenCounts(user.id));
-      await refresh();
+      if (!commandCenter) {
+        await refreshFallback();
+      }
     }
     void init();
-  }, [refresh]);
+  }, [commandCenter, refreshFallback]);
 
   useEffect(() => {
-    const interval = window.setInterval(refresh, 30_000);
+    if (commandCenter) return;
+    const interval = window.setInterval(refreshFallback, 30_000);
     return () => window.clearInterval(interval);
-  }, [refresh]);
+  }, [commandCenter, refreshFallback]);
 
   useEffect(() => {
     if (!adminUserId) return;
@@ -92,7 +101,7 @@ export function useAdminBadges() {
     isUnread,
     isOverviewUnread,
     unreadCount,
-    refresh,
+    refresh: commandCenter?.refresh ?? refreshFallback,
   };
 }
 
