@@ -24,7 +24,7 @@ export function GsiDispatchAdminButton({
       type="button"
       onClick={() => openGsiDispatch(site)}
       className={cn(
-        "shrink-0 rounded-lg border border-[#3A4048] bg-[#1B1E22]/80 px-2.5 py-1.5 text-[11px] font-semibold text-[#B0B6BE] transition hover:border-[#4A5159] hover:text-white active:scale-[0.98]",
+        "shrink-0 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-semibold text-[#B0B6BE] transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white active:scale-[0.98]",
         className
       )}
     >
