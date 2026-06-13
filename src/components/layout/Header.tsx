@@ -101,7 +101,7 @@ export function Header({
     return null;
   }
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/tesla")) {
     return null;
   }
 
@@ -156,7 +156,7 @@ export function Header({
 export function BottomNav() {
   const pathname = usePathname();
 
-  if (isMarketingPath(pathname) || pathname.startsWith("/admin")) {
+  if (isMarketingPath(pathname) || pathname.startsWith("/admin") || pathname.startsWith("/tesla")) {
     return null;
   }
 

@@ -44,7 +44,15 @@ function SwedishDateTimeDisplay() {
 }
 
 /** Fixed admin command center header — compact single-row layout. */
-export function TeslaCommandCenterHeader() {
+export function TeslaCommandCenterHeader({
+  subtitle = "Admin Command Center",
+  contextLabel = "LIVE",
+  contextHint = "Systemet uppdateras automatiskt",
+}: {
+  subtitle?: string;
+  contextLabel?: string;
+  contextHint?: string;
+} = {}) {
   return (
     <header
       className="admin-command-center-header fixed top-0 left-0 right-0 z-[110] flex h-[72px] w-full shrink-0 items-center border-b border-white/[0.08] px-6"
@@ -66,7 +74,7 @@ export function TeslaCommandCenterHeader() {
             <h1 className="text-lg font-bold tracking-tight text-white">
               {APP_NAME}
             </h1>
-            <p className="text-xs text-white/75">Admin Command Center</p>
+            <p className="text-xs text-white/75">{subtitle}</p>
           </div>
 
           <div className="min-w-0 shrink-0 border-l border-white/10 pl-3">
@@ -75,10 +83,12 @@ export function TeslaCommandCenterHeader() {
                 className="admin-live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"
                 aria-hidden
               />
-              <span className="text-xs font-semibold text-[#22C55E]">LIVE</span>
+              <span className="text-xs font-semibold text-[#22C55E]">
+                {contextLabel}
+              </span>
             </div>
             <p className="mt-0.5 truncate text-[10px] font-medium text-[#8A9099]">
-              Systemet uppdateras automatiskt
+              {contextHint}
             </p>
           </div>
         </div>
