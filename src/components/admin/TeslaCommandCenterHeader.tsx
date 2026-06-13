@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { GsiDispatchAdminButton } from "@/components/gsi/GsiDispatchAdminButton";
+import { GoteborgCAdminBadge } from "@/components/sj/GoteborgCAdminBadge";
 import { APP_NAME } from "@/lib/constants";
 import {
   formatSwedishClockNow,
@@ -83,8 +84,9 @@ export function TeslaCommandCenterHeader() {
         </div>
 
         {/* Right — GSI then clock (matches reference layout) */}
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <GsiDispatchAdminButton />
+          <GoteborgCAdminBadge />
           <SwedishDateTimeDisplay />
         </div>
       </div>

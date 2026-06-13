@@ -8,6 +8,7 @@ import { RadarLatestReports } from "@/components/dashboard/RadarLatestReports";
 import { ReportEventGrid } from "@/components/dashboard/ReportEventGrid";
 import { ReportEventSheet } from "@/components/dashboard/ReportEventSheet";
 import { GsiDispatchCard } from "@/components/gsi/GsiDispatchCard";
+import { GoteborgCTrainsCard } from "@/components/sj/GoteborgCTrainsCard";
 import { useAlertValidationPrompt } from "@/hooks/useAlertValidationPrompt";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useEmergencyGpsTracking } from "@/hooks/useEmergencyGpsTracking";
@@ -134,6 +135,7 @@ export function DashboardClient({
           </p>
         )}
         <GsiDispatchCard className="mt-4" />
+        <GoteborgCTrainsCard className="mt-3" />
       </section>
 
       <RadarLatestReports
