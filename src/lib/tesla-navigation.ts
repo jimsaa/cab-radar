@@ -31,12 +31,24 @@ function coordsPair(
   return { lat, lng };
 }
 
+export function teslaNavigateHttpsUrl(lat: number, lng: number): string {
+  return `https://www.tesla.com/_ak/navigate?lat=${lat}&lon=${lng}`;
+}
+
+export function teslaNavigateSchemeUrl(lat: number, lng: number): string {
+  return `tesla://navigate?lat=${lat}&lon=${lng}`;
+}
+
+export function formatTeslaCoordinatePair(lat: number, lng: number): string {
+  return `${lat},${lng}`;
+}
+
 /** Tesla in-car navigation deep link — coordinates preferred. */
 export function teslaNavigateUrl(target: NavigationTarget): string | null {
   const { latitude, longitude, address } = target;
   const coords = coordsPair(latitude, longitude);
   if (coords) {
-    return `https://www.tesla.com/_ak/navigate?lat=${coords.lat}&lon=${coords.lng}`;
+    return teslaNavigateHttpsUrl(coords.lat, coords.lng);
   }
   const query = address?.trim();
   if (query) {
@@ -62,4 +74,10 @@ export function navigationGoogleMapsUrl(target: NavigationTarget): string | null
 export function formatCoordinate(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return "—";
   return value.toFixed(6);
+}
+
+export function navigationCoords(
+  target: NavigationTarget
+): { lat: number; lng: number } | null {
+  return coordsPair(target.latitude, target.longitude);
 }
