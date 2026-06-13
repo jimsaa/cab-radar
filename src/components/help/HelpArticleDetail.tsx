@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ThumbsDown, ThumbsUp } from "lucide-react";
 import { HelpCategoryBadge } from "./HelpArticleCard";
+import { useAppToast } from "@/components/ui/AppToast";
 import { voteOnHelpArticle } from "@/lib/help";
 import { createClient } from "@/lib/supabase/client";
 import type { HelpArticle } from "@/lib/types/database";
@@ -36,16 +37,17 @@ export function HelpArticleDetail({
   canVote,
 }: HelpArticleDetailProps) {
   const router = useRouter();
+  const showToast = useAppToast();
   const embedUrl = article.video_url ? embedVideoUrl(article.video_url) : null;
 
   async function handleVote(vote: 1 | -1) {
     if (!userId) {
-      window.alert("Logga in för att rösta.");
+      showToast("Logga in för att rösta.", { variant: "info" });
       router.push("/login");
       return;
     }
     if (!canVote) {
-      window.alert("Kräver verifierad förare.");
+      showToast("Kräver verifierad förare.", { variant: "info" });
       return;
     }
     const supabase = createClient();

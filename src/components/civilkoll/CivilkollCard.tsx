@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAppToast } from "@/components/ui/AppToast";
 import { normalizeRegistrationNumber } from "@/lib/civilkoll";
 import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import { cn } from "@/lib/utils";
@@ -63,11 +64,11 @@ function CivilkollResultCard({ found }: { found: boolean }) {
 }
 
 export function CivilkollCard() {
+  const showToast = useAppToast();
   const [registration, setRegistration] = useState("");
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
   const [reportComment, setReportComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
   const normalized = normalizeRegistrationNumber(registration);
   const canLookup = normalized.length >= 2 && lookup.status !== "loading";
@@ -76,7 +77,6 @@ export function CivilkollCard() {
 
   async function handleLookup() {
     if (!canLookup) return;
-    setSubmitMessage(null);
     setLookup({ status: "loading" });
 
     try {
@@ -111,7 +111,6 @@ export function CivilkollCard() {
   async function handleSubmitReport() {
     if (!normalized || normalized.length < 2) return;
     setSubmitting(true);
-    setSubmitMessage(null);
 
     try {
       const res = await fetch("/api/civilkoll/submit", {
@@ -129,20 +128,21 @@ export function CivilkollCard() {
       };
 
       if (!res.ok) {
-        setSubmitMessage(data.error ?? "Kunde inte skicka anmälan.");
+        showToast(data.error ?? "Kunde inte skicka anmälan.", {
+          variant: "error",
+        });
         return;
       }
 
       setReportComment("");
-      setSubmitMessage(
-        data.message ??
-          (data.isTest
-            ? "Testanmälan skickad — inget riktigt Civilkoll-flöde påverkas."
-            : "Tack! Registreringsnumret har skickats för granskning.")
+      showToast(
+        data.isTest
+          ? "✓ Testanmälan skickad"
+          : "✓ Registreringsnummer sparat"
       );
       void recordDriverActivityFromDevice("civilkoll_submit");
     } catch {
-      setSubmitMessage("Nätverksfel. Försök igen.");
+      showToast("⚠️ Kunde inte skicka anmälan", { variant: "error" });
     } finally {
       setSubmitting(false);
     }
@@ -167,7 +167,6 @@ export function CivilkollCard() {
           if (lookup.status === "done" || lookup.status === "error") {
             setLookup({ status: "idle" });
           }
-          setSubmitMessage(null);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") void handleLookup();
@@ -220,18 +219,6 @@ export function CivilkollCard() {
               >
                 {submitting ? "Skickar…" : "Skicka"}
               </button>
-              {submitMessage && (
-                <p
-                  className={cn(
-                    "mt-2 text-sm",
-                    submitMessage.startsWith("Tack!")
-                      ? "text-success"
-                      : "text-red-400"
-                  )}
-                >
-                  {submitMessage}
-                </p>
-              )}
             </div>
           )}
         </div>

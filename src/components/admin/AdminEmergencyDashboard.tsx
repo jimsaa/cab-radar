@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminEmergencyDetail } from "@/components/admin/AdminEmergencyDetail";
 import { AdminEmergencyListCard } from "@/components/admin/AdminEmergencyListCard";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
+import { useAdminToast } from "@/components/admin/AdminToast";
 import { type EmergencyAlertWithDriver } from "@/lib/emergency";
 
 interface AdminEmergencyDashboardProps {
@@ -33,6 +34,7 @@ export function AdminEmergencyDashboard({
   canViewPhone,
 }: AdminEmergencyDashboardProps) {
   const { snapshot, newEmergencyIds, refresh } = useAdminCommandCenter();
+  const showToast = useAdminToast();
   const liveEmergencies = snapshot?.emergencies ?? initialEmergencies;
 
   const [emergencies, setEmergencies] =
@@ -67,7 +69,9 @@ export function AdminEmergencyDashboard({
 
       if (!res.ok) {
         const data = await res.json();
-        window.alert(data.error ?? "Kunde inte avsluta nödläge.");
+        showToast(data.error ?? "Kunde inte avsluta nödläge.", {
+          variant: "error",
+        });
         return;
       }
 
@@ -82,7 +86,7 @@ export function AdminEmergencyDashboard({
       });
       void refresh();
     },
-    [refresh]
+    [refresh, showToast]
   );
 
   if (fetchError) {

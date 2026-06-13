@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { AdminCommandCenterProvider } from "@/contexts/AdminCommandCenterContext";
 import { AdminDispatchMapProvider } from "@/contexts/AdminDispatchMapContext";
-import { AdminToastProvider } from "@/components/admin/AdminToast";
 import { AdminDispatchMapModal } from "@/components/admin/AdminDispatchMapModal";
 import { AdminWideScreenGate } from "@/components/admin/AdminWideScreenGate";
 import {
@@ -39,20 +38,18 @@ export function AdminCommandCenterShell({
   return (
     <AdminCommandCenterProvider>
       <AdminDispatchMapProvider>
-        <AdminToastProvider>
-          <div className="admin-command-center-root min-h-dvh bg-background text-foreground">
-            <TeslaCommandCenterHeader />
-            <div
-              className="admin-command-center-body min-h-dvh"
-              style={{ paddingTop: ADMIN_COMMAND_CENTER_HEADER_HEIGHT }}
-            >
-              <AdminWideScreenGate isFullAdmin={isFullAdmin}>
-                {children}
-              </AdminWideScreenGate>
-            </div>
-            <AdminDispatchMapModal />
+        <div className="admin-command-center-root min-h-dvh bg-background text-foreground">
+          <TeslaCommandCenterHeader />
+          <div
+            className="admin-command-center-body min-h-dvh"
+            style={{ paddingTop: ADMIN_COMMAND_CENTER_HEADER_HEIGHT }}
+          >
+            <AdminWideScreenGate isFullAdmin={isFullAdmin}>
+              {children}
+            </AdminWideScreenGate>
           </div>
-        </AdminToastProvider>
+          <AdminDispatchMapModal />
+        </div>
       </AdminDispatchMapProvider>
     </AdminCommandCenterProvider>
   );

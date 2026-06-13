@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react";
 import { EmergencyActivateConfirm } from "./EmergencyActivateConfirm";
 import { AlertQuickButtons } from "./AlertQuickButtons";
 import { QuickReportConfirm } from "./QuickReportConfirm";
+import { useAppToast } from "@/components/ui/AppToast";
 import {
   ALERT_TYPE_ICONS,
   ALERT_TYPE_LABELS,
@@ -14,7 +15,11 @@ import {
   logAlertButtonPressed,
   reportButtonIdForAlertType,
 } from "@/lib/report-alert-mapping";
-import { reportSuccessMessage, submitDriverAlert, extendSuccessMessage } from "@/lib/submit-alert";
+import {
+  extendSuccessToast,
+  reportSuccessToast,
+  submitDriverAlert,
+} from "@/lib/submit-alert";
 import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 
 interface AlertFABProps {
@@ -24,6 +29,7 @@ interface AlertFABProps {
 }
 
 export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
+  const showToast = useAppToast();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"pick" | "confirm">("pick");
   const [selectedType, setSelectedType] = useState<AlertType | null>(null);
@@ -51,7 +57,7 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
   async function handleExtended(alert: DriverAlert) {
     onCreated?.(alert);
     close();
-    window.alert(extendSuccessMessage());
+    showToast(extendSuccessToast());
   }
 
   async function handleSubmit(data: CreateAlertInput) {
@@ -59,10 +65,8 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
     onCreated?.(alert);
     close();
 
-    const message = reportSuccessMessage(data.type, alert.is_test);
-    if (message) {
-      window.alert(message);
-    }
+    const { message, variant } = reportSuccessToast(data.type, alert.is_test);
+    showToast(message, { variant });
   }
 
   const isEmergency = selectedType === "taxi_emergency";

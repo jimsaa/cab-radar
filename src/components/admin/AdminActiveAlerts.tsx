@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertCard } from "@/components/alerts/AlertCard";
 import { useAdminCommandCenterOptional } from "@/contexts/AdminCommandCenterContext";
+import { useAdminToast } from "@/components/admin/AdminToast";
 import { isEmergencyAlertType } from "@/lib/emergency-rules";
 import type { DriverAlert } from "@/lib/types/database";
 
@@ -12,6 +13,7 @@ interface AdminActiveAlertsProps {
 
 export function AdminActiveAlerts({ alerts }: AdminActiveAlertsProps) {
   const commandCenter = useAdminCommandCenterOptional();
+  const showToast = useAdminToast();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   async function removeAlert(alertId: string, isEmergency: boolean) {
@@ -30,7 +32,9 @@ export function AdminActiveAlerts({ alerts }: AdminActiveAlertsProps) {
 
     if (!res.ok) {
       const data = (await res.json()) as { error?: string };
-      window.alert(data.error ?? "Kunde inte ta bort varningen.");
+      showToast(data.error ?? "Kunde inte ta bort varningen.", {
+        variant: "error",
+      });
       return;
     }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CivilSubmissionWithSubmitter } from "@/lib/civilkoll";
 import { formatCivilDateTime } from "@/lib/civilkoll";
 import { cn } from "@/lib/utils";
+import { useAdminToast } from "@/components/admin/AdminToast";
 import { ExternalLink } from "lucide-react";
 
 const STATUS_LABELS = {
@@ -28,6 +29,7 @@ export function AdminCivilSubmissionsTab({
   submissions: CivilSubmissionWithSubmitter[];
 }) {
   const router = useRouter();
+  const showToast = useAdminToast();
   const [filter, setFilter] = useState<"pending" | "all" | "approved" | "rejected">(
     "pending"
   );
@@ -60,7 +62,7 @@ export function AdminCivilSubmissionsTab({
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        window.alert(data.error ?? "Kunde inte granska.");
+        showToast(data.error ?? "Kunde inte granska.", { variant: "error" });
         return;
       }
       setInvestigatingId(null);

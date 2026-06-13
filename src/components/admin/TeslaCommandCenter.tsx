@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Phone } from "lucide-react";
+import { useAdminToast } from "@/components/admin/AdminToast";
 import { TeslaEmergencyAttentionBanner } from "@/components/admin/TeslaEmergencyAttentionBanner";
 import { TeslaLiveFeedPanel } from "@/components/admin/TeslaLiveFeedPanel";
 import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
@@ -182,6 +183,7 @@ function InfoCell({
 
 /** Full-screen Tesla dispatch center — emergencies top, ops below. */
 export function TeslaCommandCenter() {
+  const showToast = useAdminToast();
   const {
     snapshot,
     refresh,
@@ -200,13 +202,15 @@ export function TeslaCommandCenter() {
       });
       if (!res.ok) {
         const data = await res.json();
-        window.alert(data.error ?? "Kunde inte avsluta nödläge.");
+        showToast(data.error ?? "Kunde inte avsluta nödläge.", {
+          variant: "error",
+        });
         return;
       }
       clearEmergencyAcknowledgement(alertId);
       void refresh();
     },
-    [refresh, clearEmergencyAcknowledgement]
+    [refresh, clearEmergencyAcknowledgement, showToast]
   );
 
   async function verifyDriver(driverId: string, action: "approve" | "reject") {
@@ -217,7 +221,9 @@ export function TeslaCommandCenter() {
     });
     if (!res.ok) {
       const data = (await res.json()) as { error?: string };
-      window.alert(data.error ?? "Kunde inte uppdatera föraren.");
+      showToast(data.error ?? "Kunde inte uppdatera föraren.", {
+        variant: "error",
+      });
       return;
     }
     void refresh();
@@ -231,7 +237,7 @@ export function TeslaCommandCenter() {
     });
     if (!res.ok) {
       const data = (await res.json()) as { error?: string };
-      window.alert(data.error ?? "Kunde inte granska.");
+      showToast(data.error ?? "Kunde inte granska.", { variant: "error" });
       return;
     }
     void refresh();

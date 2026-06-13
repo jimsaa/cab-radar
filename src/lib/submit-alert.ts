@@ -187,6 +187,27 @@ export function reportSuccessMessage(
 
 }
 
+export type ReportToastVariant = "success" | "emergency";
+
+export function reportSuccessToast(
+  type: CreateAlertInput["type"],
+  isTest?: boolean
+): { message: string; variant: ReportToastVariant } {
+  if (type === "taxi_emergency") {
+    return { message: "🚨 Nödläge aktiverat", variant: "emergency" };
+  }
+
+  if (isTest) {
+    return { message: "✓ Testrapport skickad", variant: "success" };
+  }
+
+  if (alertNeedsAdmin(type)) {
+    return { message: "✓ Skickat för granskning", variant: "success" };
+  }
+
+  return { message: "✓ Rapport skickad", variant: "success" };
+}
+
 /** Non-blocking Tesla admin toast after a successful report. */
 export function adminReportSuccessToast(
   type: CreateAlertInput["type"],
@@ -206,14 +227,18 @@ export function adminReportSuccessToast(
     case "accident":
       return "✅ Olycka rapporterad";
     case "taxi_emergency":
-      return "✅ Taxi i nöd aktiverad";
+      return "🚨 Nödläge aktiverat";
     default:
       return "✅ Rapport skickad";
   }
 }
 
 export function adminExtendSuccessToast(): string {
-  return "✅ Händelsen bekräftad — fortsatt aktiv";
+  return "✓ Händelsen bekräftad";
+}
+
+export function extendSuccessToast(): string {
+  return "✓ Händelsen bekräftad";
 }
 
 export function extendSuccessMessage(): string {

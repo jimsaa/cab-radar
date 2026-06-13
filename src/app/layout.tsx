@@ -4,6 +4,7 @@ import "./globals.css";
 import { DriverActivityShell } from "@/components/driver/DriverActivityShell";
 import { Header, BottomNav } from "@/components/layout/Header";
 import { TestModeBanner } from "@/components/test-mode/TestModeBanner";
+import { AppToastProvider } from "@/components/ui/AppToast";
 import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
 import { fetchLayoutAdminRole } from "@/lib/admin-access";
 import { createClient } from "@/lib/supabase/server";
@@ -68,15 +69,17 @@ export default async function RootLayout({
   return (
     <html lang="sv" className={`${inter.variable} h-full`}>
       <body className="min-h-full bg-background text-foreground antialiased">
-        <Header
-          isAdmin={isAdmin}
-          isEmergencyAdmin={isEmergencyAdmin}
-          isLoggedIn={isLoggedIn}
-        />
-        <TestModeBanner active={testModeEnabled} />
-        <DriverActivityShell enabled={isLoggedIn && !isAdmin} />
-        <main className="flex-1">{children}</main>
-        <BottomNav />
+        <AppToastProvider>
+          <Header
+            isAdmin={isAdmin}
+            isEmergencyAdmin={isEmergencyAdmin}
+            isLoggedIn={isLoggedIn}
+          />
+          <TestModeBanner active={testModeEnabled} />
+          <DriverActivityShell enabled={isLoggedIn && !isAdmin} />
+          <main className="flex-1">{children}</main>
+          <BottomNav />
+        </AppToastProvider>
       </body>
     </html>
   );
