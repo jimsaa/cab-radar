@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, MapPin } from "lucide-react";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
+import { useAdminDispatchMap } from "@/contexts/AdminDispatchMapContext";
 import type { LiveFeedItem } from "@/lib/admin-command-center";
 import { APP_NAME } from "@/lib/constants";
 import { formatRelativeSwedish } from "@/lib/datetime";
@@ -72,6 +73,7 @@ function TeslaReportDetailEmpty() {
 }
 
 function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
+  const { openMap } = useAdminDispatchMap();
   const [copied, setCopied] = useState(false);
   const ageLabel = useMemo(
     () => formatRelativeSwedish(item.created_at),
@@ -145,6 +147,16 @@ function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
       )}
 
       <div className="mt-8 space-y-3">
+        {item.latitude != null && item.longitude != null && (
+          <button
+            type="button"
+            onClick={() => openMap(item.id)}
+            className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-[#3B82F6]/50 bg-[#3B82F6]/15 px-5 py-4 text-lg font-bold text-white transition hover:bg-[#3B82F6]/25 active:scale-[0.98]"
+          >
+            <MapPin className="h-6 w-6" strokeWidth={2.5} />
+            Visa på karta
+          </button>
+        )}
         <TeslaNavigationButtons
           size="large"
           target={{

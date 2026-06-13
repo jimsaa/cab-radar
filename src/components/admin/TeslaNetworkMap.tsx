@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAdminDispatchMap } from "@/contexts/AdminDispatchMapContext";
 import { NETWORK_MAP_REFRESH_MS } from "@/lib/driver-activity";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
 import { networkMapOverlayMessage } from "@/lib/network-map-messages";
@@ -32,6 +33,7 @@ export function TeslaNetworkMap({
   height?: number;
   className?: string;
 }) {
+  const { openMap } = useAdminDispatchMap();
   const [points, setPoints] = useState<AnonymizedActivityPoint[]>([]);
   const [activeDriverCount, setActiveDriverCount] = useState(0);
   const [positionCount, setPositionCount] = useState(0);
@@ -96,7 +98,12 @@ export function TeslaNetworkMap({
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-[12px] border border-[#3A4048]">
+      <button
+        type="button"
+        onClick={() => openMap()}
+        className="group relative block w-full overflow-hidden rounded-[12px] border border-[#3A4048] text-left transition hover:border-[#4B5563] active:scale-[0.995]"
+        aria-label="Öppna nätverkskarta i helskärm"
+      >
         {loading ? (
           <div
             className="flex items-center justify-center bg-[#1B1E22]/80 text-xs text-[#8A9099]"
@@ -105,13 +112,22 @@ export function TeslaNetworkMap({
             Laddar karta…
           </div>
         ) : (
-          <NetworkMapCanvas
-            points={points}
-            height={height}
-            overlayMessage={overlayMessage}
-          />
+          <>
+            <NetworkMapCanvas
+              points={points}
+              height={height}
+              interactive={false}
+              overlayMessage={overlayMessage}
+            />
+            <span
+              className="pointer-events-none absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#3A4048]/80 bg-[#1E2125]/90 text-base text-[#B0B6BE] shadow-sm transition group-hover:border-[#4B5563] group-hover:text-white"
+              aria-hidden
+            >
+              ⛶
+            </span>
+          </>
         )}
-      </div>
+      </button>
     </div>
   );
 }
