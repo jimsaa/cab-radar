@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAppToast } from "@/components/ui/AppToast";
 import {
   NICKNAME_MAX_LENGTH,
   NICKNAME_PRIVACY_EXPLANATION,
   NICKNAME_TAKEN_MESSAGE,
+  normalizeNickname,
 } from "@/lib/driver-nickname";
 import { publicDriverLabel } from "@/lib/driver-display";
 import type { Profile } from "@/lib/types/database";
@@ -23,7 +24,15 @@ export function NicknameSettings({ profile, onUpdated }: NicknameSettingsProps) 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const currentLabel = publicDriverLabel(profile);
+  useEffect(() => {
+    setNickname(profile.nickname ?? "");
+  }, [profile.nickname]);
+
+  const networkLabel = useMemo(() => {
+    const draft = normalizeNickname(nickname);
+    if (draft.length >= 3) return draft;
+    return publicDriverLabel(profile);
+  }, [nickname, profile]);
   const unchanged =
     nickname.trim() === (profile.nickname ?? "").trim() ||
     nickname.trim().length === 0;
@@ -70,7 +79,7 @@ export function NicknameSettings({ profile, onUpdated }: NicknameSettingsProps) 
       </p>
       <p className="mt-3 text-xs text-muted">
         Visas i nätverket som:{" "}
-        <span className="font-semibold text-foreground">{currentLabel}</span>
+        <span className="font-semibold text-foreground">{networkLabel}</span>
       </p>
 
       <label className="mt-4 flex flex-col gap-1.5">

@@ -7,7 +7,7 @@ export interface DriverIdentity {
   driver_license_last4?: string | null;
 }
 
-/** Public label — never exposes real name. */
+/** Public label — never exposes real name to other drivers. */
 export function publicDriverLabel(identity: DriverIdentity): string {
   const nickname = identity.nickname?.trim();
   if (nickname) return nickname;
@@ -17,6 +17,20 @@ export function publicDriverLabel(identity: DriverIdentity): string {
 
   const cabradarId = identity.cabradar_user_id?.trim();
   if (cabradarId) return cabradarId;
+
+  return "Okänd förare";
+}
+
+/**
+ * Own-profile header — nickname first, then real name (display_name), for the
+ * logged-in user only. Never use this for other users' public UI.
+ */
+export function ownProfileDisplayLabel(identity: DriverIdentity): string {
+  const nickname = identity.nickname?.trim();
+  if (nickname) return nickname;
+
+  const realName = identity.display_name?.trim();
+  if (realName) return realName;
 
   return "Okänd förare";
 }

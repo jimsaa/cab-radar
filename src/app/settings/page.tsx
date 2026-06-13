@@ -18,7 +18,7 @@ import { syncMembershipProfile } from "@/lib/profile";
 import { AdditionalProfileInfo } from "@/components/profile/AdditionalProfileInfo";
 import { NicknameSettings } from "@/components/profile/NicknameSettings";
 import { DriverCitySettings } from "@/components/profile/DriverCitySettings";
-import { publicDriverLabel } from "@/lib/driver-display";
+import { ownProfileDisplayLabel } from "@/lib/driver-display";
 import { ProfileResourcesSection } from "@/components/profile/ProfileResourcesSection";
 import { TestModeSettings } from "@/components/test-mode/TestModeSettings";
 import { PushNotificationsSection } from "@/components/notifications/PushNotificationsSection";
@@ -26,6 +26,7 @@ import { PushNotificationsSection } from "@/components/notifications/PushNotific
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function SettingsPage() {
       } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
+      setUserEmail(user.email ?? null);
       const synced = await syncMembershipProfile(supabase, user.id);
       if (synced) setProfile(synced);
     }
@@ -84,8 +86,11 @@ export default function SettingsPage() {
             <User className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
             <div className="min-w-0 flex-1">
               <p className="font-semibold">
-                {publicDriverLabel(profile)}
+                {ownProfileDisplayLabel(profile)}
               </p>
+              {userEmail && (
+                <p className="mt-1 text-sm text-muted">{userEmail}</p>
+              )}
               {profile.cabradar_user_id && (
                 <p className="mt-1 text-sm">
                   Ditt användar-ID:{" "}
