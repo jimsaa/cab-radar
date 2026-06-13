@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   formatCivilkollObservedDate,
+  normalizeRegistrationNumber,
   quickAddCivilRegistryEntry,
 } from "@/lib/civilkoll";
 import { createClient } from "@/lib/supabase/server";
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const normalized = normalizeRegistrationNumber(body.registrationNumber);
     const result = await quickAddCivilRegistryEntry(
       supabase,
       user.id,
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         status: "exists",
+        registrationNumber: normalized,
         message: "Finns redan i Civilkoll",
         lastObservedAt: result.lastObservedAt,
         lastObservedLabel: result.lastObservedAt
@@ -62,6 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       status: "created",
+      registrationNumber: normalized,
       message: "Registreringsnummer tillagt",
     });
   } catch (err) {

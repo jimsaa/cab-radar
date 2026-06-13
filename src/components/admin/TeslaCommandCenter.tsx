@@ -9,7 +9,7 @@ import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
-import { TeslaCivilkollLookup } from "@/components/admin/TeslaCivilkollLookup";
+import { TeslaCivilkollLookup } from "@/components/admin/AdminCivilkollActions";
 import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { formatCommandCenterDriverLabel } from "@/lib/admin-command-center";

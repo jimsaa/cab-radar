@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { AdminActivityMap } from "@/components/admin/AdminActivityMap";
+import { AdminCivilkollActions } from "@/components/admin/AdminCivilkollActions";
 import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import {
   AdminDashboardHeader,
@@ -68,6 +69,8 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
       </div>
 
       <AdminActivityMap />
+
+      <AdminCivilkollActions variant="dashboard" className="mb-4" autoFocus={false} />
 
       <div className="grid grid-cols-2 gap-3">
         <AdminStatCard
