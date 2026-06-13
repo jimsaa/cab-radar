@@ -403,6 +403,167 @@ body {
   }
 }
 
+/* --- Admin report attention (Tesla dispatch) --- */
+
+@keyframes admin-report-bg-flash {
+  0% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.admin-report-bg-flash {
+  animation: admin-report-bg-flash 2.5s ease-out forwards;
+}
+
+@keyframes admin-report-pulse-once-laser {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.55);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(168, 85, 247, 0.95),
+      0 0 14px rgba(168, 85, 247, 0.28);
+  }
+}
+
+@keyframes admin-report-pulse-once-taxikontroll {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(244, 196, 48, 0.55);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(244, 196, 48, 0.95),
+      0 0 14px rgba(244, 196, 48, 0.25);
+  }
+}
+
+@keyframes admin-report-pulse-once-ko {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.55);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(249, 115, 22, 0.95),
+      0 0 14px rgba(249, 115, 22, 0.25);
+  }
+}
+
+@keyframes admin-report-pulse-once-stopp {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.55);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(239, 68, 68, 0.95),
+      0 0 14px rgba(239, 68, 68, 0.28);
+  }
+}
+
+@keyframes admin-report-pulse-once-olycka {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.55);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(59, 130, 246, 0.95),
+      0 0 14px rgba(59, 130, 246, 0.25);
+  }
+}
+
+@keyframes admin-report-pulse-once-default {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(176, 182, 190, 0.45);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(176, 182, 190, 0.75),
+      0 0 10px rgba(176, 182, 190, 0.18);
+  }
+}
+
+@keyframes admin-report-pulse-emergency-loop {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 59, 48, 0.75),
+      0 0 0 rgba(255, 59, 48, 0);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 3px rgba(255, 59, 48, 1),
+      0 0 24px rgba(255, 59, 48, 0.45);
+  }
+}
+
+.admin-report-border-laser {
+  box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.65);
+}
+
+.admin-report-border-taxikontroll {
+  box-shadow: inset 0 0 0 1px rgba(244, 196, 48, 0.65);
+}
+
+.admin-report-border-ko {
+  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.65);
+}
+
+.admin-report-border-stopp {
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.65);
+}
+
+.admin-report-border-olycka {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.65);
+}
+
+.admin-report-border-default {
+  box-shadow: inset 0 0 0 1px rgba(176, 182, 190, 0.35);
+}
+
+.admin-report-border-emergency {
+  box-shadow: inset 0 0 0 2px rgba(255, 59, 48, 0.85);
+}
+
+.admin-report-pulse-laser {
+  animation: admin-report-pulse-once-laser 1s ease-in-out 3;
+}
+
+.admin-report-pulse-taxikontroll {
+  animation: admin-report-pulse-once-taxikontroll 1s ease-in-out 3;
+}
+
+.admin-report-pulse-ko {
+  animation: admin-report-pulse-once-ko 1s ease-in-out 3;
+}
+
+.admin-report-pulse-stopp {
+  animation: admin-report-pulse-once-stopp 1s ease-in-out 3;
+}
+
+.admin-report-pulse-olycka {
+  animation: admin-report-pulse-once-olycka 1s ease-in-out 3;
+}
+
+.admin-report-pulse-default {
+  animation: admin-report-pulse-once-default 1s ease-in-out 3;
+}
+
+.admin-report-pulse-emergency {
+  animation: admin-report-pulse-emergency-loop 1.4s ease-in-out infinite;
+}
+
+.admin-emergency-attention-banner {
+  animation: admin-report-pulse-emergency-loop 1.4s ease-in-out infinite;
+}
+
 /* Tesla full-screen dispatch center — hide driver app chrome only */
 body.tesla-command-center-active header:not(.admin-command-center-header) {
   display: none !important;

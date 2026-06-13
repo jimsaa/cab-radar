@@ -3,10 +3,35 @@
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
+import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import type { LiveFeedItem } from "@/lib/admin-command-center";
 import { ReportCommentPreview } from "@/components/reports/ReportCommentPreview";
 import { formatCoordinate } from "@/lib/tesla-navigation";
 import { cn } from "@/lib/utils";
+
+function ReportAttentionBadge({
+  showNy,
+  showAkut,
+}: {
+  showNy: boolean;
+  showAkut: boolean;
+}) {
+  if (showAkut) {
+    return (
+      <span className="absolute right-3 top-3 rounded-full bg-[#FF3B30] px-2.5 py-1 text-[11px] font-black tracking-wider text-white shadow-sm">
+        AKUT
+      </span>
+    );
+  }
+
+  if (!showNy) return null;
+
+  return (
+    <span className="absolute right-3 top-3 rounded-full bg-[#FF3B30] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+      NY
+    </span>
+  );
+}
 
 function TeslaReportDetail({
   item,
@@ -107,6 +132,7 @@ interface TeslaLiveFeedPanelProps {
 }
 
 export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
+  const { getReportAttention } = useAdminCommandCenter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = items.find((item) => item.id === selectedId) ?? null;
 
@@ -130,19 +156,31 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
       >
         {items.map((item) => {
           const isSelected = item.id === selectedId;
+          const attention = getReportAttention(item.id, item.type);
+
           return (
             <li key={item.id} className="border-b border-[#3A4048]/60 last:border-0">
               <button
                 type="button"
                 onClick={() => setSelectedId(item.id)}
                 className={cn(
-                  "w-full px-5 py-4 text-left transition active:scale-[0.99]",
+                  "relative w-full px-5 py-4 text-left transition active:scale-[0.99]",
                   isSelected
                     ? "bg-[#3B82F6]/15 ring-1 ring-inset ring-[#3B82F6]/40"
-                    : "hover:bg-[#2a3038]/60"
+                    : "hover:bg-[#2a3038]/60",
+                  attention.borderClass,
+                  attention.pulseClass,
+                  attention.showBgFlash && "admin-report-bg-flash"
                 )}
               >
-                <p className="text-lg font-bold text-white">{item.type_label}</p>
+                <ReportAttentionBadge
+                  showNy={attention.showNyBadge}
+                  showAkut={attention.showAkutBadge}
+                />
+
+                <p className="pr-14 text-lg font-bold text-white">
+                  {item.type_label}
+                </p>
                 <p className="mt-1 text-base text-[#B0B6BE]">{item.location}</p>
                 <p className="mt-0.5 text-sm font-mono text-[#8A9099]">
                   {item.time_label}

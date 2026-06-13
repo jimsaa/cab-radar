@@ -17,7 +17,8 @@ import {
   type AdminCommandCenterSnapshot,
 } from "@/lib/admin-command-center";
 import type { AdminBadgeCounts } from "@/lib/admin-notifications";
-import { playAlertChime } from "@/lib/push";
+import type { ReportAttentionVisual } from "@/lib/admin-report-attention";
+import { useAdminReportAttentionEngine } from "@/hooks/useAdminReportAttentionEngine";
 
 const EMPTY_COUNTS: AdminBadgeCounts = {
   emergency: 0,
@@ -34,9 +35,14 @@ interface AdminCommandCenterContextValue {
   lastUpdatedAt: number | null;
   refreshLabel: string;
   isRefreshing: boolean;
+  /** @deprecated Use unacknowledgedEmergencyIds */
   newEmergencyIds: ReadonlySet<string>;
   refresh: () => Promise<void>;
   counts: AdminBadgeCounts;
+  getReportAttention: (id: string, type: string) => ReportAttentionVisual;
+  acknowledgeEmergency: (id: string) => void;
+  clearEmergencyAcknowledgement: (id: string) => void;
+  unacknowledgedEmergencyIds: ReadonlySet<string>;
 }
 
 const AdminCommandCenterContext =
@@ -53,14 +59,18 @@ export function AdminCommandCenterProvider({
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tick, setTick] = useState(0);
-  const [newEmergencyIds, setNewEmergencyIds] = useState<Set<string>>(
-    () => new Set()
-  );
 
-  const knownEmergencyIds = useRef<Set<string>>(new Set());
-  const initialLoadDone = useRef(false);
   const refreshInFlight = useRef(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const chimeEnabled = snapshot?.alertChimeEnabled !== false;
+
+  const {
+    getReportAttention,
+    acknowledgeEmergency,
+    clearEmergencyAcknowledgement,
+    unacknowledgedEmergencyIds,
+  } = useAdminReportAttentionEngine(snapshot, chimeEnabled);
 
   const refresh = useCallback(async () => {
     if (refreshInFlight.current) return;
@@ -79,37 +89,8 @@ export function AdminCommandCenterProvider({
       };
       if (!data.snapshot) return;
 
-      const next = data.snapshot;
-      const nextIds = new Set(next.emergencies.map((e) => e.id));
-      const brandNew = new Set<string>();
-
-      if (initialLoadDone.current) {
-        for (const id of nextIds) {
-          if (!knownEmergencyIds.current.has(id)) {
-            brandNew.add(id);
-          }
-        }
-        if (brandNew.size > 0 && next.alertChimeEnabled) {
-          playAlertChime();
-        }
-      } else {
-        initialLoadDone.current = true;
-      }
-
-      knownEmergencyIds.current = nextIds;
-      setNewEmergencyIds(brandNew);
-      setSnapshot(next);
+      setSnapshot(data.snapshot);
       setLastUpdatedAt(Date.now());
-
-      if (brandNew.size > 0) {
-        window.setTimeout(() => {
-          setNewEmergencyIds((prev) => {
-            const cleared = new Set(prev);
-            for (const id of brandNew) cleared.delete(id);
-            return cleared;
-          });
-        }, 12_000);
-      }
     } catch {
       // best-effort live refresh
     } finally {
@@ -198,18 +179,25 @@ export function AdminCommandCenterProvider({
       lastUpdatedAt,
       refreshLabel,
       isRefreshing,
-      newEmergencyIds,
+      newEmergencyIds: unacknowledgedEmergencyIds,
       refresh,
       counts,
+      getReportAttention,
+      acknowledgeEmergency,
+      clearEmergencyAcknowledgement,
+      unacknowledgedEmergencyIds,
     }),
     [
       snapshot,
       lastUpdatedAt,
       refreshLabel,
       isRefreshing,
-      newEmergencyIds,
+      unacknowledgedEmergencyIds,
       refresh,
       counts,
+      getReportAttention,
+      acknowledgeEmergency,
+      clearEmergencyAcknowledgement,
     ]
   );
 

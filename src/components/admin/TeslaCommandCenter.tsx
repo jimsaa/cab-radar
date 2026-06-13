@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Phone } from "lucide-react";
+import { TeslaEmergencyAttentionBanner } from "@/components/admin/TeslaEmergencyAttentionBanner";
 import { TeslaLiveFeedPanel } from "@/components/admin/TeslaLiveFeedPanel";
 import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
@@ -29,14 +30,18 @@ import { cn } from "@/lib/utils";
 
 function TeslaEmergencyCard({
   emergency,
-  isNew,
+  attentionPulseClass,
+  showAkutBadge,
   canViewPhone,
   onResolve,
+  onAcknowledge,
 }: {
   emergency: EmergencyAlertWithDriver;
-  isNew: boolean;
+  attentionPulseClass: string;
+  showAkutBadge: boolean;
   canViewPhone: boolean;
   onResolve: (id: string) => Promise<void>;
+  onAcknowledge: (id: string) => void;
 }) {
   const [closing, setClosing] = useState(false);
   const driverName = emergencyDriverName(emergency);
@@ -61,14 +66,18 @@ function TeslaEmergencyCard({
   return (
     <div
       className={cn(
-        "grid w-full gap-4 rounded-[18px] border-2 p-5 lg:grid-cols-[1fr_auto]",
+        "relative grid w-full gap-4 rounded-[18px] border-2 p-5 lg:grid-cols-[1fr_auto]",
         isTest
-          ? "admin-pulse-emergency border-amber-500/60 bg-amber-500/10"
-          : "border-[#FF3B30]/70 bg-[#262B31] shadow-[0_0_24px_rgba(255,59,48,0.12)]",
-        isNew && !isTest && "ring-2 ring-[#FF3B30]/60",
-        isNew && isTest && "ring-2 ring-amber-500/50"
+          ? "border-amber-500/60 bg-amber-500/10"
+          : "admin-report-border-emergency border-[#FF3B30]/70 bg-[#262B31] shadow-[0_0_24px_rgba(255,59,48,0.12)]",
+        attentionPulseClass
       )}
     >
+      {showAkutBadge && !isTest && (
+        <span className="absolute right-4 top-4 rounded-full bg-[#FF3B30] px-3 py-1.5 text-xs font-black tracking-wider text-white">
+          AKUT
+        </span>
+      )}
       <div>
         {isTest && (
           <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -123,6 +132,15 @@ function TeslaEmergencyCard({
             Ring förare
           </a>
         )}
+        {showAkutBadge && !isTest && (
+          <button
+            type="button"
+            onClick={() => onAcknowledge(emergency.id)}
+            className="rounded-[14px] border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white"
+          >
+            Kvittera larm
+          </button>
+        )}
         <button
           type="button"
           disabled={closing}
@@ -164,7 +182,14 @@ function InfoCell({
 
 /** Full-screen Tesla dispatch center — emergencies top, ops below. */
 export function TeslaCommandCenter() {
-  const { snapshot, newEmergencyIds, refresh } = useAdminCommandCenter();
+  const {
+    snapshot,
+    refresh,
+    getReportAttention,
+    acknowledgeEmergency,
+    clearEmergencyAcknowledgement,
+    unacknowledgedEmergencyIds,
+  } = useAdminCommandCenter();
 
   const resolveEmergency = useCallback(
     async (alertId: string) => {
@@ -178,9 +203,10 @@ export function TeslaCommandCenter() {
         window.alert(data.error ?? "Kunde inte avsluta nödläge.");
         return;
       }
+      clearEmergencyAcknowledgement(alertId);
       void refresh();
     },
-    [refresh]
+    [refresh, clearEmergencyAcknowledgement]
   );
 
   async function verifyDriver(driverId: string, action: "approve" | "reject") {
@@ -225,39 +251,55 @@ export function TeslaCommandCenter() {
       className="flex flex-col overflow-hidden bg-[#1E2125] text-white"
       style={{ height: `calc(100dvh - ${ADMIN_COMMAND_CENTER_HEADER_HEIGHT}px)` }}
     >
-      {/* Emergency — only when active (no empty state) */}
+      <TeslaEmergencyAttentionBanner
+        emergencies={emergencies}
+        unacknowledgedIds={unacknowledgedEmergencyIds}
+        onAcknowledge={acknowledgeEmergency}
+      />
+
+      {/* Emergency detail cards */}
       {hasLiveEmergencies && (
-        <section className="admin-pulse-emergency shrink-0 border-b-2 border-[#FF3B30]/50 bg-[#FF3B30]/[0.07] px-4 py-4">
+        <section className="shrink-0 border-b-2 border-[#FF3B30]/50 bg-[#FF3B30]/[0.07] px-4 py-4">
           <div className="space-y-3">
-            {liveEmergencies.map((e) => (
-              <TeslaEmergencyCard
-                key={e.id}
-                emergency={e}
-                isNew={newEmergencyIds.has(e.id)}
-                canViewPhone={snapshot?.canViewEmergencyPhone ?? false}
-                onResolve={resolveEmergency}
-              />
-            ))}
+            {liveEmergencies.map((e) => {
+              const attention = getReportAttention(e.id, "taxi_emergency");
+              return (
+                <TeslaEmergencyCard
+                  key={e.id}
+                  emergency={e}
+                  attentionPulseClass={attention.pulseClass}
+                  showAkutBadge={attention.showAkutBadge}
+                  canViewPhone={snapshot?.canViewEmergencyPhone ?? false}
+                  onResolve={resolveEmergency}
+                  onAcknowledge={acknowledgeEmergency}
+                />
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* 1b. Test emergencies */}
+      {/* Test emergencies */}
       {testEmergencies.length > 0 && (
         <section className="shrink-0 border-b border-amber-500/30 bg-amber-500/5 px-4 py-3">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-300">
             🧪 Testläge — nödsituationer
           </h3>
           <div className="space-y-3">
-            {testEmergencies.map((e) => (
-              <TeslaEmergencyCard
-                key={e.id}
-                emergency={e}
-                isNew={newEmergencyIds.has(e.id)}
-                canViewPhone={snapshot?.canViewEmergencyPhone ?? false}
-                onResolve={resolveEmergency}
-              />
-            ))}
+            {testEmergencies.map((e) => {
+              const attention = getReportAttention(e.id, "taxi_emergency");
+              return (
+                <TeslaEmergencyCard
+                  key={e.id}
+                  emergency={e}
+                  attentionPulseClass={attention.pulseClass}
+                  showAkutBadge={attention.showAkutBadge}
+                  canViewPhone={snapshot?.canViewEmergencyPhone ?? false}
+                  onResolve={resolveEmergency}
+                  onAcknowledge={acknowledgeEmergency}
+                />
+              );
+            })}
           </div>
         </section>
       )}
