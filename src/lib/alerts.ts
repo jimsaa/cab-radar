@@ -6,6 +6,11 @@ import {
   isCurrentAlertType,
   type AlertType,
 } from "./constants";
+import {
+  isAlertCurrentlyLive,
+  NEARBY_ACTIVE_ALERT_RADIUS_M,
+} from "./alert-ttl";
+import { distanceMeters } from "./geo";
 import { PUBLIC_EMERGENCY_LABEL } from "./emergency-privacy";
 import type { CreateAlertInput, DriverAlert } from "./types/database";
 import {
@@ -53,7 +58,52 @@ export async function fetchActiveAlerts(
     .limit(100);
 
   if (error) throw error;
-  return (data ?? []) as DriverAlert[];
+  return ((data ?? []) as DriverAlert[]).filter(isAlertCurrentlyLive);
+}
+
+export async function findNearbyActiveAlert(
+  supabase: SupabaseClient,
+  type: AlertType,
+  latitude: number,
+  longitude: number,
+  radiusM = NEARBY_ACTIVE_ALERT_RADIUS_M
+): Promise<DriverAlert | null> {
+  await supabase.rpc("expire_stale_alerts");
+
+  const { data, error } = await supabase
+    .from("driver_alerts")
+    .select("*")
+    .eq("status", "active")
+    .eq("admin_verified", true)
+    .eq("type", type);
+
+  if (error) throw error;
+
+  for (const row of data ?? []) {
+    const alert = row as DriverAlert;
+    if (!isAlertCurrentlyLive(alert)) continue;
+    if (alert.latitude == null || alert.longitude == null) continue;
+    if (
+      distanceMeters(latitude, longitude, alert.latitude, alert.longitude) <=
+      radiusM
+    ) {
+      return alert;
+    }
+  }
+
+  return null;
+}
+
+export async function extendAlertTtl(
+  supabase: SupabaseClient,
+  alertId: string
+): Promise<DriverAlert> {
+  const { data, error } = await supabase.rpc("extend_alert_ttl", {
+    p_alert_id: alertId,
+  });
+
+  if (error) throw error;
+  return data as DriverAlert;
 }
 
 export async function createAlert(
@@ -144,7 +194,7 @@ export async function fetchAllActiveAlertsForAdmin(
     .limit(200);
 
   if (error) throw error;
-  return (data ?? []) as DriverAlert[];
+  return ((data ?? []) as DriverAlert[]).filter(isAlertCurrentlyLive);
 }
 
 /** Admin: immediately close any alert (including Taxi i nöd). */

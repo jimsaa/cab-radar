@@ -1,4 +1,5 @@
 import { createAlert, alertNeedsAdmin, shouldPushNotify } from "@/lib/alerts";
+import { alertTypeHasDuplicateCheck } from "@/lib/alert-ttl";
 import { recordDriverActivityAt } from "@/lib/driver-activity-client";
 
 import { syncMembershipProfile } from "@/lib/profile";
@@ -87,6 +88,85 @@ export async function submitDriverAlert(
 
 
 
+export async function checkNearbyActiveAlert(
+
+  type: CreateAlertInput["type"],
+
+  latitude: number,
+
+  longitude: number
+
+): Promise<DriverAlert | null> {
+
+  if (!alertTypeHasDuplicateCheck(type)) return null;
+
+
+
+  const res = await fetch("/api/alerts/nearby-active", {
+
+    method: "POST",
+
+    headers: { "Content-Type": "application/json" },
+
+    body: JSON.stringify({ type, latitude, longitude }),
+
+  });
+
+
+
+  if (!res.ok) return null;
+
+
+
+  const data = (await res.json()) as { nearby?: DriverAlert | null };
+
+  return data.nearby ?? null;
+
+}
+
+
+
+export async function extendNearbyAlert(alertId: string): Promise<DriverAlert> {
+
+  const res = await fetch("/api/alerts/extend-ttl", {
+
+    method: "POST",
+
+    headers: { "Content-Type": "application/json" },
+
+    body: JSON.stringify({ alertId }),
+
+  });
+
+
+
+  const data = (await res.json()) as { alert?: DriverAlert; error?: string };
+
+
+
+
+  if (!res.ok) {
+
+    throw new Error(data.error ?? "Kunde inte förlänga varningen.");
+
+  }
+
+
+
+  if (!data.alert) {
+
+    throw new Error("Kunde inte förlänga varningen.");
+
+  }
+
+
+
+  return data.alert;
+
+}
+
+
+
 export function reportSuccessMessage(
 
   type: CreateAlertInput["type"],
@@ -130,6 +210,14 @@ export function adminReportSuccessToast(
     default:
       return "✅ Rapport skickad";
   }
+}
+
+export function adminExtendSuccessToast(): string {
+  return "✅ Händelsen bekräftad — fortsatt aktiv";
+}
+
+export function extendSuccessMessage(): string {
+  return "Tack! Händelsen är fortfarande aktiv.";
 }
 
 

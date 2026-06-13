@@ -8,7 +8,11 @@ import {
 } from "@/hooks/useAutoLocation";
 import type { AlertType } from "@/lib/constants";
 import type { ReportButtonId } from "@/lib/report-alert-mapping";
-import type { CreateAlertInput } from "@/lib/types/database";
+import {
+  checkNearbyActiveAlert,
+  extendNearbyAlert,
+} from "@/lib/submit-alert";
+import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 interface QuickReportConfirmProps {
@@ -17,6 +21,7 @@ interface QuickReportConfirmProps {
   displayLabel: string;
   displayIcon: string;
   onSubmit: (data: CreateAlertInput) => Promise<void>;
+  onExtended?: (alert: DriverAlert) => void;
   onCancel: () => void;
   isAdmin?: boolean;
 }
@@ -27,6 +32,7 @@ export function QuickReportConfirm({
   displayLabel,
   displayIcon,
   onSubmit,
+  onExtended,
   onCancel,
   isAdmin = false,
 }: QuickReportConfirmProps) {
@@ -35,6 +41,10 @@ export function QuickReportConfirm({
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nearbyAlert, setNearbyAlert] = useState<DriverAlert | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<CreateAlertInput | null>(
+    null
+  );
 
   const locationLine = formatLocationLine(
     location.roadAddress,
@@ -49,29 +59,149 @@ export function QuickReportConfirm({
     location.longitude != null &&
     !submitting;
 
-  async function handleSend() {
-    if (!canSend) return;
+  function buildPayload(): CreateAlertInput {
+    return {
+      type: alertType,
+      title: displayLabel,
+      description: comment.trim(),
+      latitude: location.latitude!,
+      longitude: location.longitude!,
+      road_address: location.roadAddress,
+      city: location.city,
+      is_major: false,
+    };
+  }
 
+  async function submitPayload(data: CreateAlertInput) {
     setError(null);
     setSubmitting(true);
     try {
       console.log("[ALERT] Selected type:", alertType);
-      await onSubmit({
-        type: alertType,
-        title: displayLabel,
-        description: comment.trim(),
-        latitude: location.latitude,
-        longitude: location.longitude,
-        road_address: location.roadAddress,
-        city: location.city,
-        is_major: false,
-      });
+      await onSubmit(data);
     } catch (err) {
       if (!isAdmin) {
         setError(err instanceof Error ? err.message : "Kunde inte skicka");
       }
       setSubmitting(false);
     }
+  }
+
+  async function handleSend() {
+    if (!canSend) return;
+
+    const payload = buildPayload();
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const nearby = await checkNearbyActiveAlert(
+        alertType,
+        payload.latitude!,
+        payload.longitude!
+      );
+
+      if (nearby) {
+        setNearbyAlert(nearby);
+        setPendingPayload(payload);
+        setSubmitting(false);
+        return;
+      }
+
+      await submitPayload(payload);
+    } catch (err) {
+      if (!isAdmin) {
+        setError(err instanceof Error ? err.message : "Kunde inte skicka");
+      }
+      setSubmitting(false);
+    }
+  }
+
+  async function handleConfirmStillActive() {
+    if (!nearbyAlert) return;
+
+    setError(null);
+    setSubmitting(true);
+    try {
+      const alert = await extendNearbyAlert(nearbyAlert.id);
+      onExtended?.(alert);
+    } catch (err) {
+      if (!isAdmin) {
+        setError(
+          err instanceof Error ? err.message : "Kunde inte bekräfta händelsen"
+        );
+      }
+      setSubmitting(false);
+    }
+  }
+
+  async function handleNewReport() {
+    if (!pendingPayload) return;
+    setNearbyAlert(null);
+    await submitPayload(pendingPayload);
+    setPendingPayload(null);
+  }
+
+  function handleDuplicateCancel() {
+    setNearbyAlert(null);
+    setPendingPayload(null);
+    setSubmitting(false);
+  }
+
+  if (nearbyAlert) {
+    return (
+      <div className="flex flex-col" data-report-button={reportButtonId}>
+        <div className="rounded-2xl border border-card-border bg-card/60 px-4 py-5 text-center">
+          <p className="text-lg font-bold text-foreground">
+            <span aria-hidden>{displayIcon}</span> {displayLabel}
+          </p>
+          <p className="mt-4 text-sm text-foreground/90">
+            Denna händelse rapporterades nyligen. Är den fortfarande kvar?
+          </p>
+          <p className="mt-2 text-xs text-muted">📍 {locationLine}</p>
+        </div>
+
+        {error && (
+          <p className="mt-3 rounded-lg bg-danger/10 px-3 py-2 text-center text-sm text-danger">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => void handleConfirmStillActive()}
+          disabled={submitting}
+          className={cn(
+            "btn-primary mt-5 w-full !min-h-[56px] text-base font-bold",
+            submitting && "opacity-80"
+          )}
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Bekräftar…
+            </>
+          ) : (
+            "Ja"
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleNewReport()}
+          disabled={submitting}
+          className="btn-secondary mt-2 w-full !min-h-[44px]"
+        >
+          Ny rapport
+        </button>
+        <button
+          type="button"
+          onClick={handleDuplicateCancel}
+          disabled={submitting}
+          className="btn-secondary mt-2 w-full !min-h-[44px]"
+        >
+          Avbryt
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -150,7 +280,7 @@ export function QuickReportConfirm({
         <>
           <button
             type="button"
-            onClick={handleSend}
+            onClick={() => void handleSend()}
             disabled={!canSend}
             className={cn(
               "btn-primary mt-5 w-full !min-h-[56px] text-base font-bold",

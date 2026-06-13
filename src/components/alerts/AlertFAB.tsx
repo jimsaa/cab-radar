@@ -14,7 +14,7 @@ import {
   logAlertButtonPressed,
   reportButtonIdForAlertType,
 } from "@/lib/report-alert-mapping";
-import { reportSuccessMessage, submitDriverAlert } from "@/lib/submit-alert";
+import { reportSuccessMessage, submitDriverAlert, extendSuccessMessage } from "@/lib/submit-alert";
 import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 
 interface AlertFABProps {
@@ -46,6 +46,12 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
     }
     setSelectedType(type);
     setStep("confirm");
+  }
+
+  async function handleExtended(alert: DriverAlert) {
+    onCreated?.(alert);
+    close();
+    window.alert(extendSuccessMessage());
   }
 
   async function handleSubmit(data: CreateAlertInput) {
@@ -115,6 +121,7 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
                 displayLabel={ALERT_TYPE_LABELS[selectedType]}
                 displayIcon={ALERT_TYPE_ICONS[selectedType]}
                 onSubmit={handleSubmit}
+                onExtended={handleExtended}
                 onCancel={() => setStep("pick")}
               />
             )}

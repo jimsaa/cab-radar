@@ -1,18 +1,25 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { isAlertCurrentlyLive } from "@/lib/alert-ttl";
 import type { DriverAlert } from "@/lib/types/database";
 import { shouldPushNotify } from "@/lib/alerts";
 import { playAlertChime } from "@/lib/push";
+
+function filterLiveAlerts(alerts: DriverAlert[]): DriverAlert[] {
+  return alerts.filter(isAlertCurrentlyLive);
+}
 
 export function useAlertsRealtime(
   initial: DriverAlert[],
   chimeEnabled: boolean
 ) {
-  const [alerts, setAlerts] = useState<DriverAlert[]>(initial);
+  const [alerts, setAlerts] = useState<DriverAlert[]>(() =>
+    filterLiveAlerts(initial)
+  );
 
   const updateAlert = useCallback((alert: DriverAlert) => {
     setAlerts((prev) => {
-      if (alert.status !== "active" || !alert.admin_verified) {
+      if (!isAlertCurrentlyLive(alert)) {
         return prev.filter((a) => a.id !== alert.id);
       }
       const idx = prev.findIndex((a) => a.id === alert.id);
@@ -24,11 +31,12 @@ export function useAlertsRealtime(
       return prev;
     });
   }, []);
+
   const handleInsert = useCallback(
     (alert: DriverAlert) => {
       setAlerts((prev) => {
         if (prev.some((a) => a.id === alert.id)) return prev;
-        if (alert.status !== "active" || !alert.admin_verified) return prev;
+        if (!isAlertCurrentlyLive(alert)) return prev;
         return [alert, ...prev];
       });
 
@@ -40,8 +48,15 @@ export function useAlertsRealtime(
   );
 
   useEffect(() => {
-    setAlerts(initial);
+    setAlerts(filterLiveAlerts(initial));
   }, [initial]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setAlerts((prev) => filterLiveAlerts(prev));
+    }, 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -59,7 +74,7 @@ export function useAlertsRealtime(
           const updated = payload.new as DriverAlert;
           setAlerts((prev) => {
             const idx = prev.findIndex((a) => a.id === updated.id);
-            if (updated.status !== "active" || !updated.admin_verified) {
+            if (!isAlertCurrentlyLive(updated)) {
               return prev.filter((a) => a.id !== updated.id);
             }
             if (idx >= 0) {
