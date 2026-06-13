@@ -64,10 +64,25 @@ export async function recordDriverActivityFromDevice(
   }
 }
 
-/** Record once when the app resumes after inactivity (no background polling). */
 export async function recordDriverActivityIfDue(source = "app_resume"): Promise<void> {
+  void recordDriverHeartbeatClient(source);
   if (!shouldRecordDriverActivity()) return;
   await recordDriverActivityFromDevice(source);
+}
+
+/** Presence ping without GPS — keeps admin active-driver counter fresh. */
+export async function recordDriverHeartbeatClient(source?: string): Promise<void> {
+  try {
+    const res = await fetch("/api/profile/heartbeat", {
+      method: "POST",
+      headers: source ? { "X-Activity-Source": source } : undefined,
+    });
+    if (!res.ok) {
+      console.warn("[HEARTBEAT] failed", source, res.status);
+    }
+  } catch (err) {
+    console.warn("[HEARTBEAT] request failed", source, err);
+  }
 }
 
 export type { AnonymizedActivityPoint };

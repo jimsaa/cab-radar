@@ -28,7 +28,7 @@ export function ActiveDriversNetworkStatus({
       >
         {hasActive
           ? `🟢 Aktiva förare: ${activeDrivers}`
-          : "⚫ Inga aktiva förare"}
+          : "⚪ Inga aktiva förare"}
       </p>
       <p
         className={cn(

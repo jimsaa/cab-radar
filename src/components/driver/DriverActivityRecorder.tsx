@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { recordDriverActivityIfDue } from "@/lib/driver-activity-client";
-
+import { usePathname } from "next/navigation";
+import {
+  recordDriverActivityIfDue,
+  recordDriverHeartbeatClient,
+} from "@/lib/driver-activity-client";
 interface DriverActivityRecorderProps {
   enabled: boolean;
 }
@@ -11,6 +14,8 @@ interface DriverActivityRecorderProps {
  * Records driver activity on natural app resume — never polls GPS in the background.
  */
 export function DriverActivityRecorder({ enabled }: DriverActivityRecorderProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -25,6 +30,11 @@ export function DriverActivityRecorder({ enabled }: DriverActivityRecorderProps)
     document.addEventListener("visibilitychange", onResume);
     return () => document.removeEventListener("visibilitychange", onResume);
   }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    void recordDriverHeartbeatClient("page_change");
+  }, [enabled, pathname]);
 
   return null;
 }

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NETWORK_MAP_REFRESH_MS } from "@/lib/driver-activity";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
-import { networkMapEmptyMessage } from "@/lib/network-map-messages";
+import { networkMapOverlayMessage } from "@/lib/network-map-messages";
 
 const NetworkMapCanvas = dynamic(
   () => import("./ActivityMapCanvas").then((m) => m.NetworkMapCanvas),
@@ -28,7 +28,7 @@ export function AdminActivityMap() {
   const [activeDriverCount, setActiveDriverCount] = useState(0);
   const [positionCount, setPositionCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const signatureRef = useRef("");
 
   const load = useCallback(async () => {
@@ -38,11 +38,13 @@ export function AdminActivityMap() {
         points?: AnonymizedActivityPoint[];
         activeDriverCount?: number;
         positionCount?: number;
+        unavailable?: boolean;
         error?: string;
       };
 
-      if (!res.ok) {
-        setError(data.error ?? "Kunde inte ladda karta.");
+      if (!res.ok || data.unavailable) {
+        console.error("[NETWORK MAP] fetch failed:", data.error ?? res.status);
+        setUnavailable(true);
         return;
       }
 
@@ -54,9 +56,10 @@ export function AdminActivityMap() {
       }
       setActiveDriverCount(data.activeDriverCount ?? 0);
       setPositionCount(data.positionCount ?? 0);
-      setError(null);
-    } catch {
-      setError("Kunde inte ladda karta.");
+      setUnavailable(false);
+    } catch (err) {
+      console.error("[NETWORK MAP] load error:", err);
+      setUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -68,13 +71,17 @@ export function AdminActivityMap() {
     return () => window.clearInterval(interval);
   }, [load]);
 
-  const emptyMessage = networkMapEmptyMessage(activeDriverCount, positionCount);
+  const overlayMessage = networkMapOverlayMessage(
+    activeDriverCount,
+    positionCount,
+    unavailable
+  );
 
   return (
     <section className="mb-4 rounded-[18px] border border-card-border bg-card p-4">
       <h2 className="text-sm font-semibold">Nätverkskarta</h2>
       <p className="mt-1 text-xs text-muted leading-relaxed">
-        Ungefärlig närvaro från senaste 15 minuterna · uppdateras var 5:e minut.
+        Ungefärlig närvaro från senaste 30 minuterna · uppdateras var 5:e minut.
       </p>
 
       <div className="mt-3 overflow-hidden rounded-xl border border-card-border">
@@ -82,16 +89,12 @@ export function AdminActivityMap() {
           <div className="flex h-[180px] items-center justify-center bg-background/40 text-xs text-muted">
             Laddar karta…
           </div>
-        ) : error ? (
-          <div className="flex h-[180px] items-center justify-center bg-background/40 px-4 text-center text-xs text-muted">
-            {error}
-          </div>
-        ) : points.length === 0 ? (
-          <div className="flex h-[180px] items-center justify-center bg-background/40 px-4 text-center text-xs text-muted">
-            {emptyMessage}
-          </div>
         ) : (
-          <NetworkMapCanvas points={points} />
+          <NetworkMapCanvas
+            points={points}
+            height={180}
+            overlayMessage={overlayMessage}
+          />
         )}
       </div>
     </section>

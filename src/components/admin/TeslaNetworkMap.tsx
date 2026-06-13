@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NETWORK_MAP_REFRESH_MS } from "@/lib/driver-activity";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
-import { networkMapEmptyMessage } from "@/lib/network-map-messages";
+import { networkMapOverlayMessage } from "@/lib/network-map-messages";
 import { cn } from "@/lib/utils";
 
 const NetworkMapCanvas = dynamic(
@@ -12,9 +12,7 @@ const NetworkMapCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="h-[280px] animate-pulse rounded-[12px] bg-[#1B1E22]/80"
-      />
+      <div className="h-[280px] animate-pulse rounded-[12px] bg-[#1B1E22]/80" />
     ),
   }
 );
@@ -38,7 +36,7 @@ export function TeslaNetworkMap({
   const [activeDriverCount, setActiveDriverCount] = useState(0);
   const [positionCount, setPositionCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const signatureRef = useRef("");
 
   const load = useCallback(async () => {
@@ -48,11 +46,13 @@ export function TeslaNetworkMap({
         points?: AnonymizedActivityPoint[];
         activeDriverCount?: number;
         positionCount?: number;
+        unavailable?: boolean;
         error?: string;
       };
 
-      if (!res.ok) {
-        setError(data.error ?? "Kunde inte ladda nätverkskarta.");
+      if (!res.ok || data.unavailable) {
+        console.error("[NETWORK MAP] fetch failed:", data.error ?? res.status);
+        setUnavailable(true);
         return;
       }
 
@@ -64,9 +64,10 @@ export function TeslaNetworkMap({
       }
       setActiveDriverCount(data.activeDriverCount ?? 0);
       setPositionCount(data.positionCount ?? 0);
-      setError(null);
-    } catch {
-      setError("Kunde inte ladda nätverkskarta.");
+      setUnavailable(false);
+    } catch (err) {
+      console.error("[NETWORK MAP] load error:", err);
+      setUnavailable(true);
     } finally {
       setLoading(false);
     }
@@ -78,7 +79,11 @@ export function TeslaNetworkMap({
     return () => window.clearInterval(interval);
   }, [load]);
 
-  const emptyMessage = networkMapEmptyMessage(activeDriverCount, positionCount);
+  const overlayMessage = networkMapOverlayMessage(
+    activeDriverCount,
+    positionCount,
+    unavailable
+  );
 
   return (
     <div className={cn("shrink-0 px-4 py-3", className)}>
@@ -99,22 +104,12 @@ export function TeslaNetworkMap({
           >
             Laddar karta…
           </div>
-        ) : error ? (
-          <div
-            className="flex items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-xs text-[#8A9099]"
-            style={{ height }}
-          >
-            {error}
-          </div>
-        ) : points.length === 0 ? (
-          <div
-            className="flex items-center justify-center bg-[#1B1E22]/80 px-4 text-center text-sm text-[#8A9099]"
-            style={{ height }}
-          >
-            {emptyMessage}
-          </div>
         ) : (
-          <NetworkMapCanvas points={points} height={height} />
+          <NetworkMapCanvas
+            points={points}
+            height={height}
+            overlayMessage={overlayMessage}
+          />
         )}
       </div>
     </div>

@@ -41,9 +41,12 @@ export async function GET() {
     });
   } catch (err) {
     console.error("[ACTIVITY MAP]", err);
-    return NextResponse.json(
-      { error: "Kunde inte hämta aktivitetskarta." },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      points: [],
+      activeDriverCount: 0,
+      positionCount: 0,
+      unavailable: true,
+      error: "Kunde inte hämta aktivitetskarta.",
+    });
   }
 }

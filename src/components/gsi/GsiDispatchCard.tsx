@@ -6,6 +6,7 @@ import {
   openGsiDispatch,
   type GsiDispatchSiteId,
 } from "@/lib/gsi-dispatch";
+import { recordDriverHeartbeatClient } from "@/lib/driver-activity-client";
 import { cn } from "@/lib/utils";
 
 interface GsiDispatchCardProps {
@@ -23,7 +24,10 @@ export function GsiDispatchCard({
   return (
     <button
       type="button"
-      onClick={() => openGsiDispatch(site)}
+      onClick={() => {
+        void recordDriverHeartbeatClient("gsi_dispatch");
+        openGsiDispatch(site);
+      }}
       className={cn(
         "flex w-full items-center gap-3 rounded-2xl border border-card-border bg-card px-4 py-3.5 text-left transition hover:border-accent/40 active:scale-[0.99]",
         className

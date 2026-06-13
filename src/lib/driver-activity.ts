@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /** Positions older than this are hidden from the admin network map. */
-export const NETWORK_POSITION_FRESH_MS = 15 * 60 * 1000;
+export const NETWORK_POSITION_FRESH_MS = 30 * 60 * 1000;
+
+/** Verified drivers with activity within this window count as active. */
+export const ACTIVE_DRIVER_WINDOW_MS = NETWORK_POSITION_FRESH_MS;
 
 /** Activity older than this is eligible for cleanup in driver_activity_points. */
 export const ACTIVITY_RETENTION_MS = 24 * 60 * 60 * 1000;
@@ -18,7 +21,7 @@ export interface AnonymizedActivityPoint {
 }
 
 export interface ActiveDriverNetworkData {
-  /** Verified non-admin drivers with last_known_at within 15 minutes. */
+  /** Verified non-admin drivers with activity within 30 minutes. */
   activeDriverCount: number;
   /** Subset with valid coordinates to plot on the map. */
   positionCount: number;
@@ -46,7 +49,28 @@ export function isValidActivityCoordinate(
 }
 
 export function networkPositionSince(): string {
-  return new Date(Date.now() - NETWORK_POSITION_FRESH_MS).toISOString();
+  return new Date(Date.now() - ACTIVE_DRIVER_WINDOW_MS).toISOString();
+}
+
+function activeDriverSince(): string {
+  return networkPositionSince();
+}
+
+/** Lightweight presence ping — no GPS required (app open, page change, etc.). */
+export async function recordDriverHeartbeat(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      last_known_at: now,
+      updated_at: now,
+    })
+    .eq("id", userId);
+
+  if (error) throw error;
 }
 
 /** Persist activity for admin map + emergency proximity push targeting. */
@@ -124,15 +148,31 @@ export async function fetchLatestVerifiedDriverActivityAt(
 
   let profileQuery = supabase
     .from("profiles")
-    .select("last_known_at")
+    .select("last_known_at, updated_at")
     .eq("verification_status", "verified")
     .eq("is_admin", false)
-    .not("last_known_at", "is", null)
     .order("last_known_at", { ascending: false })
     .limit(1);
 
   if (hasRestrict) {
     profileQuery = profileQuery.in("id", restrictIds!);
+  } else {
+    profileQuery = profileQuery.not("last_known_at", "is", null);
+  }
+
+  const profileRes = await profileQuery.maybeSingle();
+  if (profileRes.error) throw profileRes.error;
+
+  let updatedQuery = supabase
+    .from("profiles")
+    .select("updated_at")
+    .eq("verification_status", "verified")
+    .eq("is_admin", false)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (hasRestrict) {
+    updatedQuery = updatedQuery.in("id", restrictIds!);
   }
 
   let pointsQuery = supabase
@@ -145,14 +185,13 @@ export async function fetchLatestVerifiedDriverActivityAt(
     pointsQuery = pointsQuery.in("user_id", restrictIds!);
   }
 
-  const [profileRes, pointsRes, alertRes] = await Promise.all([
-    profileQuery.maybeSingle(),
+  const [pointsRes, alertRes, updatedRes] = await Promise.all([
     pointsQuery.maybeSingle(),
     hasRestrict
       ? supabase
           .from("driver_alerts")
           .select("created_at")
-          .in("user_id", restrictIds!)
+          .in("created_by", restrictIds!)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle()
@@ -164,67 +203,193 @@ export async function fetchLatestVerifiedDriverActivityAt(
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+    updatedQuery.maybeSingle(),
   ]);
 
-  if (profileRes.error) throw profileRes.error;
   if (pointsRes.error) throw pointsRes.error;
   if (alertRes.error) throw alertRes.error;
+  if (updatedRes.error) throw updatedRes.error;
 
   return maxIsoTimestamp(
     profileRes.data?.last_known_at as string | null | undefined,
+    profileRes.data?.updated_at as string | null | undefined,
+    updatedRes.data?.updated_at as string | null | undefined,
     pointsRes.data?.recorded_at as string | null | undefined,
     alertRes.data?.created_at as string | null | undefined
   );
+}
+
+async function fetchVerifiedProfileIds(
+  supabase: SupabaseClient,
+  userIds: string[]
+): Promise<Set<string>> {
+  const verified = new Set<string>();
+  if (userIds.length === 0) return verified;
+
+  const chunkSize = 100;
+  for (let i = 0; i < userIds.length; i += chunkSize) {
+    const chunk = userIds.slice(i, i + chunkSize);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .in("id", chunk)
+      .eq("verification_status", "verified")
+      .eq("is_admin", false);
+
+    if (error) throw error;
+    for (const row of data ?? []) {
+      verified.add(row.id as string);
+    }
+  }
+
+  return verified;
+}
+
+async function fetchRecentlyActiveDriverIds(
+  supabase: SupabaseClient,
+  since: string
+): Promise<Set<string>> {
+  const ids = new Set<string>();
+
+  const [byPresence, byUpdated, pointRows, alertRows] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id")
+      .eq("verification_status", "verified")
+      .eq("is_admin", false)
+      .gte("last_known_at", since),
+    supabase
+      .from("profiles")
+      .select("id")
+      .eq("verification_status", "verified")
+      .eq("is_admin", false)
+      .gte("updated_at", since),
+    supabase.from("driver_activity_points").select("user_id").gte("recorded_at", since),
+    supabase
+      .from("driver_alerts")
+      .select("created_by")
+      .gte("created_at", since)
+      .not("created_by", "is", null),
+  ]);
+
+  if (byPresence.error) throw byPresence.error;
+  if (byUpdated.error) throw byUpdated.error;
+  if (pointRows.error) throw pointRows.error;
+  if (alertRows.error) throw alertRows.error;
+
+  for (const row of byPresence.data ?? []) ids.add(row.id as string);
+  for (const row of byUpdated.data ?? []) ids.add(row.id as string);
+
+  const pointUserIds = [
+    ...new Set((pointRows.data ?? []).map((row) => row.user_id as string)),
+  ];
+  const alertUserIds = [
+    ...new Set(
+      (alertRows.data ?? [])
+        .map((row) => row.created_by as string | null)
+        .filter((id): id is string => Boolean(id))
+    ),
+  ];
+
+  const [verifiedFromPoints, verifiedFromAlerts] = await Promise.all([
+    fetchVerifiedProfileIds(supabase, pointUserIds),
+    fetchVerifiedProfileIds(supabase, alertUserIds),
+  ]);
+
+  for (const id of verifiedFromPoints) ids.add(id);
+  for (const id of verifiedFromAlerts) ids.add(id);
+
+  return ids;
 }
 
 /** Shared source for active-driver counter and admin network map. */
 export async function fetchActiveDriverNetwork(
   supabase: SupabaseClient
 ): Promise<ActiveDriverNetworkData> {
-  const since = networkPositionSince();
+  const since = activeDriverSince();
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, last_known_latitude, last_known_longitude, last_known_at")
-    .eq("verification_status", "verified")
-    .eq("is_admin", false)
-    .gte("last_known_at", since)
-    .limit(500);
+  const activeIdSet = await fetchRecentlyActiveDriverIds(supabase, since);
+  const activeDriverIds = [...activeIdSet];
 
-  if (error) {
-    throw error;
+  if (activeDriverIds.length === 0) {
+    const lastNetworkActivityAt =
+      await fetchLatestVerifiedDriverActivityAt(supabase);
+    return {
+      activeDriverCount: 0,
+      positionCount: 0,
+      points: [],
+      activeDriverIds: [],
+      positionedDriverIds: [],
+      lastActiveDriverActivityAt: null,
+      lastNetworkActivityAt,
+    };
   }
 
-  const rows = data ?? [];
-  const activeDriverIds = rows.map((row) => row.id as string);
-  const positionedRows = rows.filter(
-    (row) =>
-      row.last_known_latitude != null &&
-      row.last_known_longitude != null &&
-      isValidActivityCoordinate(
-        row.last_known_latitude as number,
-        row.last_known_longitude as number
-      )
-  );
+  const [profileRes, pointRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, last_known_latitude, last_known_longitude, last_known_at")
+      .in("id", activeDriverIds),
+    supabase
+      .from("driver_activity_points")
+      .select("user_id, latitude, longitude, recorded_at")
+      .in("user_id", activeDriverIds)
+      .gte("recorded_at", since)
+      .order("recorded_at", { ascending: false }),
+  ]);
 
-  const points = positionedRows.map((row) => ({
-    latitude: row.last_known_latitude as number,
-    longitude: row.last_known_longitude as number,
-  }));
+  if (profileRes.error) throw profileRes.error;
+  if (pointRes.error) throw pointRes.error;
 
-  const positionedDriverIds = positionedRows.map((row) => row.id as string);
+  const latestPointByUser = new Map<
+    string,
+    { latitude: number; longitude: number }
+  >();
+  for (const row of pointRes.data ?? []) {
+    const userId = row.user_id as string;
+    if (latestPointByUser.has(userId)) continue;
+    const latitude = row.latitude as number;
+    const longitude = row.longitude as number;
+    if (!isValidActivityCoordinate(latitude, longitude)) continue;
+    latestPointByUser.set(userId, { latitude, longitude });
+  }
+
+  const points: AnonymizedActivityPoint[] = [];
+  const positionedDriverIds: string[] = [];
+
+  for (const row of profileRes.data ?? []) {
+    const userId = row.id as string;
+    const profileLat = row.last_known_latitude as number | null;
+    const profileLng = row.last_known_longitude as number | null;
+    const lastKnownAt = row.last_known_at as string | null;
+    const profileFresh =
+      lastKnownAt != null && lastKnownAt >= since &&
+      profileLat != null &&
+      profileLng != null &&
+      isValidActivityCoordinate(profileLat, profileLng);
+
+    if (profileFresh) {
+      points.push({ latitude: profileLat, longitude: profileLng });
+      positionedDriverIds.push(userId);
+      continue;
+    }
+
+    const fallback = latestPointByUser.get(userId);
+    if (fallback) {
+      points.push(fallback);
+      positionedDriverIds.push(userId);
+    }
+  }
 
   const [lastNetworkActivityAt, lastActiveDriverActivityAt] = await Promise.all([
     fetchLatestVerifiedDriverActivityAt(supabase),
-    activeDriverIds.length > 0
-      ? fetchLatestVerifiedDriverActivityAt(supabase, {
-          restrictToUserIds: activeDriverIds,
-        })
-      : Promise.resolve(null),
+    fetchLatestVerifiedDriverActivityAt(supabase, {
+      restrictToUserIds: activeDriverIds,
+    }),
   ]);
 
   return {
-    activeDriverCount: rows.length,
+    activeDriverCount: activeDriverIds.length,
     positionCount: points.length,
     points,
     activeDriverIds,
