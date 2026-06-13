@@ -65,6 +65,7 @@ create type public.driver_verification_status as enum (
 create table public.profiles (
   id                      uuid primary key references auth.users (id) on delete cascade,
   display_name            text,
+  nickname                text,
   phone_number            text,
   driver_license_number   text,
   verification_status     public.driver_verification_status not null default 'pending_verification',

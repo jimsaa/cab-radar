@@ -50,6 +50,7 @@ export function NicknameSettings({ profile, onUpdated }: NicknameSettingsProps) 
       const data = (await res.json()) as { error?: string; nickname?: string };
 
       if (!res.ok) {
+        console.error("Nickname save failed:", res.status, data);
         const message =
           res.status === 409
             ? NICKNAME_TAKEN_MESSAGE
@@ -62,7 +63,8 @@ export function NicknameSettings({ profile, onUpdated }: NicknameSettingsProps) 
       onUpdated(saved);
       setNickname(saved);
       showToast("✓ Visningsnamn sparat");
-    } catch {
+    } catch (err) {
+      console.error("Nickname save failed:", err);
       setError("Nätverksfel. Försök igen.");
     } finally {
       setSaving(false);
