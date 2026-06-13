@@ -12,9 +12,7 @@ import {
 } from "@/lib/dashboard-report-types";
 import { isEmergencyReportButton } from "@/lib/report-alert-mapping";
 import {
-  adminExtendSuccessToast,
   adminReportSuccessToast,
-  extendSuccessToast,
   reportSuccessToast,
   submitDriverAlert,
 } from "@/lib/submit-alert";
@@ -84,15 +82,6 @@ export function ReportEventSheet({
     }
     setStep("pick");
     setSelected(null);
-  }
-
-  async function handleExtended(alert: DriverAlert) {
-    onCreated?.(alert);
-    handleClose();
-
-    showToast(
-      isAdmin ? adminExtendSuccessToast() : extendSuccessToast()
-    );
   }
 
   async function handleSubmit(data: CreateAlertInput) {
@@ -184,7 +173,6 @@ export function ReportEventSheet({
             displayIcon={selected.icon}
             isAdmin={isAdmin}
             onSubmit={handleSubmit}
-            onExtended={handleExtended}
             onCancel={handleCancelConfirm}
           />
         )}

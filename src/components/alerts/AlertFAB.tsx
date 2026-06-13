@@ -16,7 +16,6 @@ import {
   reportButtonIdForAlertType,
 } from "@/lib/report-alert-mapping";
 import {
-  extendSuccessToast,
   reportSuccessToast,
   submitDriverAlert,
 } from "@/lib/submit-alert";
@@ -52,12 +51,6 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
     }
     setSelectedType(type);
     setStep("confirm");
-  }
-
-  async function handleExtended(alert: DriverAlert) {
-    onCreated?.(alert);
-    close();
-    showToast(extendSuccessToast());
   }
 
   async function handleSubmit(data: CreateAlertInput) {
@@ -125,7 +118,6 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
                 displayLabel={ALERT_TYPE_LABELS[selectedType]}
                 displayIcon={ALERT_TYPE_ICONS[selectedType]}
                 onSubmit={handleSubmit}
-                onExtended={handleExtended}
                 onCancel={() => setStep("pick")}
               />
             )}
