@@ -8,7 +8,6 @@ import {
   Headphones,
   Image,
   MessageSquare,
-  ScanSearch,
   ShieldAlert,
   Tag,
   Users,
@@ -95,17 +94,6 @@ export function AdminDashboardLive({ firstName }: AdminDashboardLiveProps) {
           }
           attention="orange"
           badgeCount={counts.users}
-        />
-
-        <AdminStatCard
-          href="/admin/civilkoll"
-          icon={ScanSearch}
-          label="Civilkoll"
-          subtitle={
-            counts.civilkoll > 0 ? `${counts.civilkoll} väntar` : undefined
-          }
-          attention="orange"
-          badgeCount={counts.civilkoll}
         />
 
         <AdminStatCard

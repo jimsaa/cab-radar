@@ -54,6 +54,12 @@ export interface CivilkollLookupResult {
   found: boolean;
 }
 
+export interface AdminCivilkollLookupResult {
+  found: boolean;
+  registrationNumber: string;
+  lastVerifiedAt: string | null;
+}
+
 const REG_PATTERN = /^[A-Z0-9]{2,10}$/;
 
 export function normalizeRegistrationNumber(input: string): string {
@@ -234,6 +240,56 @@ export async function lookupCivilkollEntry(
   }
 
   return { found: Boolean(data) };
+}
+
+/** Admin instant lookup — read-only, returns last verified date when found. */
+export async function adminLookupCivilkollEntry(
+  supabase: SupabaseClient,
+  registrationNumber: string
+): Promise<AdminCivilkollLookupResult> {
+  const normalized = normalizeRegistrationNumber(registrationNumber);
+  if (!isValidRegistrationNumber(normalized)) {
+    return {
+      found: false,
+      registrationNumber: normalized,
+      lastVerifiedAt: null,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from(REGISTRY_TABLE)
+    .select("id, last_observed_at")
+    .eq("registration_number", normalized)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (error && isMissingSchemaError(error)) {
+    const fallback = await supabase
+      .from(REGISTRY_TABLE)
+      .select("id, last_observed_at")
+      .eq("registration_number", normalized)
+      .maybeSingle();
+    if (fallback.error) {
+      if (isMissingSchemaError(fallback.error)) {
+        return { found: false, registrationNumber: normalized, lastVerifiedAt: null };
+      }
+      throw fallback.error;
+    }
+    return {
+      found: Boolean(fallback.data),
+      registrationNumber: normalized,
+      lastVerifiedAt:
+        (fallback.data?.last_observed_at as string | null | undefined) ?? null,
+    };
+  }
+
+  if (error) throw error;
+
+  return {
+    found: Boolean(data),
+    registrationNumber: normalized,
+    lastVerifiedAt: (data?.last_observed_at as string | null | undefined) ?? null,
+  };
 }
 
 export interface CivilImportLine {

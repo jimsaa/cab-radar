@@ -9,7 +9,6 @@ import {
   Image,
   Mail,
   MessageSquare,
-  ScanSearch,
   ShieldAlert,
   Tag,
   Users,
@@ -23,7 +22,6 @@ import type { AdminBadgeKey } from "@/lib/admin-notifications";
 const FULL_LINKS = [
   { href: "/admin", label: "Översikt", icon: LayoutDashboard },
   { href: "/admin/emergency", label: "Nödlägen", icon: ShieldAlert },
-  { href: "/admin/civilkoll", label: "Civilkoll", icon: ScanSearch },
   { href: "/admin/alerts", label: "Varningar", icon: AlertTriangle },
   { href: "/admin/deals", label: "Erbjudanden", icon: Tag },
   { href: "/admin/help", label: "Hjälp", icon: BookOpen },

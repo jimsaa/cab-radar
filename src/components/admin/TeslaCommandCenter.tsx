@@ -9,8 +9,7 @@ import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
-import { TeslaQuickCivilPanel } from "@/components/admin/TeslaQuickCivilPanel";
-import { TeslaOpenCivilkollButton } from "@/components/admin/TeslaOpenCivilkollButton";
+import { TeslaCivilkollLookup } from "@/components/admin/TeslaCivilkollLookup";
 import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { formatCommandCenterDriverLabel } from "@/lib/admin-command-center";
@@ -234,20 +233,6 @@ export function TeslaCommandCenter() {
     void refresh();
   }
 
-  async function reviewCivil(submissionId: string, action: "approve" | "reject") {
-    const res = await fetch("/api/admin/civilkoll/review", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ submissionId, action, adminNotes: "" }),
-    });
-    if (!res.ok) {
-      const data = (await res.json()) as { error?: string };
-      showToast(data.error ?? "Kunde inte granska.", { variant: "error" });
-      return;
-    }
-    void refresh();
-  }
-
   const emergencies = snapshot?.emergencies ?? [];
   const liveEmergencies = emergencies.filter((e) => !e.is_test);
   const testEmergencies = emergencies.filter((e) => e.is_test);
@@ -255,7 +240,6 @@ export function TeslaCommandCenter() {
   const stats = snapshot?.stats;
   const pendingUsers = snapshot?.pendingUsers ?? [];
   const testModeDrivers = snapshot?.testModeDrivers ?? [];
-  const pendingCivil = snapshot?.pendingCivil ?? [];
 
   return (
     <div
@@ -325,10 +309,7 @@ export function TeslaCommandCenter() {
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             <TeslaQuickReportPanel onReported={() => void refresh()} />
           </div>
-          <div className="shrink-0 border-t border-[#3A4048] px-3 py-3">
-            <TeslaOpenCivilkollButton />
-          </div>
-          <TeslaQuickCivilPanel onAdded={() => void refresh()} />
+          <TeslaCivilkollLookup />
         </section>
 
         {/* Center — Live flöde (primary focus) */}
@@ -423,55 +404,6 @@ export function TeslaCommandCenter() {
                       className="truncate text-sm text-amber-100/90"
                     >
                       • {formatCommandCenterDriverLabel(driver)}
-                    </li>
-                  ))
-                )}
-              </ul>
-            </section>
-
-            {/* 4. Civilkoll — lowest priority */}
-            <section className="rounded-[16px] border border-[#3A4048] bg-[#1B1E22]/60 p-3">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-[#8B5CF6]">
-                🔍 Civilkoll — väntar granskning
-              </h3>
-              <ul className="mt-2 max-h-[120px] space-y-2 overflow-y-auto">
-                {pendingCivil.length === 0 ? (
-                  <li className="text-sm text-[#8A9099]">Inget att granska</li>
-                ) : (
-                  pendingCivil.map((c) => (
-                    <li
-                      key={c.id}
-                      className="flex items-center justify-between gap-2 rounded-[12px] bg-[#262B31] px-3 py-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-mono font-semibold text-white">
-                          {c.registration_number}
-                        </p>
-                        {c.submitter_nickname && (
-                          <p className="truncate text-xs text-[#8A9099]">
-                            {c.submitter_nickname}
-                            {c.submitter_display_name &&
-                              c.submitter_display_name !== c.submitter_nickname &&
-                              ` · ${c.submitter_display_name}`}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 gap-1">
-                        <button
-                          type="button"
-                          onClick={() => void reviewCivil(c.id, "approve")}
-                          className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void reviewCivil(c.id, "reject")}
-                          className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
-                        >
-                          ✕
-                        </button>
-                      </div>
                     </li>
                   ))
                 )}
