@@ -1,6 +1,7 @@
 /** Göteborg C train departures via tagtider.net */
 
-export const GoteborgC_SOURCE_URL = "https://tagtider.net/goteborg-c/avgangar";
+export const GoteborgC_SOURCE_URL =
+  "https://tagtider.net/goteborg-c/avgangar/";
 export const GoteborgC_USER_LABEL = "🚆 Göteborg C / SJ";
 export const GoteborgC_DISRUPTION_SCAN_COUNT = 20;
 export const GoteborgC_DISPLAY_COUNT = 5;
