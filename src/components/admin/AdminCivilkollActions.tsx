@@ -368,7 +368,7 @@ function AddResultModal({
             isCreated ? "text-success" : "text-amber-300"
           )}
         >
-          {isCreated ? "🟢 Civil registrerad" : "🟡 Finns redan"}
+          {isCreated ? "🟢 CIVIL REGISTRERAD" : "🟡 FINNS REDAN"}
         </h2>
 
         <p className="text-lg leading-relaxed text-foreground">

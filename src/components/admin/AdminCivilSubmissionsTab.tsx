@@ -74,9 +74,14 @@ export function AdminCivilSubmissionsTab({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted">
-        Alla föraranmälningar. Godkända flyttas till Civilkoll-databasen.
-      </p>
+      <div>
+        <h2 className="text-base font-bold tracking-wide">
+          CivilKoll — väntar granskning
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          Föraranmälningar som kräver godkännande innan de läggs i databasen.
+        </p>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {(["pending", "all", "approved", "rejected"] as const).map((option) => (
@@ -94,7 +99,7 @@ export function AdminCivilSubmissionsTab({
             {option === "all"
               ? "Alla"
               : option === "pending"
-                ? "Väntar"
+                ? "Väntar granskning"
                 : STATUS_LABELS[option]}
           </button>
         ))}
