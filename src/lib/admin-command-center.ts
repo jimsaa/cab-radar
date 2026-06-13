@@ -8,6 +8,7 @@ import {
   fetchPendingAlerts,
 } from "./alerts";
 import { alertTypeLabel } from "./constants";
+import { alertTypeIcon } from "./constants";
 import { formatTestAlertTypeLabel } from "./test-mode";
 import { fetchCivilSubmissions } from "./civilkoll";
 import { isMissingSchemaError } from "./db-errors";
@@ -93,7 +94,10 @@ export interface LiveFeedItem {
   id: string;
   type: string;
   type_label: string;
+  type_icon: string;
   driver_name: string;
+  driver_license_last4: string | null;
+  verification_status: string | null;
   /** Short location for list rows, e.g. "Rödbo, Göteborg" */
   location: string;
   /** Full address for navigation and detail panel */
@@ -105,6 +109,12 @@ export interface LiveFeedItem {
   timestamp_label: string;
   created_at: string;
   is_test: boolean;
+}
+
+export interface LiveFeedCreator {
+  label: string;
+  driver_license_last4: string | null;
+  verification_status: string | null;
 }
 
 export interface AdminCommandCenterSnapshot {
@@ -297,10 +307,10 @@ async function fetchActiveOffersList(
   }
 }
 
-async function loadCreatorNames(
+async function loadFeedCreators(
   supabase: SupabaseClient,
   alerts: DriverAlert[]
-): Promise<Map<string, string>> {
+): Promise<Map<string, LiveFeedCreator>> {
   const ids = [
     ...new Set(alerts.map((a) => a.created_by).filter((id): id is string => !!id)),
   ];
@@ -308,16 +318,26 @@ async function loadCreatorNames(
 
   const { data } = await supabase
     .from("profiles")
-    .select("id, display_name, cabradar_user_id")
+    .select(
+      "id, display_name, cabradar_user_id, driver_license_last4, verification_status"
+    )
     .in("id", ids);
 
-  const map = new Map<string, string>();
+  const map = new Map<string, LiveFeedCreator>();
   for (const row of data ?? []) {
-    const name =
-      (row.display_name as string | null)?.trim() ||
-      (row.cabradar_user_id as string | null)?.trim() ||
-      "Okänd förare";
-    map.set(row.id as string, name);
+    const displayName = (row.display_name as string | null)?.trim();
+    const cabradarId = (row.cabradar_user_id as string | null)?.trim();
+    const licenseLast4 = (row.driver_license_last4 as string | null) ?? null;
+    const label =
+      displayName ||
+      cabradarId ||
+      (licenseLast4 ? `Leg ${maskLicenceLast4(licenseLast4)}` : "Okänd förare");
+
+    map.set(row.id as string, {
+      label,
+      driver_license_last4: licenseLast4,
+      verification_status: (row.verification_status as string | null) ?? null,
+    });
   }
   return map;
 }
@@ -341,7 +361,7 @@ export function formatFeedTimestamp(iso: string): string {
 
 export function buildLiveFeed(
   alerts: DriverAlert[],
-  creatorNames: Map<string, string>
+  creators: Map<string, LiveFeedCreator>
 ): LiveFeedItem[] {
   return alerts
     .filter((a) => a.type !== "taxi_emergency")
@@ -350,23 +370,30 @@ export function buildLiveFeed(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
     .slice(0, 30)
-    .map((alert) => ({
-      id: alert.id,
-      type: alert.type,
-      type_label: formatTestAlertTypeLabel(alert.type, Boolean(alert.is_test)),
-      driver_name: alert.created_by
-        ? (creatorNames.get(alert.created_by) ?? "Okänd förare")
-        : "Okänd förare",
-      location: formatAlertLocation(alert),
-      address: formatAlertLocation(alert),
-      latitude: alert.latitude,
-      longitude: alert.longitude,
-      description: alert.description?.trim() || null,
-      time_label: formatFeedTime(alert.created_at),
-      timestamp_label: formatFeedTimestamp(alert.created_at),
-      created_at: alert.created_at,
-      is_test: Boolean(alert.is_test),
-    }));
+    .map((alert) => {
+      const creator = alert.created_by
+        ? creators.get(alert.created_by)
+        : undefined;
+
+      return {
+        id: alert.id,
+        type: alert.type,
+        type_label: formatTestAlertTypeLabel(alert.type, Boolean(alert.is_test)),
+        type_icon: alertTypeIcon(alert.type),
+        driver_name: creator?.label ?? "Okänd förare",
+        driver_license_last4: creator?.driver_license_last4 ?? null,
+        verification_status: creator?.verification_status ?? null,
+        location: formatAlertLocation(alert),
+        address: formatAlertLocation(alert),
+        latitude: alert.latitude,
+        longitude: alert.longitude,
+        description: alert.description?.trim() || null,
+        time_label: formatFeedTime(alert.created_at),
+        timestamp_label: formatFeedTimestamp(alert.created_at),
+        created_at: alert.created_at,
+        is_test: Boolean(alert.is_test),
+      };
+    });
 }
 
 export async function fetchAdminCommandCenterSnapshot(
@@ -457,8 +484,8 @@ export async function fetchAdminCommandCenterSnapshot(
 
   const { activeDrivers, lastDriverActivityAt } = driverNetworkStats;
 
-  const creatorNames = await loadCreatorNames(serviceSupabase, activeAlerts);
-  const allFeed = buildLiveFeed(activeAlerts, creatorNames);
+  const creatorProfiles = await loadFeedCreators(serviceSupabase, activeAlerts);
+  const allFeed = buildLiveFeed(activeAlerts, creatorProfiles);
   const liveFeed = allFeed.filter((item) => !item.is_test);
   const testLiveFeed = allFeed.filter((item) => item.is_test);
   const pendingCivil = allPendingCivil.filter((c) => !c.is_test).slice(0, 10);

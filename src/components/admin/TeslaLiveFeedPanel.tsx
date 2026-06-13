@@ -1,13 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { useMemo, useState } from "react";
+import Image from "next/image";
+import { Copy, Check } from "lucide-react";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import type { LiveFeedItem } from "@/lib/admin-command-center";
-import { ReportCommentPreview } from "@/components/reports/ReportCommentPreview";
+import { APP_NAME } from "@/lib/constants";
+import { formatRelativeSwedish } from "@/lib/datetime";
+import { maskLicenceLast4 } from "@/lib/licence.shared";
 import { formatCoordinate } from "@/lib/tesla-navigation";
+import { ReportCommentPreview } from "@/components/reports/ReportCommentPreview";
 import { cn } from "@/lib/utils";
+
+function reporterStatusLabel(item: LiveFeedItem): string {
+  if (item.is_test) return "Testläge";
+  switch (item.verification_status) {
+    case "verified":
+      return "Verifierad";
+    case "pending_verification":
+      return "Väntar verifiering";
+    default:
+      return "Overifierad";
+  }
+}
+
+function reporterLegLine(item: LiveFeedItem): string | null {
+  if (!item.driver_license_last4) return null;
+  return `Taxi Leg ${maskLicenceLast4(item.driver_license_last4)}`;
+}
 
 function ReportAttentionBadge({
   showNy,
@@ -33,57 +54,97 @@ function ReportAttentionBadge({
   );
 }
 
-function TeslaReportDetail({
-  item,
-  onBack,
-}: {
-  item: LiveFeedItem;
-  onBack: () => void;
-}) {
-  const notes = item.description?.trim();
+function TeslaReportDetailEmpty() {
+  return (
+    <div className="flex h-full min-h-[280px] flex-col items-center justify-center px-8 text-center">
+      <Image
+        src="/logo.png"
+        alt={APP_NAME}
+        width={56}
+        height={56}
+        className="mb-4 rounded-xl opacity-80"
+      />
+      <p className="max-w-sm text-lg font-medium leading-relaxed text-[#8A9099]">
+        Välj en rapport i LIVE-flödet för att visa detaljer.
+      </p>
+    </div>
+  );
+}
+
+function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
+  const [copied, setCopied] = useState(false);
+  const ageLabel = useMemo(
+    () => formatRelativeSwedish(item.created_at),
+    [item.created_at]
+  );
+  const legLine = reporterLegLine(item);
+  const statusLabel = reporterStatusLabel(item);
+
+  async function copyAddress() {
+    if (!item.address) return;
+    try {
+      await navigator.clipboard.writeText(item.address);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Kopiera adress:", item.address);
+    }
+  }
 
   return (
-    <div className="flex min-h-0 flex-col">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-4 flex items-center gap-1 text-sm font-medium text-[#8A9099] transition hover:text-white"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Tillbaka
-      </button>
+    <div className="flex min-h-0 flex-col p-6">
+      <div className="flex items-start gap-4">
+        <span className="text-5xl leading-none" aria-hidden>
+          {item.type_icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8A9099]">
+            Rapportdetaljer
+          </p>
+          <h3 className="mt-1 text-3xl font-bold leading-tight text-white">
+            {item.type_label}
+          </h3>
+          <p className="mt-2 text-lg font-medium text-[#B0B6BE]">{ageLabel}</p>
+        </div>
+      </div>
 
-      <p className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
-        Rapport
-      </p>
-      <h3 className="mt-1 text-2xl font-bold text-white">{item.type_label}</h3>
-
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <DetailCell label="Förare" value={item.driver_name} />
-        <DetailCell label="Tid" value={item.timestamp_label} mono />
-        <DetailCell label="Adress" value={item.address} className="sm:col-span-2" />
-        <DetailCell
-          label="Latitud"
-          value={formatCoordinate(item.latitude)}
-          mono
-        />
-        <DetailCell
-          label="Longitud"
-          value={formatCoordinate(item.longitude)}
-          mono
+      <div className="mt-6 space-y-4">
+        <DetailRow label="Plats" value={item.address} large />
+        <DetailRow label="Tid" value={item.time_label} mono large />
+        <DetailRow label="Rapporterad av" value={item.driver_name} large />
+        {legLine && <DetailRow label="Taxi Leg" value={legLine} mono large />}
+        <DetailRow
+          label="Status"
+          value={statusLabel}
+          large
+          valueClassName={
+            item.is_test
+              ? "text-amber-300"
+              : statusLabel === "Verifierad"
+                ? "text-[#22C55E]"
+                : "text-[#B0B6BE]"
+          }
         />
       </div>
 
-      {notes && (
-        <div className="mt-4 rounded-[12px] bg-[#1B1E22]/80 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#8A9099]">
-            Anteckningar
+      {item.description?.trim() && (
+        <div className="mt-6 rounded-[14px] border border-[#3A4048] bg-[#1B1E22]/90 px-4 py-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
+            Kommentar
           </p>
-          <p className="mt-1 text-sm text-[#B0B6BE]">{notes}</p>
+          <p className="mt-2 text-lg leading-relaxed text-white">
+            {item.description.trim()}
+          </p>
         </div>
       )}
 
-      <div className="mt-6">
+      {(item.latitude != null || item.longitude != null) && (
+        <p className="mt-4 font-mono text-xs text-[#6B7280]">
+          {formatCoordinate(item.latitude)}, {formatCoordinate(item.longitude)}
+        </p>
+      )}
+
+      <div className="mt-8 space-y-3">
         <TeslaNavigationButtons
           size="large"
           target={{
@@ -92,33 +153,54 @@ function TeslaReportDetail({
             address: item.address,
           }}
         />
+        {item.address && (
+          <button
+            type="button"
+            onClick={() => void copyAddress()}
+            className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-[#3A4048] bg-[#262B31] px-5 py-3.5 text-base font-semibold text-[#B0B6BE] transition hover:text-white active:scale-[0.98]"
+          >
+            {copied ? (
+              <>
+                <Check className="h-5 w-5 text-[#22C55E]" />
+                Adress kopierad
+              </>
+            ) : (
+              <>
+                <Copy className="h-5 w-5" />
+                Kopiera adress
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-function DetailCell({
+function DetailRow({
   label,
   value,
   mono,
-  className,
+  large,
+  valueClassName,
 }: {
   label: string;
   value: string;
   mono?: boolean;
-  className?: string;
+  large?: boolean;
+  valueClassName?: string;
 }) {
   return (
-    <div
-      className={cn("rounded-[12px] bg-[#1B1E22]/80 px-3 py-2", className)}
-    >
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#8A9099]">
+    <div>
+      <p className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
         {label}
       </p>
       <p
         className={cn(
-          "mt-0.5 text-sm font-medium text-white",
-          mono && "font-mono text-xs"
+          "mt-1 font-semibold text-white",
+          large ? "text-xl" : "text-base",
+          mono && "font-mono",
+          valueClassName
         )}
       >
         {value}
@@ -134,7 +216,11 @@ interface TeslaLiveFeedPanelProps {
 export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
   const { getReportAttention } = useAdminCommandCenter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = items.find((item) => item.id === selectedId) ?? null;
+
+  const selected = useMemo(() => {
+    if (!selectedId) return null;
+    return items.find((item) => item.id === selectedId) ?? null;
+  }, [items, selectedId]);
 
   if (items.length === 0) {
     return (
@@ -147,13 +233,8 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <ul
-        className={cn(
-          "min-h-0 overflow-y-auto",
-          selected ? "w-[42%] shrink-0 border-r border-[#3A4048]/60" : "w-full"
-        )}
-      >
+    <div className="flex min-h-0 flex-1 flex-row">
+      <ul className="min-h-0 w-[40%] shrink-0 overflow-y-auto border-r border-[#3A4048]/60">
         {items.map((item) => {
           const isSelected = item.id === selectedId;
           const attention = getReportAttention(item.id, item.type);
@@ -179,6 +260,9 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
                 />
 
                 <p className="pr-14 text-lg font-bold text-white">
+                  <span aria-hidden className="mr-1.5">
+                    {item.type_icon}
+                  </span>
                   {item.type_label}
                 </p>
                 <p className="mt-1 text-base text-[#B0B6BE]">{item.location}</p>
@@ -196,11 +280,13 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
         })}
       </ul>
 
-      {selected && (
-        <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          <TeslaReportDetail item={selected} onBack={() => setSelectedId(null)} />
-        </div>
-      )}
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[#1E2125]/40">
+        {selected ? (
+          <TeslaReportDetailPanel item={selected} />
+        ) : (
+          <TeslaReportDetailEmpty />
+        )}
+      </div>
     </div>
   );
 }
