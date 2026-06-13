@@ -14,6 +14,7 @@ import {
   meetsContributionRequirements,
 } from "@/lib/membership";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
+import { AdminDriverIdentity } from "@/components/admin/AdminDriverIdentity";
 import { formatDriverCityLabel } from "@/lib/driver-city";
 import type { Profile } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -501,7 +502,9 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
 
     return users.filter((u) => {
       const idMatch = u.cabradar_user_id?.toLowerCase().includes(q);
-      const nameMatch = u.display_name?.toLowerCase().includes(q);
+      const nameMatch =
+        u.nickname?.toLowerCase().includes(q) ||
+        u.display_name?.toLowerCase().includes(q);
       const masked = maskLicenceLast4(u.driver_license_last4).toLowerCase();
       const last4Match = u.driver_license_last4?.includes(q.replace(/^xx/i, ""));
       const maskedMatch = masked.includes(q);
@@ -582,7 +585,11 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                       {u.cabradar_user_id ?? "—"}
                     </td>
                     <td className="p-3">
-                      <p className="font-medium">{u.display_name ?? "—"}</p>
+                      <AdminDriverIdentity
+                        driver={u}
+                        primaryClassName="font-medium"
+                        layout="stacked"
+                      />
                       {u.verification_status === "pending_verification" &&
                         !u.is_admin && (
                           <p className="mt-1 text-xs text-muted">

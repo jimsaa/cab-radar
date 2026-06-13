@@ -5,6 +5,7 @@
 import {
   emergencyCabradarId,
   emergencyDriverName,
+  emergencyDriverRealName,
   emergencyLocationLabel,
   emergencyMapsUrl,
   emergencyPhoneDisplay,
@@ -109,6 +110,7 @@ export function AdminEmergencyDetail({
 
   const driver = alert.driver;
   const driverName = emergencyDriverName(alert);
+  const driverRealName = emergencyDriverRealName(alert);
   const cabradarId = emergencyCabradarId(driver);
 
   const phoneDisplay = emergencyPhoneDisplay(driver);
@@ -165,6 +167,9 @@ export function AdminEmergencyDetail({
         </p>
 
         <h2 className="mt-1 text-2xl font-bold leading-tight">🆘 {driverName}</h2>
+        {driverRealName && driverRealName !== driverName && (
+          <p className="mt-0.5 text-sm text-muted">{driverRealName}</p>
+        )}
         <p className="mt-1 text-sm text-muted">
           CabRadar ID:{" "}
           <span className="font-mono font-semibold text-foreground">{cabradarId}</span>

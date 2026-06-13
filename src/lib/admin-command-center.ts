@@ -21,7 +21,7 @@ import { isPresenceFresh, PRESENCE_STALE_MS } from "./emergency-privacy";
 import { fetchActiveDriverNetwork } from "./driver-activity";
 import { fetchAllHelpArticles } from "./help";
 import { fetchAllBanners, fetchAllDeals } from "./deals";
-import { maskLicenceLast4 } from "./licence.shared";
+import { publicDriverLabel, adminDriverRealName } from "./driver-display";
 import {
   formatRelativeSwedish,
   formatSwedishDateTime,
@@ -48,6 +48,7 @@ export interface AdminCommandCenterStats {
 export interface CommandCenterDriver {
   id: string;
   display_name: string | null;
+  nickname: string | null;
   cabradar_user_id: string | null;
   beta_user: boolean;
   verification_status: string;
@@ -59,6 +60,7 @@ export interface CommandCenterDriver {
 export interface CommandCenterPendingUser {
   id: string;
   display_name: string | null;
+  nickname: string | null;
   cabradar_user_id: string | null;
   phone_number: string | null;
   driver_license_last4: string | null;
@@ -71,6 +73,7 @@ export interface CommandCenterPendingUser {
 export interface CommandCenterTestModeDriver {
   id: string;
   display_name: string | null;
+  nickname: string | null;
   cabradar_user_id: string | null;
   driver_license_last4: string | null;
 }
@@ -85,6 +88,7 @@ export interface CommandCenterOffer {
 export interface CommandCenterCivilItem {
   id: string;
   registration_number: string;
+  submitter_nickname: string | null;
   submitter_display_name: string | null;
   created_at: string;
   is_test: boolean;
@@ -96,6 +100,7 @@ export interface LiveFeedItem {
   type_label: string;
   type_icon: string;
   driver_name: string;
+  driver_real_name: string | null;
   driver_license_last4: string | null;
   verification_status: string | null;
   /** Short location for list rows, e.g. "Rödbo, Göteborg" */
@@ -113,6 +118,7 @@ export interface LiveFeedItem {
 
 export interface LiveFeedCreator {
   label: string;
+  real_name: string | null;
   driver_license_last4: string | null;
   verification_status: string | null;
 }
@@ -138,16 +144,12 @@ export interface AdminCommandCenterSnapshot {
 }
 
 export function formatCommandCenterDriverLabel(driver: {
-  display_name: string | null;
-  cabradar_user_id: string | null;
+  nickname?: string | null;
+  display_name?: string | null;
+  cabradar_user_id?: string | null;
   driver_license_last4?: string | null;
 }): string {
-  if (driver.display_name?.trim()) return driver.display_name.trim();
-  if (driver.driver_license_last4) {
-    return `Leg ${maskLicenceLast4(driver.driver_license_last4)}`;
-  }
-  if (driver.cabradar_user_id) return driver.cabradar_user_id;
-  return "Okänd förare";
+  return publicDriverLabel(driver);
 }
 
 async function fetchDriverNetworkStats(
@@ -194,7 +196,7 @@ async function fetchCommandCenterDrivers(
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, display_name, cabradar_user_id, beta_user, verification_status, monthly_reports_count, total_approved_reports, last_known_at"
+        "id, display_name, nickname, cabradar_user_id, beta_user, verification_status, monthly_reports_count, total_approved_reports, last_known_at"
       )
       .eq("is_admin", false)
       .neq("verification_status", "rejected")
@@ -209,6 +211,7 @@ async function fetchCommandCenterDrivers(
     return (data ?? []).map((row) => ({
       id: row.id as string,
       display_name: row.display_name as string | null,
+      nickname: row.nickname as string | null,
       cabradar_user_id: row.cabradar_user_id as string | null,
       beta_user: Boolean(row.beta_user),
       verification_status: row.verification_status as string,
@@ -230,7 +233,7 @@ async function fetchPendingUsers(
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, display_name, cabradar_user_id, phone_number, driver_license_last4, driver_city, taxi_company_name, taxi_number, created_at"
+        "id, display_name, nickname, cabradar_user_id, phone_number, driver_license_last4, driver_city, taxi_company_name, taxi_number, created_at"
       )
       .eq("verification_status", "pending_verification")
       .eq("is_admin", false)
@@ -250,11 +253,11 @@ async function fetchTestModeDrivers(
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, cabradar_user_id, driver_license_last4")
+      .select("id, display_name, nickname, cabradar_user_id, driver_license_last4")
       .eq("test_mode_enabled", true)
       .eq("is_admin", false)
       .neq("verification_status", "rejected")
-      .order("display_name", { ascending: true, nullsFirst: false })
+      .order("nickname", { ascending: true, nullsFirst: false })
       .limit(20);
 
     if (error) {
@@ -279,6 +282,7 @@ async function fetchPendingCivilItems(
       .map((s) => ({
         id: s.id,
         registration_number: s.registration_number,
+        submitter_nickname: s.submitter_nickname,
         submitter_display_name: s.submitter_display_name,
         created_at: s.created_at,
         is_test: Boolean((s as { is_test?: boolean }).is_test),
@@ -319,23 +323,25 @@ async function loadFeedCreators(
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, cabradar_user_id, driver_license_last4, verification_status"
+      "id, display_name, nickname, cabradar_user_id, driver_license_last4, verification_status"
     )
     .in("id", ids);
 
   const map = new Map<string, LiveFeedCreator>();
   for (const row of data ?? []) {
-    const displayName = (row.display_name as string | null)?.trim();
-    const cabradarId = (row.cabradar_user_id as string | null)?.trim();
-    const licenseLast4 = (row.driver_license_last4 as string | null) ?? null;
-    const label =
-      displayName ||
-      cabradarId ||
-      (licenseLast4 ? `Leg ${maskLicenceLast4(licenseLast4)}` : "Okänd förare");
+    const identity = {
+      nickname: row.nickname as string | null,
+      display_name: row.display_name as string | null,
+      cabradar_user_id: row.cabradar_user_id as string | null,
+      driver_license_last4: (row.driver_license_last4 as string | null) ?? null,
+    };
+    const label = publicDriverLabel(identity);
+    const realName = adminDriverRealName(identity);
 
     map.set(row.id as string, {
       label,
-      driver_license_last4: licenseLast4,
+      real_name: realName,
+      driver_license_last4: identity.driver_license_last4,
       verification_status: (row.verification_status as string | null) ?? null,
     });
   }
@@ -381,6 +387,7 @@ export function buildLiveFeed(
         type_label: formatTestAlertTypeLabel(alert.type, Boolean(alert.is_test)),
         type_icon: alertTypeIcon(alert.type),
         driver_name: creator?.label ?? "Okänd förare",
+        driver_real_name: creator?.real_name ?? null,
         driver_license_last4: creator?.driver_license_last4 ?? null,
         verification_status: creator?.verification_status ?? null,
         location: formatAlertLocation(alert),

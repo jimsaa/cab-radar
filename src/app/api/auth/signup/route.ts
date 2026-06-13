@@ -19,11 +19,18 @@ import {
   PROFILE_SCHEMA_ERROR,
   profileHasLicenceHashColumn,
 } from "@/lib/signup-profile";
+import {
+  isNicknameConflictError,
+  NICKNAME_TAKEN_MESSAGE,
+  normalizeNickname,
+  validateNickname,
+} from "@/lib/driver-nickname";
 
 interface SignupBody {
   email?: string;
   password?: string;
   displayName?: string;
+  nickname?: string;
   phoneNumber?: string;
   driverCity?: string;
   taxiCompanyName?: string;
@@ -58,6 +65,7 @@ export async function POST(request: Request) {
   const email = body.email?.trim().toLowerCase();
   const password = body.password;
   const displayName = body.displayName?.trim();
+  const nicknameRaw = body.nickname?.trim();
   const phoneNumber = body.phoneNumber?.trim();
   const driverCity = body.driverCity?.trim();
   const taxiCompanyName = body.taxiCompanyName?.trim();
@@ -101,6 +109,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: LICENCE_INVALID_MESSAGE }, { status: 400 });
   }
 
+  const nicknameError = validateNickname(nicknameRaw ?? "");
+  if (nicknameError) {
+    return NextResponse.json({ error: nicknameError }, { status: 400 });
+  }
+  const nickname = normalizeNickname(nicknameRaw ?? "");
+
   if (!process.env.LICENCE_HASH_SECRET) {
     console.error("[AUTH] Signup failed: LICENCE_HASH_SECRET not configured");
     return NextResponse.json(
@@ -128,6 +142,16 @@ export async function POST(request: Request) {
     if (await findDuplicateLicence(supabase, licence, licenceHash, useHashColumn)) {
       console.error("[AUTH] Signup failed: duplicate licence");
       return NextResponse.json({ error: LICENCE_DUPLICATE_MESSAGE }, { status: 409 });
+    }
+
+    const { data: nicknameTaken } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("nickname", nickname)
+      .maybeSingle();
+
+    if (nicknameTaken) {
+      return NextResponse.json({ error: NICKNAME_TAKEN_MESSAGE }, { status: 409 });
     }
 
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -177,6 +201,7 @@ export async function POST(request: Request) {
         phone_number: phoneNumber,
         driver_city: driverCity,
         taxi_company_name: taxiCompanyName,
+        nickname,
         ...(taxiNumber ? { taxi_number: taxiNumber } : {}),
       };
 
@@ -220,7 +245,15 @@ export async function POST(request: Request) {
 
             await supabase.auth.admin.deleteUser(userId);
             if (profileError.code === "23505") {
-              return { ok: false, error: LICENCE_DUPLICATE_MESSAGE, status: 409 };
+              return {
+                ok: false,
+                error:
+                  profileError.message?.includes("nickname") ||
+                  profileError.details?.includes("nickname")
+                    ? NICKNAME_TAKEN_MESSAGE
+                    : LICENCE_DUPLICATE_MESSAGE,
+                status: 409,
+              };
             }
             return { ok: false, error: "Det gick inte att skapa kontot.", status: 500 };
           }
@@ -252,6 +285,7 @@ export async function POST(request: Request) {
       const { error: insertError } = await supabase.from("profiles").insert({
         id: userId,
         display_name: displayName || userEmail.split("@")[0],
+        nickname,
         ...licenceFields,
         phone_number: phoneNumber,
         driver_city: driverCity,

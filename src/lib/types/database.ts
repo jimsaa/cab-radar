@@ -13,6 +13,7 @@ export type AlertStatus =
 export interface Profile {
   id: string;
   display_name: string | null;
+  nickname: string | null;
   phone_number: string | null;
   cabradar_user_id: string | null;
   driver_license_last4: string | null;

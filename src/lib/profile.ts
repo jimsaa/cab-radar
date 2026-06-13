@@ -8,7 +8,7 @@ import type { Profile } from "./types/database";
 
 /** Columns safe for client reads — excludes licence hash and plaintext */
 export const PROFILE_SAFE_COLUMNS =
-  "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, fab_enabled, alert_chime_enabled, push_enabled, push_prompted, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, last_monthly_reset, reputation_score, report_usefulness_score, total_approved_reports, reward_points_balance, taxi_company_name, taxi_operator, taxi_number, taximeter_type, driver_city, show_national_emergencies, welcome_pending, created_at, updated_at";
+  "id, display_name, nickname, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, fab_enabled, alert_chime_enabled, push_enabled, push_prompted, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, last_monthly_reset, reputation_score, report_usefulness_score, total_approved_reports, reward_points_balance, taxi_company_name, taxi_operator, taxi_number, taximeter_type, driver_city, show_national_emergencies, welcome_pending, created_at, updated_at";
 
 export const PROFILE_CORE_COLUMNS =
   "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, fab_enabled, alert_chime_enabled, created_at, updated_at";
@@ -30,7 +30,7 @@ const PROFILE_OPTIONAL_GROUPS = [
   PROFILE_REPUTATION_COLUMNS,
   PROFILE_TAXI_COLUMNS,
   "last_known_latitude, last_known_longitude, last_known_at",
-  "driver_city, show_national_emergencies, welcome_pending, test_mode_enabled",
+  "driver_city, show_national_emergencies, welcome_pending, test_mode_enabled, nickname",
 ] as const;
 
 /** Smallest column set that works on databases without membership/phone migrations */
@@ -42,7 +42,7 @@ export const PROFILE_BASE_COLUMNS =
   "id, display_name, verification_status, is_admin, created_at, updated_at";
 
 export const ADMIN_PROFILE_COLUMNS =
-  "id, display_name, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, driver_city, taxi_company_name, taxi_number, test_mode_enabled, created_at";
+  "id, display_name, nickname, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, driver_city, taxi_company_name, taxi_number, test_mode_enabled, created_at";
 
 export function normalizeProfileRow(row: Record<string, unknown>): Profile {
   const isAdmin = Boolean(row.is_admin);
@@ -68,6 +68,7 @@ export function normalizeProfileRow(row: Record<string, unknown>): Profile {
   return {
     id: row.id as string,
     display_name: (row.display_name as string | null) ?? null,
+    nickname: (row.nickname as string | null) ?? null,
     phone_number: (row.phone_number as string | null) ?? null,
     cabradar_user_id: (row.cabradar_user_id as string | null) ?? null,
     driver_license_last4: (row.driver_license_last4 as string | null) ?? null,

@@ -113,7 +113,17 @@ function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
       <div className="mt-6 space-y-4">
         <DetailRow label="Plats" value={item.address} large />
         <DetailRow label="Tid" value={item.time_label} mono large />
-        <DetailRow label="Rapporterad av" value={item.driver_name} large />
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
+            Rapporterad av
+          </p>
+          <p className="mt-1 text-xl font-semibold text-white">{item.driver_name}</p>
+          {item.driver_real_name && item.driver_real_name !== item.driver_name && (
+            <p className="mt-0.5 text-sm font-normal text-[#8A9099]">
+              {item.driver_real_name}
+            </p>
+          )}
+        </div>
         {legLine && <DetailRow label="Taxi Leg" value={legLine} mono large />}
         <DetailRow
           label="Status"

@@ -6,6 +6,7 @@ import {
 import { googleMapsLink } from "./constants";
 import { isMissingSchemaError } from "./db-errors";
 import { distanceMeters } from "./geo";
+import { publicDriverLabel, adminDriverRealName } from "./driver-display";
 import { fetchCurrentProfile } from "./profile";
 import type { DriverAlert, Profile } from "./types/database";
 
@@ -19,6 +20,7 @@ export interface EmergencyAlertWithDriver extends DriverAlert {
     Profile,
     | "id"
     | "display_name"
+    | "nickname"
     | "phone_number"
     | "cabradar_user_id"
     | "taxi_company_name"
@@ -45,6 +47,7 @@ function pickEmergencyDriverFields(profile: Profile): EmergencyDriverProfile {
   return {
     id: profile.id,
     display_name: profile.display_name,
+    nickname: profile.nickname,
     phone_number: profile.phone_number,
     cabradar_user_id: profile.cabradar_user_id,
     taxi_company_name: profile.taxi_company_name,
@@ -53,21 +56,26 @@ function pickEmergencyDriverFields(profile: Profile): EmergencyDriverProfile {
   };
 }
 
-/** Display name with profile → CabRadar ID → auth metadata fallbacks. */
+/** Public nickname for emergency UI — never exposes real name. */
 export function emergencyDriverName(
   alert: Pick<EmergencyAlertWithDriver, "created_by" | "driver">
 ): string {
   const driver = alert.driver;
-  if (driver?.display_name?.trim()) {
-    return driver.display_name.trim();
-  }
-  if (driver?.cabradar_user_id?.trim()) {
-    return driver.cabradar_user_id.trim();
+  if (driver) {
+    return publicDriverLabel(driver);
   }
   if (alert.created_by) {
     return `Förare (${alert.created_by.slice(0, 8)}…)`;
   }
   return "Okänd förare";
+}
+
+/** Real name for admin emergency views only. */
+export function emergencyDriverRealName(
+  alert: Pick<EmergencyAlertWithDriver, "driver">
+): string | null {
+  if (!alert.driver) return null;
+  return adminDriverRealName(alert.driver);
 }
 
 export function emergencyCabradarId(
@@ -249,10 +257,10 @@ export function hasEmergencyMoved(
 }
 
 const EMERGENCY_DRIVER_COLUMNS =
-  "id, display_name, phone_number, cabradar_user_id, taxi_company_name, taxi_operator, taxi_number";
+  "id, display_name, nickname, phone_number, cabradar_user_id, taxi_company_name, taxi_operator, taxi_number";
 
 const EMERGENCY_DRIVER_COLUMNS_MINIMAL =
-  "id, display_name, phone_number, cabradar_user_id";
+  "id, display_name, nickname, phone_number, cabradar_user_id";
 
 async function loadAuthUserFallback(
   supabase: SupabaseClient,
@@ -312,6 +320,7 @@ async function loadEmergencyDriverProfile(
         driver: {
           id: userId,
           display_name: authPartial.display_name ?? null,
+          nickname: null,
           phone_number: authPartial.phone_number ?? null,
           cabradar_user_id: null,
           taxi_company_name: null,
@@ -368,6 +377,7 @@ async function loadEmergencyDriverProfiles(
       map.set(id, {
         id,
         display_name: (profile.display_name as string | null) ?? null,
+        nickname: (profile.nickname as string | null) ?? null,
         phone_number: (profile.phone_number as string | null) ?? null,
         cabradar_user_id: (profile.cabradar_user_id as string | null) ?? null,
         taxi_company_name: (profile.taxi_company_name as string | null) ?? null,

@@ -140,10 +140,16 @@ export function AdminCivilSubmissionsTab({
                     <p>
                       <span className="text-muted">Inskickad av: </span>
                       <span className="font-medium text-foreground/90">
-                        {item.submitter_display_name ??
+                        {item.submitter_nickname ??
                           item.submitter_cabradar_user_id ??
                           "—"}
                       </span>
+                      {item.submitter_display_name &&
+                        item.submitter_display_name !== item.submitter_nickname && (
+                          <span className="block text-xs text-muted">
+                            {item.submitter_display_name}
+                          </span>
+                        )}
                     </p>
                     {item.report_count > 1 && (
                       <p className="text-xs text-muted">

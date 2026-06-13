@@ -16,7 +16,9 @@ import { isVerifiedDriver, isBetaUser } from "@/lib/membership";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
 import { syncMembershipProfile } from "@/lib/profile";
 import { AdditionalProfileInfo } from "@/components/profile/AdditionalProfileInfo";
+import { NicknameSettings } from "@/components/profile/NicknameSettings";
 import { DriverCitySettings } from "@/components/profile/DriverCitySettings";
+import { publicDriverLabel } from "@/lib/driver-display";
 import { ProfileResourcesSection } from "@/components/profile/ProfileResourcesSection";
 import { TestModeSettings } from "@/components/test-mode/TestModeSettings";
 import { PushNotificationsSection } from "@/components/notifications/PushNotificationsSection";
@@ -81,7 +83,9 @@ export default function SettingsPage() {
           <div className="flex items-start gap-3">
             <User className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">{profile.display_name ?? "Förare"}</p>
+              <p className="font-semibold">
+                {publicDriverLabel(profile)}
+              </p>
               {profile.cabradar_user_id && (
                 <p className="mt-1 text-sm">
                   Ditt användar-ID:{" "}
@@ -122,6 +126,17 @@ export default function SettingsPage() {
         <div className="mb-4">
           <MembershipCard profile={profile} />
         </div>
+      )}
+
+      {profile && userId && (
+        <NicknameSettings
+          profile={profile}
+          onUpdated={(nickname) =>
+            setProfile((current) =>
+              current ? { ...current, nickname } : current
+            )
+          }
+        />
       )}
 
       {profile && userId && (

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { publicDriverLabel } from "./driver-display";
 import { formatSwedishDateTime, formatSwedishObservedDate } from "./datetime";
 import { isMissingSchemaError } from "./db-errors";
 
@@ -43,6 +44,7 @@ export interface CivilSubmission {
 }
 
 export interface CivilSubmissionWithSubmitter extends CivilSubmission {
+  submitter_nickname: string | null;
   submitter_display_name: string | null;
   submitter_cabradar_user_id: string | null;
   report_count: number;
@@ -132,22 +134,34 @@ async function loadProfileMap(
   supabase: SupabaseClient,
   userIds: string[]
 ): Promise<
-  Map<string, { display_name: string | null; cabradar_user_id: string | null }>
+  Map<
+    string,
+    {
+      nickname: string | null;
+      display_name: string | null;
+      cabradar_user_id: string | null;
+    }
+  >
 > {
   const profileMap = new Map<
     string,
-    { display_name: string | null; cabradar_user_id: string | null }
+    {
+      nickname: string | null;
+      display_name: string | null;
+      cabradar_user_id: string | null;
+    }
   >();
   if (userIds.length === 0) return profileMap;
 
   const withCrId = await supabase
     .from("profiles")
-    .select("id, display_name, cabradar_user_id")
+    .select("id, display_name, nickname, cabradar_user_id")
     .in("id", userIds);
 
   let profiles: {
     id: string;
     display_name: string | null;
+    nickname?: string | null;
     cabradar_user_id?: string | null;
   }[] = [];
 
@@ -165,6 +179,7 @@ async function loadProfileMap(
 
   for (const profile of profiles) {
     profileMap.set(profile.id, {
+      nickname: profile.nickname ?? null,
       display_name: profile.display_name ?? null,
       cabradar_user_id: profile.cabradar_user_id ?? null,
     });
@@ -395,6 +410,7 @@ export async function fetchCivilSubmissions(
     return {
       ...submission,
       comment: submission.comment ?? null,
+      submitter_nickname: submitter ? publicDriverLabel(submitter) : null,
       submitter_display_name: submitter?.display_name ?? null,
       submitter_cabradar_user_id: submitter?.cabradar_user_id ?? null,
       report_count: reportCounts.get(submission.registration_number) ?? 1,

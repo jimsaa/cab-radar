@@ -20,6 +20,11 @@ import {
   isValidDriverCitySelection,
   resolveDriverCity,
 } from "@/lib/driver-city";
+import {
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_PRIVACY_EXPLANATION,
+  validateNickname,
+} from "@/lib/driver-nickname";
 
 interface AuthFormProps {
   mode: "login" | "signup";
@@ -63,6 +68,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [driverCity, setDriverCity] = useState("");
   const [customCity, setCustomCity] = useState("");
@@ -146,6 +152,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
+    const nicknameError = validateNickname(nickname);
+    if (nicknameError) {
+      setError(nicknameError);
+      setLoading(false);
+      return;
+    }
+
     const resolvedCity = resolveDriverCity(driverCity, customCity);
     if (!resolvedCity) {
       setError("Välj din stad.");
@@ -161,6 +174,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           email,
           password,
           displayName,
+          nickname,
           phoneNumber: phone,
           driverCity: resolvedCity,
           taxiCompanyName: company,
@@ -294,17 +308,41 @@ export function AuthForm({ mode }: AuthFormProps) {
       {mode === "signup" && (
         <>
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-muted">Förarnamn</span>
+            <span className="text-sm text-muted">Förarnamn (riktigt namn)</span>
             <input
               className="field"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Ditt namn"
+              placeholder="Ditt riktiga namn"
               required
               autoComplete="name"
               disabled={submitDisabled}
             />
+            <span className="text-xs text-muted">
+              Syns endast för administratörer — inte för andra förare.
+            </span>
           </label>
+
+          <div className="rounded-xl border border-card-border bg-card/40 px-3 py-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-muted">Visningsnamn (smeknamn) *</span>
+              <input
+                className="field"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="T.ex. Jim On Road"
+                required
+                maxLength={NICKNAME_MAX_LENGTH}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                disabled={submitDisabled}
+              />
+            </label>
+            <p className="mt-2 text-xs leading-relaxed text-muted">
+              {NICKNAME_PRIVACY_EXPLANATION}
+            </p>
+          </div>
 
           <label className="flex flex-col gap-1">
             <span className="text-sm text-muted">Mobilnummer *</span>
