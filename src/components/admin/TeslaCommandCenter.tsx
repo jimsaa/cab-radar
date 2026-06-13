@@ -8,6 +8,7 @@ import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButton
 import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
 import { TeslaQuickCivilPanel } from "@/components/admin/TeslaQuickCivilPanel";
+import { TeslaOpenCivilkollButton } from "@/components/admin/TeslaOpenCivilkollButton";
 import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { formatCommandCenterDriverLabel } from "@/lib/admin-command-center";
@@ -270,6 +271,9 @@ export function TeslaCommandCenter() {
           </h2>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             <TeslaQuickReportPanel onReported={() => void refresh()} />
+          </div>
+          <div className="shrink-0 border-t border-[#3A4048] px-3 py-3">
+            <TeslaOpenCivilkollButton />
           </div>
           <TeslaQuickCivilPanel onAdded={() => void refresh()} />
         </section>

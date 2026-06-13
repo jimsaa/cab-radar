@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { TeslaCommandCenter } from "@/components/admin/TeslaCommandCenter";
 import { TESLA_COMMAND_CENTER_MIN_WIDTH } from "@/lib/admin-command-center";
 
@@ -11,6 +12,7 @@ export function AdminWideScreenGate({
   isFullAdmin: boolean;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [isWide, setIsWide] = useState(false);
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export function AdminWideScreenGate({
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const showDispatch = isFullAdmin && isWide;
+  const showDispatch = isFullAdmin && isWide && pathname === "/admin";
 
   useEffect(() => {
     if (showDispatch) {

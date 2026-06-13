@@ -38,7 +38,7 @@ export default async function AdminCivilkollPage() {
   const pendingCount = submissions.filter((s) => s.status === "pending").length;
 
   return (
-    <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
+    <div id="admin-civilkoll" className="safe-bottom mx-auto max-w-lg scroll-mt-24 px-4 pb-4">
       <h1 className="py-4 text-xl font-bold">🔍 Civilkoll</h1>
       <p className="mb-4 text-sm text-muted">
         Bygg och underhåll CabRadars interna observationsregister.
