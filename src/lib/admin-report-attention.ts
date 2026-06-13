@@ -4,9 +4,9 @@ export const ADMIN_ALERTED_REPORTS_KEY = "cabradar_admin_alerted_reports";
 export const ADMIN_ACKED_EMERGENCIES_KEY = "cabradar_admin_emergency_acked";
 export const ADMIN_ALERTED_MAX_STORED = 500;
 
-export const ADMIN_BORDER_PULSE_MS = 3000;
+export const ADMIN_HIGHLIGHT_MS = 5000;
 export const ADMIN_NY_BADGE_MS = 60_000;
-export const ADMIN_BG_FLASH_MS = 2500;
+export const ADMIN_BG_FLASH_MS = 5000;
 
 export type AdminReportAttentionKind =
   | "laser"

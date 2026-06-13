@@ -501,84 +501,195 @@ body {
   0% {
     background-color: rgba(255, 255, 255, 0.1);
   }
+  70% {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
   100% {
     background-color: transparent;
   }
 }
 
 .admin-report-bg-flash {
-  animation: admin-report-bg-flash 2.5s ease-out forwards;
+  animation: admin-report-bg-flash 5s ease-out forwards;
 }
 
-@keyframes admin-report-pulse-once-laser {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.55);
+@keyframes admin-report-attention-laser {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(168, 85, 247, 0.75),
+      0 0 20px rgba(168, 85, 247, 0.32);
   }
-  50% {
+  15%,
+  35%,
+  55% {
     box-shadow:
       inset 0 0 0 2px rgba(168, 85, 247, 0.95),
-      0 0 14px rgba(168, 85, 247, 0.28);
+      0 0 24px rgba(168, 85, 247, 0.4);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(168, 85, 247, 0.55),
+      0 0 14px rgba(168, 85, 247, 0.18);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(168, 85, 247, 0.2),
+      0 0 6px rgba(168, 85, 247, 0.06);
+  }
+  100% {
+    box-shadow: none;
   }
 }
 
-@keyframes admin-report-pulse-once-taxikontroll {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 1px rgba(244, 196, 48, 0.55);
+@keyframes admin-report-attention-taxikontroll {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(244, 196, 48, 0.75),
+      0 0 20px rgba(244, 196, 48, 0.3);
   }
-  50% {
+  15%,
+  35%,
+  55% {
     box-shadow:
       inset 0 0 0 2px rgba(244, 196, 48, 0.95),
-      0 0 14px rgba(244, 196, 48, 0.25);
+      0 0 24px rgba(244, 196, 48, 0.38);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(244, 196, 48, 0.55),
+      0 0 14px rgba(244, 196, 48, 0.16);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(244, 196, 48, 0.2),
+      0 0 6px rgba(244, 196, 48, 0.06);
+  }
+  100% {
+    box-shadow: none;
   }
 }
 
-@keyframes admin-report-pulse-once-ko {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.55);
+@keyframes admin-report-attention-ko {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(249, 115, 22, 0.75),
+      0 0 20px rgba(249, 115, 22, 0.3);
   }
-  50% {
+  15%,
+  35%,
+  55% {
     box-shadow:
       inset 0 0 0 2px rgba(249, 115, 22, 0.95),
-      0 0 14px rgba(249, 115, 22, 0.25);
+      0 0 24px rgba(249, 115, 22, 0.38);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(249, 115, 22, 0.55),
+      0 0 14px rgba(249, 115, 22, 0.16);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(249, 115, 22, 0.2),
+      0 0 6px rgba(249, 115, 22, 0.06);
+  }
+  100% {
+    box-shadow: none;
   }
 }
 
-@keyframes admin-report-pulse-once-stopp {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.55);
+@keyframes admin-report-attention-stopp {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(239, 68, 68, 0.75),
+      0 0 20px rgba(239, 68, 68, 0.32);
   }
-  50% {
+  15%,
+  35%,
+  55% {
     box-shadow:
       inset 0 0 0 2px rgba(239, 68, 68, 0.95),
-      0 0 14px rgba(239, 68, 68, 0.28);
+      0 0 24px rgba(239, 68, 68, 0.4);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(239, 68, 68, 0.55),
+      0 0 14px rgba(239, 68, 68, 0.18);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(239, 68, 68, 0.2),
+      0 0 6px rgba(239, 68, 68, 0.06);
+  }
+  100% {
+    box-shadow: none;
   }
 }
 
-@keyframes admin-report-pulse-once-olycka {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.55);
+@keyframes admin-report-attention-olycka {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(59, 130, 246, 0.75),
+      0 0 20px rgba(59, 130, 246, 0.3);
   }
-  50% {
+  15%,
+  35%,
+  55% {
     box-shadow:
       inset 0 0 0 2px rgba(59, 130, 246, 0.95),
-      0 0 14px rgba(59, 130, 246, 0.25);
+      0 0 24px rgba(59, 130, 246, 0.38);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(59, 130, 246, 0.55),
+      0 0 14px rgba(59, 130, 246, 0.16);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(59, 130, 246, 0.2),
+      0 0 6px rgba(59, 130, 246, 0.06);
+  }
+  100% {
+    box-shadow: none;
   }
 }
 
-@keyframes admin-report-pulse-once-default {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 1px rgba(176, 182, 190, 0.45);
+@keyframes admin-report-attention-default {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(176, 182, 190, 0.55),
+      0 0 16px rgba(176, 182, 190, 0.2);
   }
-  50% {
+  15%,
+  35%,
+  55% {
     box-shadow:
       inset 0 0 0 2px rgba(176, 182, 190, 0.75),
-      0 0 10px rgba(176, 182, 190, 0.18);
+      0 0 20px rgba(176, 182, 190, 0.24);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(176, 182, 190, 0.4),
+      0 0 10px rgba(176, 182, 190, 0.12);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(176, 182, 190, 0.15),
+      0 0 4px rgba(176, 182, 190, 0.04);
+  }
+  100% {
+    box-shadow: none;
   }
 }
 
@@ -592,7 +703,7 @@ body {
   50% {
     box-shadow:
       inset 0 0 0 3px rgba(255, 59, 48, 1),
-      0 0 24px rgba(255, 59, 48, 0.45);
+      0 0 28px rgba(255, 59, 48, 0.5);
   }
 }
 
@@ -625,27 +736,27 @@ body {
 }
 
 .admin-report-pulse-laser {
-  animation: admin-report-pulse-once-laser 1s ease-in-out 3;
+  animation: admin-report-attention-laser 5s ease-out forwards;
 }
 
 .admin-report-pulse-taxikontroll {
-  animation: admin-report-pulse-once-taxikontroll 1s ease-in-out 3;
+  animation: admin-report-attention-taxikontroll 5s ease-out forwards;
 }
 
 .admin-report-pulse-ko {
-  animation: admin-report-pulse-once-ko 1s ease-in-out 3;
+  animation: admin-report-attention-ko 5s ease-out forwards;
 }
 
 .admin-report-pulse-stopp {
-  animation: admin-report-pulse-once-stopp 1s ease-in-out 3;
+  animation: admin-report-attention-stopp 5s ease-out forwards;
 }
 
 .admin-report-pulse-olycka {
-  animation: admin-report-pulse-once-olycka 1s ease-in-out 3;
+  animation: admin-report-attention-olycka 5s ease-out forwards;
 }
 
 .admin-report-pulse-default {
-  animation: admin-report-pulse-once-default 1s ease-in-out 3;
+  animation: admin-report-attention-default 5s ease-out forwards;
 }
 
 .admin-report-pulse-emergency {

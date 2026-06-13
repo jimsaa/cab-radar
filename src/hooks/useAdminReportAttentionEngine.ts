@@ -8,7 +8,7 @@ import {
 } from "@/lib/admin-attention-sounds";
 import {
   ADMIN_BG_FLASH_MS,
-  ADMIN_BORDER_PULSE_MS,
+  ADMIN_HIGHLIGHT_MS,
   ADMIN_NY_BADGE_MS,
   adminReportAttentionStyle,
   loadAcknowledgedEmergencyIds,
@@ -21,7 +21,7 @@ import {
 interface AttentionEntry {
   showNyBadge: boolean;
   showBgFlash: boolean;
-  showBorderPulse: boolean;
+  showHighlight: boolean;
 }
 
 function emptyAttention(): ReportAttentionVisual {
@@ -88,13 +88,13 @@ export function useAdminReportAttentionEngine(
           next.set(id, {
             showNyBadge: true,
             showBgFlash: true,
-            showBorderPulse: true,
+            showHighlight: true,
           });
 
           scheduleAttentionClear(
             id,
-            { showBorderPulse: false },
-            ADMIN_BORDER_PULSE_MS
+            { showHighlight: false },
+            ADMIN_HIGHLIGHT_MS
           );
           scheduleAttentionClear(id, { showBgFlash: false }, ADMIN_BG_FLASH_MS);
           scheduleAttentionClear(id, { showNyBadge: false }, ADMIN_NY_BADGE_MS);
@@ -206,9 +206,9 @@ export function useAdminReportAttentionEngine(
       }
 
       return {
-        borderClass: style.borderClass,
+        borderClass: isEmergencyUnacknowledged ? style.borderClass : "",
         pulseClass:
-          entry?.showBorderPulse || isEmergencyUnacknowledged
+          entry?.showHighlight || isEmergencyUnacknowledged
             ? style.pulseClass
             : "",
         showNyBadge: Boolean(entry?.showNyBadge),

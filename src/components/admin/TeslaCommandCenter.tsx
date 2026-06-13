@@ -15,7 +15,6 @@ import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { formatCommandCenterDriverLabel } from "@/lib/admin-command-center";
 import {
   emergencyDriverName,
-  emergencyDriverRealName,
   emergencyLocationLabel,
   emergencyPhoneDisplay,
   emergencyPhoneTel,
@@ -46,7 +45,6 @@ function TeslaEmergencyCard({
 }) {
   const [closing, setClosing] = useState(false);
   const driverName = emergencyDriverName(emergency);
-  const driverRealName = emergencyDriverRealName(emergency);
   const locationLabel = emergencyLocationLabel(emergency);
   const navLat =
     emergency.emergency_last_latitude ?? emergency.latitude;
@@ -98,9 +96,6 @@ function TeslaEmergencyCard({
           {isTest ? "🧪 TEST – Aktiv nödsituation" : "🆘 Aktiv nödsituation"}
         </p>
         <h2 className="mt-1 text-2xl font-bold text-white">{driverName}</h2>
-        {driverRealName && driverRealName !== driverName && (
-          <p className="text-sm text-[#8A9099]">{driverRealName}</p>
-        )}
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <InfoCell label="Taxibolag" value={emergencyTaxiCompany(emergency.driver)} />
           <InfoCell

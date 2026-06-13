@@ -118,11 +118,6 @@ function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
             Rapporterad av
           </p>
           <p className="mt-1 text-xl font-semibold text-white">{item.driver_name}</p>
-          {item.driver_real_name && item.driver_real_name !== item.driver_name && (
-            <p className="mt-0.5 text-sm font-normal text-[#8A9099]">
-              {item.driver_real_name}
-            </p>
-          )}
         </div>
         {legLine && <DetailRow label="Taxi Leg" value={legLine} mono large />}
         <DetailRow
@@ -267,7 +262,7 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
                 type="button"
                 onClick={() => setSelectedId(item.id)}
                 className={cn(
-                  "relative w-full px-5 py-4 text-left transition active:scale-[0.99]",
+                  "relative w-full px-5 py-4 text-left transition-[transform,box-shadow,background-color] duration-700 ease-out active:scale-[0.99]",
                   isSelected
                     ? "bg-[#3B82F6]/15 ring-1 ring-inset ring-[#3B82F6]/40"
                     : "hover:bg-[#2a3038]/60",
