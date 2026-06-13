@@ -8,6 +8,7 @@ import {
   Headphones,
   Image,
   Mail,
+  Map,
   MessageSquare,
   ShieldAlert,
   Tag,
@@ -21,6 +22,7 @@ import type { AdminBadgeKey } from "@/lib/admin-notifications";
 
 const FULL_LINKS = [
   { href: "/admin", label: "Översikt", icon: LayoutDashboard },
+  { href: "/admin/map", label: "Karta", icon: Map },
   { href: "/admin/emergency", label: "Nödlägen", icon: ShieldAlert },
   { href: "/admin/alerts", label: "Varningar", icon: AlertTriangle },
   { href: "/admin/deals", label: "Erbjudanden", icon: Tag },

@@ -89,13 +89,23 @@ export function TeslaNetworkMap({
 
   return (
     <div className={cn("shrink-0 px-4 py-3", className)}>
-      <div className="mb-2">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
-          Nätverkskarta
-        </h3>
-        <p className="mt-0.5 text-[10px] text-[#8A9099]">
-          Ungefärlig närvaro · uppdateras var 5:e minut
-        </p>
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
+            Nätverkskarta
+          </h3>
+          <p className="mt-0.5 text-[10px] text-[#8A9099]">
+            Ungefärlig närvaro · uppdateras var 5:e minut
+          </p>
+        </div>
+        <a
+          href="/admin/map"
+          onClick={(event) => event.stopPropagation()}
+          className="flex h-9 shrink-0 items-center gap-1 rounded-[10px] border border-[#3A4048]/80 bg-[#1E2125]/90 px-2.5 text-[11px] font-semibold text-[#B0B6BE] transition hover:border-[#4B5563] hover:text-white"
+          aria-label="Öppna karta på helsida"
+        >
+          ⛶ Helsida
+        </a>
       </div>
 
       <button

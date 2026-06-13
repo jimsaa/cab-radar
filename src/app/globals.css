@@ -367,6 +367,14 @@ body {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem) !important;
 }
 
+.admin-dispatch-map-page {
+  --admin-command-center-header-height: 72px;
+}
+
+.admin-dispatch-map-overlay {
+  touch-action: manipulation;
+}
+
 .admin-command-center .safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
 }
