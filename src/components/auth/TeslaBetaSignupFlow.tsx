@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import { APP_NAME } from "@/lib/constants";
 import {
   isValidLicence,
   LICENCE_INVALID_MESSAGE,
@@ -116,8 +118,16 @@ export function TeslaBetaSignupFlow() {
 
   return (
     <div className="safe-bottom mx-auto max-w-lg px-4 py-8">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight">
+      <div className="mb-8 flex flex-col items-center text-center">
+        <Image
+          src="/logo.png"
+          alt={APP_NAME}
+          width={72}
+          height={72}
+          className="rounded-2xl"
+          priority
+        />
+        <h1 className="mt-4 text-3xl font-bold tracking-tight">
           🚕⚡ Tesla Beta Göteborg
         </h1>
       </div>
