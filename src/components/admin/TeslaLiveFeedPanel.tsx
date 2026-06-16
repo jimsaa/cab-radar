@@ -56,7 +56,7 @@ function ReportAttentionBadge({
   );
 }
 
-function TeslaReportDetailEmpty() {
+export function TeslaReportDetailEmpty() {
   return (
     <div className="flex h-full min-h-[280px] flex-col items-center justify-center px-8 text-center">
       <Image
@@ -73,7 +73,7 @@ function TeslaReportDetailEmpty() {
   );
 }
 
-function TeslaReportDetailPanel({
+export function TeslaReportDetailPanel({
   item,
   privacyMode = "admin",
 }: {
@@ -235,14 +235,83 @@ function DetailRow({
 interface TeslaLiveFeedPanelProps {
   items: LiveFeedItem[];
   privacyMode?: "admin" | "driving";
+  layout?: "split" | "list" | "detail";
+  selectedId?: string | null;
+  onSelectId?: (id: string) => void;
+}
+
+function TeslaLiveFeedList({
+  items,
+  selectedId,
+  onSelectId,
+}: {
+  items: LiveFeedItem[];
+  selectedId: string | null;
+  onSelectId: (id: string) => void;
+}) {
+  const { getReportAttention } = useAdminCommandCenter();
+
+  return (
+    <ul className="min-h-0 flex-1 overflow-y-auto">
+      {items.map((item) => {
+        const isSelected = item.id === selectedId;
+        const attention = getReportAttention(item.id, item.type);
+
+        return (
+          <li key={item.id} className="border-b border-[#3A4048]/60 last:border-0">
+            <button
+              type="button"
+              onClick={() => onSelectId(item.id)}
+              className={cn(
+                "relative w-full px-5 py-4 text-left transition-[transform,box-shadow,background-color] duration-700 ease-out active:scale-[0.99]",
+                isSelected
+                  ? "bg-[#3B82F6]/15 ring-1 ring-inset ring-[#3B82F6]/40"
+                  : "hover:bg-[#2a3038]/60",
+                attention.borderClass,
+                attention.pulseClass,
+                attention.showBgFlash && "admin-report-bg-flash"
+              )}
+            >
+              <ReportAttentionBadge
+                showNy={attention.showNyBadge}
+                showAkut={attention.showAkutBadge}
+              />
+
+              <p className="pr-14 text-lg font-bold text-white">
+                <span aria-hidden className="mr-1.5 inline-flex align-middle">
+                  <ReportTypeIcon type={item.type} variant="badge" className="text-white" />
+                </span>
+                {item.type_label}
+              </p>
+              <p className="mt-1 text-base text-[#B0B6BE]">{item.location}</p>
+              <p className="mt-0.5 text-sm font-mono text-[#8A9099]">
+                {item.time_label}
+              </p>
+              <ReportCommentPreview
+                comment={item.description}
+                variant="tesla"
+                className="mt-1 text-sm"
+              />
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function TeslaLiveFeedPanel({
   items,
   privacyMode = "admin",
+  layout = "split",
+  selectedId: controlledSelectedId,
+  onSelectId,
 }: TeslaLiveFeedPanelProps) {
   const { getReportAttention } = useAdminCommandCenter();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
+
+  const selectedId = controlledSelectedId ?? internalSelectedId;
+  const setSelectedId = onSelectId ?? setInternalSelectedId;
 
   const selected = useMemo(() => {
     if (!selectedId) return null;
@@ -255,6 +324,28 @@ export function TeslaLiveFeedPanel({
         <p className="text-center text-sm text-[#8A9099]">
           Inga aktiva rapporter
         </p>
+      </div>
+    );
+  }
+
+  if (layout === "list") {
+    return (
+      <TeslaLiveFeedList
+        items={items}
+        selectedId={selectedId}
+        onSelectId={setSelectedId}
+      />
+    );
+  }
+
+  if (layout === "detail") {
+    return (
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[#1E2125]/40">
+        {selected ? (
+          <TeslaReportDetailPanel item={selected} privacyMode={privacyMode} />
+        ) : (
+          <TeslaReportDetailEmpty />
+        )}
       </div>
     );
   }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Radio, ScanSearch, User, Shield, ShieldAlert, Signal } from "lucide-react";
+import { ViewModeSwitcher } from "@/components/layout/ViewModeSwitcher";
 import { APP_NAME, APP_HEADER_TAGLINE, NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +102,7 @@ export function Header({
     return null;
   }
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/tesla")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/tesla") || pathname.startsWith("/tab")) {
     return null;
   }
 
@@ -110,8 +111,13 @@ export function Header({
 
   if (dashboardHome) {
     return (
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-lg items-center justify-end px-4 py-2">
+      <header className="sticky top-0 z-40 border-b border-card-border/60 bg-background/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-2">
+          {isLoggedIn ? (
+            <ViewModeSwitcher variant="app" className="shrink-0" />
+          ) : (
+            <div className="w-[1px]" aria-hidden />
+          )}
           <AdminHeaderLink
             isAdmin={isAdmin}
             isEmergencyAdmin={isEmergencyAdmin}
@@ -143,11 +149,14 @@ export function Header({
             </span>
           </div>
         </Link>
-        <AdminHeaderLink
-          isAdmin={isAdmin}
-          isEmergencyAdmin={isEmergencyAdmin}
-          pathname={pathname}
-        />
+        <div className="flex shrink-0 items-center gap-2">
+          <AdminHeaderLink
+            isAdmin={isAdmin}
+            isEmergencyAdmin={isEmergencyAdmin}
+            pathname={pathname}
+          />
+          {isLoggedIn && <ViewModeSwitcher variant="app" className="shrink-0" />}
+        </div>
       </div>
     </header>
   );
@@ -156,7 +165,7 @@ export function Header({
 export function BottomNav() {
   const pathname = usePathname();
 
-  if (isMarketingPath(pathname) || pathname.startsWith("/admin") || pathname.startsWith("/tesla")) {
+  if (isMarketingPath(pathname) || pathname.startsWith("/admin") || pathname.startsWith("/tesla") || pathname.startsWith("/tab")) {
     return null;
   }
 

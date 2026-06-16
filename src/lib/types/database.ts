@@ -53,6 +53,7 @@ export interface Profile {
   show_national_emergencies: boolean;
   welcome_pending: boolean;
   test_mode_enabled: boolean;
+  preferred_view: "app" | "tesla" | "tab";
   created_at: string;
   updated_at: string;
 }

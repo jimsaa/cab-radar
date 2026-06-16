@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { GsiDispatchAdminButton } from "@/components/gsi/GsiDispatchAdminButton";
+import { ViewModeSwitcher } from "@/components/layout/ViewModeSwitcher";
 import { SjAnkomsterAdminButton } from "@/components/sj/SjAnkomsterAdminButton";
 import { APP_NAME } from "@/lib/constants";
 import {
@@ -92,6 +93,9 @@ export function TeslaCommandCenterHeader({
             </p>
           </div>
         </div>
+
+        {/* Center — cockpit switcher */}
+        <ViewModeSwitcher variant="cockpit" className="shrink-0" />
 
         {/* Right — GSI, SJ shortcut, then clock */}
         <div className="flex shrink-0 items-center gap-2">
