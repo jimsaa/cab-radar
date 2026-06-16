@@ -12,7 +12,6 @@ import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel"
 import { AdminCivilkollActions } from "@/components/admin/AdminCivilkollActions";
 import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
-import { formatCommandCenterDriverLabel } from "@/lib/admin-command-center";
 import {
   emergencyDriverName,
   emergencyLocationLabel,
@@ -212,29 +211,11 @@ export function TeslaCommandCenter() {
     [refresh, clearEmergencyAcknowledgement, showToast]
   );
 
-  async function verifyDriver(driverId: string, action: "approve" | "reject") {
-    const res = await fetch("/api/admin/verify-driver", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ driverId, action }),
-    });
-    if (!res.ok) {
-      const data = (await res.json()) as { error?: string };
-      showToast(data.error ?? "Kunde inte uppdatera föraren.", {
-        variant: "error",
-      });
-      return;
-    }
-    void refresh();
-  }
-
   const emergencies = snapshot?.emergencies ?? [];
   const liveEmergencies = emergencies.filter((e) => !e.is_test);
   const testEmergencies = emergencies.filter((e) => e.is_test);
   const hasLiveEmergencies = liveEmergencies.length > 0;
   const stats = snapshot?.stats;
-  const pendingUsers = snapshot?.pendingUsers ?? [];
-  const testModeDrivers = snapshot?.testModeDrivers ?? [];
 
   return (
     <div
@@ -320,7 +301,7 @@ export function TeslaCommandCenter() {
           <TeslaLiveFeedPanel items={snapshot?.liveFeed ?? []} />
         </section>
 
-        {/* Right — network status + admin queues */}
+        {/* Right — network status + map */}
         <section className="col-span-3 flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <div className="shrink-0 border-b border-[#3A4048] px-4 py-3">
             <ActiveDriversNetworkStatus
@@ -330,81 +311,7 @@ export function TeslaCommandCenter() {
             />
           </div>
 
-          <TeslaNetworkMap height={280} className="border-b border-[#3A4048]" />
-
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-            {/* 2. Nya förare väntar */}
-            <section className="rounded-[16px] border border-[#3A4048] bg-[#1B1E22]/60 p-3">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-[#F4C430]">
-                👤 Nya förare väntar: {pendingUsers.length}
-              </h3>
-              <ul className="mt-2 max-h-[160px] space-y-2 overflow-y-auto">
-                {pendingUsers.length === 0 ? (
-                  <li className="text-sm text-[#8A9099]">Inga väntande</li>
-                ) : (
-                  pendingUsers.map((u) => {
-                    const phone = u.phone_number?.replace(/\s/g, "");
-                    return (
-                      <li
-                        key={u.id}
-                        className="rounded-[12px] bg-[#262B31] px-3 py-2"
-                      >
-                        <p className="truncate text-sm font-semibold text-white">
-                          • {formatCommandCenterDriverLabel(u)}
-                        </p>
-                        <div className="mt-2 flex shrink-0 flex-wrap gap-1">
-                          {phone && (
-                            <a
-                              href={`tel:${phone}`}
-                              className="inline-flex items-center gap-1 rounded-lg border border-[#3A4048] bg-[#1B1E22] px-2 py-1 text-xs font-semibold text-white"
-                            >
-                              <Phone className="h-3 w-3" />
-                              Ring upp
-                            </a>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => void verifyDriver(u.id, "approve")}
-                            className="rounded-lg bg-[#22C55E]/20 px-2 py-1 text-xs font-semibold text-[#22C55E]"
-                          >
-                            ✅ Aktivera
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void verifyDriver(u.id, "reject")}
-                            className="rounded-lg bg-[#FF3B30]/20 px-2 py-1 text-xs font-semibold text-[#FF3B30]"
-                          >
-                            ❌ Avvisa
-                          </button>
-                        </div>
-                      </li>
-                    );
-                  })
-                )}
-              </ul>
-            </section>
-
-            {/* 3. Testläge — drivers who forgot to disable */}
-            <section className="rounded-[16px] border border-amber-500/30 bg-amber-500/[0.06] p-3">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-amber-300/90">
-                🧪 Förare i testläge: {testModeDrivers.length}
-              </h3>
-              <ul className="mt-2 max-h-[120px] space-y-1.5 overflow-y-auto">
-                {testModeDrivers.length === 0 ? (
-                  <li className="text-sm text-amber-200/60">Inga förare i testläge</li>
-                ) : (
-                  testModeDrivers.map((driver) => (
-                    <li
-                      key={driver.id}
-                      className="truncate text-sm text-amber-100/90"
-                    >
-                      • {formatCommandCenterDriverLabel(driver)}
-                    </li>
-                  ))
-                )}
-              </ul>
-            </section>
-          </div>
+          <TeslaNetworkMap height={420} className="min-h-0 flex-1" />
         </section>
       </div>
     </div>

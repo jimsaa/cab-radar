@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AdminCommandCenterProvider } from "@/contexts/AdminCommandCenterContext";
 import { AdminDispatchMapProvider } from "@/contexts/AdminDispatchMapContext";
 import { AdminDispatchMapModal } from "@/components/admin/AdminDispatchMapModal";
+import { AdminModerationFabs } from "@/components/admin/AdminModerationFabs";
 import { TeslaNavigationDebugPanel } from "@/components/admin/TeslaNavigationDebugPanel";
 import { AdminWideScreenGate } from "@/components/admin/AdminWideScreenGate";
 import {
@@ -51,6 +52,7 @@ export function AdminCommandCenterShell({
           </div>
           <AdminDispatchMapModal />
           <TeslaNavigationDebugPanel />
+          <AdminModerationFabs isFullAdmin={isFullAdmin} />
         </div>
       </AdminDispatchMapProvider>
     </AdminCommandCenterProvider>
