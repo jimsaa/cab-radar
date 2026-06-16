@@ -34,6 +34,7 @@ export function TeslaBetaSignupFlow() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [nickname, setNickname] = useState("");
   const [driverLicenseNumber, setDriverLicenseNumber] = useState("");
   const [taxiNumber, setTaxiNumber] = useState("");
@@ -78,6 +79,12 @@ export function TeslaBetaSignupFlow() {
       return;
     }
 
+    const name = displayName.trim();
+    if (name.length < 2) {
+      setError("Namn krävs.");
+      return;
+    }
+
     const nicknameError = validateNickname(nickname);
     if (nicknameError) {
       setError(nicknameError);
@@ -93,6 +100,7 @@ export function TeslaBetaSignupFlow() {
         body: JSON.stringify({
           email,
           password,
+          displayName: name,
           nickname,
           driverLicenseNumber: licence,
           taxiNumber: taxiNumber.trim() || undefined,
@@ -228,6 +236,22 @@ export function TeslaBetaSignupFlow() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
+          </label>
+
+          <label className="block">
+            <span className="field-label">Namn</span>
+            <input
+              type="text"
+              required
+              autoComplete="name"
+              className="field"
+              placeholder="Ditt riktiga namn"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+            <span className="mt-1 block text-xs text-muted">
+              Syns endast för administratörer — inte för andra förare.
+            </span>
           </label>
 
           <label className="block">

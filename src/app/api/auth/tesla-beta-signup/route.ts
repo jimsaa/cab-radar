@@ -29,6 +29,7 @@ import {
 interface TeslaBetaSignupBody {
   email?: string;
   password?: string;
+  displayName?: string;
   nickname?: string;
   driverLicenseNumber?: string;
   taxiNumber?: string;
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
 
   const email = body.email?.trim().toLowerCase();
   const password = body.password;
+  const displayName = body.displayName?.trim();
   const nicknameRaw = body.nickname?.trim();
   const taxiNumber = body.taxiNumber?.trim() || null;
   const licence = normalizeLicenceInput(body.driverLicenseNumber ?? "");
@@ -72,6 +74,10 @@ export async function POST(request: Request) {
       { error: "Lösenordet måste vara minst 6 tecken." },
       { status: 400 }
     );
+  }
+
+  if (!displayName || displayName.length < 2) {
+    return NextResponse.json({ error: "Namn krävs." }, { status: 400 });
   }
 
   if (!isValidLicence(licence)) {
@@ -125,7 +131,7 @@ export async function POST(request: Request) {
       password,
       email_confirm: true,
       user_metadata: {
-        display_name: nickname,
+        display_name: displayName,
         nickname,
       },
     });
@@ -154,7 +160,7 @@ export async function POST(request: Request) {
     const teslaBetaFields = {
       ...licenceFields,
       nickname,
-      display_name: nickname,
+      display_name: displayName,
       driver_city: TESLA_BETA_CITY,
       taxi_company_name: "Tesla Beta",
       ...(taxiNumber ? { taxi_number: taxiNumber } : {}),
@@ -190,7 +196,7 @@ export async function POST(request: Request) {
               .from("profiles")
               .update({
                 nickname,
-                display_name: nickname,
+                display_name: displayName,
                 ...licenceFields,
                 verification_status: "verified",
                 updated_at: new Date().toISOString(),
