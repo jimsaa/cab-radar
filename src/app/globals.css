@@ -81,7 +81,7 @@ body {
 }
 
 .leaflet-container {
-  background: var(--background) !important;
+  background: #e8ecef !important;
   font-family: inherit;
 }
 
@@ -280,7 +280,7 @@ body {
 }
 
 .admin-command-center .leaflet-container {
-  background: var(--background-darkest) !important;
+  background: #e8ecef !important;
 }
 
 .admin-dispatch-map .leaflet-control-zoom {

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import { CabRadarTileLayer } from "@/components/map/CabRadarTileLayer";
 import {
   alertTypeDisplayLabel,
   alertTypeLabel,
@@ -73,10 +74,7 @@ export function AlertMap({ alerts, height = "240px" }: AlertMapProps) {
         className="h-full w-full"
         style={{ height: "100%" }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
+        <CabRadarTileLayer />
         <FitBounds alerts={withCoords} />
         {withCoords.map((alert) => {
           const lat = alert.emergency_last_latitude ?? alert.latitude!;

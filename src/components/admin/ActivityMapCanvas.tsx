@@ -2,7 +2,8 @@
 
 import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo } from "react";
 import L from "leaflet";
-import { CircleMarker, MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Marker, useMap } from "react-leaflet";
+import { CabRadarTileLayer } from "@/components/map/CabRadarTileLayer";
 import type { AnonymizedActivityPoint } from "@/lib/driver-activity-client";
 import {
   NETWORK_MAP_DEFAULT_CENTER,
@@ -84,10 +85,7 @@ function NetworkMapCanvasInner({
         className="w-full"
         style={{ height }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
+        <CabRadarTileLayer />
         <FitNetworkBounds clusters={clusters} />
         {clusters.map((cluster, index) =>
           cluster.count > 1 ? (
