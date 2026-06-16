@@ -10,6 +10,7 @@ import {
   type GuideSection,
   type GuideSubsection,
 } from "@/lib/cabradar-guide";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 
@@ -26,8 +27,12 @@ function BulletList({ items }: { items: string[] }) {
 function SubsectionBlock({ subsection }: { subsection: GuideSubsection }) {
   return (
     <div className="rounded-xl border border-card-border/80 bg-background/40 p-3">
-      <h4 className="font-semibold">
-        {subsection.icon ? `${subsection.icon} ` : ""}
+      <h4 className="flex items-center gap-2 font-semibold">
+        {subsection.title === "Laser" ? (
+          <ReportTypeIcon type="laser" variant="badge" />
+        ) : subsection.icon ? (
+          <span aria-hidden>{subsection.icon}</span>
+        ) : null}
         {subsection.title}
       </h4>
       {subsection.body && (

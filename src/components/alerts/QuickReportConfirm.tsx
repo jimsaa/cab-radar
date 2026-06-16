@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import {
   formatLocationLine,
@@ -15,7 +15,7 @@ interface QuickReportConfirmProps {
   reportButtonId: ReportButtonId;
   alertType: AlertType;
   displayLabel: string;
-  displayIcon: string;
+  displayIcon: ReactNode;
   onSubmit: (data: CreateAlertInput) => Promise<void>;
   onCancel: () => void;
   isAdmin?: boolean;
@@ -103,7 +103,10 @@ export function QuickReportConfirm({
 
       <div className="rounded-2xl border border-card-border bg-card/60 px-4 py-5 text-center">
         <p className="text-lg font-bold text-foreground">
-          <span aria-hidden>{displayIcon}</span> {displayLabel}
+          <span aria-hidden className="inline-flex align-middle">
+            {displayIcon}
+          </span>{" "}
+          {displayLabel}
         </p>
 
         <p className="mt-4 text-sm text-foreground/90">

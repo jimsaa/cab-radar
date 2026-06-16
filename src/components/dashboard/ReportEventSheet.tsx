@@ -6,6 +6,7 @@ import { EmergencyActivateConfirm } from "@/components/alerts/EmergencyActivateC
 import { EmergencyDeactivateConfirm } from "@/components/alerts/EmergencyDeactivateConfirm";
 import { QuickReportConfirm } from "@/components/alerts/QuickReportConfirm";
 import { ReportEventGrid } from "@/components/dashboard/ReportEventGrid";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import {
   type DashboardReportType,
   reportAlertType,
@@ -170,7 +171,9 @@ export function ReportEventSheet({
             reportButtonId={selected.id}
             alertType={alertType}
             displayLabel={selected.label}
-            displayIcon={selected.icon}
+            displayIcon={
+              <ReportTypeIcon reportId={selected.id} variant="badge" />
+            }
             isAdmin={isAdmin}
             onSubmit={handleSubmit}
             onCancel={handleCancelConfirm}

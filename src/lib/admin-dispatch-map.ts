@@ -1,5 +1,6 @@
 import type { AdminCommandCenterSnapshot } from "@/lib/admin-command-center";
 import { alertTypeIcon, alertTypeLabel } from "@/lib/constants";
+import { laserIconSvgMarkup } from "@/components/icons/LaserIcon";
 import type { EmergencyAlertWithDriver } from "@/lib/emergency";
 import { emergencyLocationLabel } from "@/lib/emergency";
 import { PUBLIC_EMERGENCY_LABEL } from "@/lib/emergency-privacy";
@@ -150,7 +151,12 @@ export function dispatchReportMarkerHtml(
     ? `box-shadow:0 0 0 4px ${style.glow}, 0 0 18px ${style.glow};`
     : `box-shadow:0 0 10px ${style.glow};`;
 
-  return `<div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:${style.fill};border:3px solid ${style.border};font-size:${report.isEmergency ? 18 : 16}px;${ring}">${report.typeIcon || alertTypeIcon(report.type)}</div>`;
+  const iconMarkup =
+    report.type === "laser"
+      ? laserIconSvgMarkup({ size: report.isEmergency ? 18 : 16 })
+      : report.typeIcon || alertTypeIcon(report.type);
+
+  return `<div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:${style.fill};border:3px solid ${style.border};font-size:${report.isEmergency ? 18 : 16}px;${ring}">${iconMarkup}</div>`;
 }
 
 export function dispatchReportPopupHtml(report: DispatchMapReport): string {

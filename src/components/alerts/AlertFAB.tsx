@@ -6,8 +6,8 @@ import { EmergencyActivateConfirm } from "./EmergencyActivateConfirm";
 import { AlertQuickButtons } from "./AlertQuickButtons";
 import { QuickReportConfirm } from "./QuickReportConfirm";
 import { useAppToast } from "@/components/ui/AppToast";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import {
-  ALERT_TYPE_ICONS,
   ALERT_TYPE_LABELS,
   type AlertType,
 } from "@/lib/constants";
@@ -116,7 +116,9 @@ export function AlertFAB({ userId, enabled, onCreated }: AlertFABProps) {
                 reportButtonId={reportButtonId}
                 alertType={selectedType}
                 displayLabel={ALERT_TYPE_LABELS[selectedType]}
-                displayIcon={ALERT_TYPE_ICONS[selectedType]}
+                displayIcon={
+                  <ReportTypeIcon type={selectedType} variant="badge" />
+                }
                 onSubmit={handleSubmit}
                 onCancel={() => setStep("pick")}
               />

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import {
-  alertTypeIcon,
+  alertTypeDisplayLabel,
   alertTypeLabel,
   googleMapsLink,
 } from "@/lib/constants";
@@ -103,8 +103,7 @@ export function AlertMap({ alerts, height = "240px" }: AlertMapProps) {
                 ) : (
                   <>
                     <p className="font-semibold">
-                      {alertTypeIcon(alert.type)}{" "}
-                      {alertTypeLabel(alert.type)}
+                      {alertTypeDisplayLabel(alert.type)}
                     </p>
                     <p className="mt-1">{alert.title}</p>
                   </>

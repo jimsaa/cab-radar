@@ -9,6 +9,7 @@ export {
   ALERT_TYPE_DESCRIPTIONS,
   alertTypeLabel,
   alertTypeIcon,
+  alertTypeDisplayLabel,
   QUEUE_TRAFFIC_ICON,
   isCurrentAlertType,
   ALERT_TYPES_NEEDING_GPS,

@@ -68,7 +68,7 @@ export const DASHBOARD_REPORT_TYPES: DashboardReportType[] = [
 
     description: "Laser, fartkamera eller polis med laser.",
 
-    icon: "📡",
+    icon: "",
 
     borderClass: "border-purple-500/50",
 

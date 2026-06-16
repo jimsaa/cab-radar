@@ -6,6 +6,7 @@ import {
   ALERT_TYPES,
   type AlertType,
 } from "@/lib/constants";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,8 @@ export function AlertQuickButtons({ onSelect, disabled }: AlertQuickButtonsProps
         >
           {type === "slow_traffic" ? (
             <QueueTrafficIcon />
+          ) : type === "laser" ? (
+            <ReportTypeIcon type="laser" />
           ) : (
             <span className="text-3xl leading-none" aria-hidden>
               {ALERT_TYPE_ICONS[type]}

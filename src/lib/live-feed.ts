@@ -25,7 +25,7 @@ export interface LiveFeedFilterOption {
 export const LIVE_FEED_FILTER_OPTIONS: LiveFeedFilterOption[] = [
   { id: "all", label: "Alla" },
   { id: "traffic_control", label: "Taxikontroll", icon: "🚕" },
-  { id: "laser", label: "Laser", icon: "📡" },
+  { id: "laser", label: "Laser" },
   { id: "slow_traffic", label: "Kö", icon: "🚗🚗🚗" },
   { id: "total_stop", label: "Stopp", icon: "⛔" },
   { id: "accident", label: "Olycka", icon: "🚑" },

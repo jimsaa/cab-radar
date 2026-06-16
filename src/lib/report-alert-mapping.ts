@@ -1,5 +1,5 @@
 import type { AlertType } from "./alert-types";
-import { alertTypeIcon, alertTypeLabel } from "./alert-types";
+import { alertTypeDisplayLabel } from "./alert-types";
 
 /** Dashboard button identifiers (driver-facing). */
 export type ReportButtonId =
@@ -46,7 +46,7 @@ export function reportButtonIdForAlertType(
 }
 
 export function formatAlertFeedDisplay(type: string): string {
-  return `${alertTypeIcon(type)} ${alertTypeLabel(type)}`;
+  return alertTypeDisplayLabel(type);
 }
 
 export function logAlertButtonPressed(buttonId: ReportButtonId): void {

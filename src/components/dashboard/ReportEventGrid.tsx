@@ -6,6 +6,7 @@ import {
   type DashboardReportType,
 } from "@/lib/dashboard-report-types";
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,8 @@ export function ReportEventGrid({
               />
             ) : item.id === "ko" ? (
               <QueueTrafficIcon />
+            ) : item.id === "laser" ? (
+              <ReportTypeIcon reportId="laser" />
             ) : (
               <span className="text-3xl leading-none" aria-hidden>
                 {item.icon}

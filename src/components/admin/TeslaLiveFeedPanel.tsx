@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Copy, Check, MapPin } from "lucide-react";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButtons";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { useAdminDispatchMap } from "@/contexts/AdminDispatchMapContext";
@@ -103,9 +104,7 @@ function TeslaReportDetailPanel({
   return (
     <div className="flex min-h-0 flex-col p-6">
       <div className="flex items-start gap-4">
-        <span className="text-5xl leading-none" aria-hidden>
-          {item.type_icon}
-        </span>
+        <ReportTypeIcon type={item.type} variant="large" className="text-white" />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8A9099]">
             Rapportdetaljer
@@ -288,8 +287,8 @@ export function TeslaLiveFeedPanel({
                 />
 
                 <p className="pr-14 text-lg font-bold text-white">
-                  <span aria-hidden className="mr-1.5">
-                    {item.type_icon}
+                  <span aria-hidden className="mr-1.5 inline-flex align-middle">
+                    <ReportTypeIcon type={item.type} variant="badge" className="text-white" />
                   </span>
                   {item.type_label}
                 </p>

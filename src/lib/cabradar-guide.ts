@@ -35,7 +35,7 @@ export const CABRADAR_GUIDE_SECTIONS: GuideSection[] = [
     subsections: [
       {
         title: "Laser",
-        icon: "📡",
+        icon: "",
         body: "Används när du observerar:",
         bullets: [
           "Laserkontroll",

@@ -1,5 +1,4 @@
-import { alertTypeIcon } from "@/lib/alert-types";
-import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
+import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 
 interface AlertTypeIconDisplayProps {
   type: string;
@@ -11,17 +10,10 @@ export function AlertTypeIconDisplay({
   type,
   variant = "default",
 }: AlertTypeIconDisplayProps) {
-  if (type === "slow_traffic") {
-    return (
-      <QueueTrafficIcon
-        className={variant === "badge" ? "h-7 w-8" : undefined}
-      />
-    );
-  }
-
   return (
-    <span className="leading-none" aria-hidden>
-      {alertTypeIcon(type)}
-    </span>
+    <ReportTypeIcon
+      type={type}
+      variant={variant === "badge" ? "badge" : "default"}
+    />
   );
 }

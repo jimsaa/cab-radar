@@ -46,7 +46,7 @@ export const ALERT_TYPE_ICONS: Record<AlertType, string> = {
   taxi_emergency: "🆘",
   taxi_info: "📋",
   traffic_control: "🚕",
-  laser: "📡",
+  laser: "",
 };
 
 export const ALERT_TYPE_DESCRIPTIONS: Record<AlertType, string> = {
@@ -92,6 +92,7 @@ export function alertTypeLabel(type: string): string {
 }
 
 export function alertTypeIcon(type: string): string {
+  if (type === "laser") return "";
   if (type in ALERT_TYPE_ICONS) {
     return ALERT_TYPE_ICONS[type as AlertType];
   }
@@ -99,6 +100,13 @@ export function alertTypeIcon(type: string): string {
     return LEGACY_ICONS[type as LegacyAlertType];
   }
   return "⚠️";
+}
+
+/** Text label with emoji prefix when available (laser uses SVG in UI). */
+export function alertTypeDisplayLabel(type: string): string {
+  const icon = alertTypeIcon(type);
+  const label = alertTypeLabel(type);
+  return icon ? `${icon} ${label}` : label;
 }
 
 export function isCurrentAlertType(type: string): type is AlertType {
