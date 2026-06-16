@@ -1,4 +1,5 @@
 import { formatSwedishDate } from "./datetime";
+import { isTeslaBetaUser } from "./tesla-beta";
 import type { DriverVerificationStatus } from "./verification";
 import type { MembershipType } from "./types/database";
 
@@ -14,12 +15,14 @@ export const MEMBERSHIP_TYPE_LABELS: Record<MembershipType, string> = {
   active_driver: "Aktiv förare",
   annual_member: "Årsmedlemskap",
   inactive: "Medlemskap krävs",
+  tesla_beta: "Tesla Beta",
 };
 
 export interface MembershipProfile {
   verification_status: DriverVerificationStatus;
   is_admin: boolean;
   beta_user?: boolean;
+  tesla_beta?: boolean;
   membership_type: MembershipType;
   membership_expires_at: string | null;
   monthly_reports_count: number;
@@ -55,10 +58,11 @@ export function meetsContributionRequirements(profile: MembershipProfile): boole
   );
 }
 
-/** Verified + active_driver, valid annual, admin, or beta tester */
+/** Verified + active_driver, valid annual, admin, beta tester, or Tesla Beta */
 export function hasCabRadarAccess(profile: MembershipProfile): boolean {
   if (profile.is_admin) return true;
   if (!isVerifiedDriver(profile)) return false;
+  if (isTeslaBetaUser(profile)) return true;
   if (isBetaUser(profile)) return true;
   if (profile.membership_type === "active_driver") return true;
   if (hasAnnualMembership(profile)) return true;
@@ -89,6 +93,7 @@ export function membershipStatusIcon(profile: MembershipProfile): string {
 
 export function membershipStatusLine(profile: MembershipProfile): string {
   if (!isVerifiedDriver(profile)) return "Verifiering krävs";
+  if (isTeslaBetaUser(profile)) return "🚕 Tesla Beta — testläge";
   if (isBetaUser(profile)) return "🧪 Betatest — full tillgång";
   if (profile.membership_type === "annual_member" && hasAnnualMembership(profile)) {
     return `✓ ${MEMBERSHIP_TYPE_LABELS.annual_member}`;

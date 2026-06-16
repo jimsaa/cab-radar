@@ -15,6 +15,7 @@ export const COMING_SOON_BETA_GATE_PATHS = [
   "/signup",
   "/signup/klart",
   "/auth/callback",
+  "/tesla-beta",
 ] as const;
 
 /** API routes that must never be blocked. */

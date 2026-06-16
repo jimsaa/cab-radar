@@ -61,10 +61,13 @@ export function joinDisplayName(firstName: string, lastName: string): string {
 export function profileToMembershipPlan(
   profile: Pick<
     Profile,
-    "membership_type" | "beta_user" | "founder_badge"
+    "membership_type" | "beta_user" | "tesla_beta" | "founder_badge"
   >
 ): AdminMembershipPlan {
   if (profile.founder_badge) return "founder";
+  if (profile.tesla_beta || profile.membership_type === "tesla_beta") {
+    return "beta_user";
+  }
   if (profile.beta_user) return "beta_user";
   if (profile.membership_type === "annual_member") return "premium_yearly";
   if (profile.membership_type === "active_driver") return "premium_monthly";
@@ -205,6 +208,8 @@ export function adminUserStatusBadges(
     | "verification_status"
     | "test_mode_enabled"
     | "beta_user"
+    | "tesla_beta"
+    | "membership_type"
     | "founder_badge"
     | "is_co_admin"
   >
@@ -231,9 +236,23 @@ export function adminUserStatusBadges(
       label: "Testläge",
       className: "border-amber-500/40 bg-amber-500/15 text-amber-200",
     });
+  } else if (profile.tesla_beta || profile.membership_type === "tesla_beta") {
+    badges.push({
+      emoji: "🟢",
+      label: "Live",
+      className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300",
+    });
   }
 
-  if (profile.beta_user) {
+  if (profile.tesla_beta || profile.membership_type === "tesla_beta") {
+    badges.push({
+      emoji: "🚕",
+      label: "Tesla Beta",
+      className: "border-cyan-500/40 bg-cyan-500/15 text-cyan-200",
+    });
+  }
+
+  if (profile.beta_user && !profile.tesla_beta && profile.membership_type !== "tesla_beta") {
     badges.push({
       emoji: "🔵",
       label: "Beta",

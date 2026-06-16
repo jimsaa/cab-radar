@@ -7,6 +7,7 @@ import {
   adminUserStatusBadges,
 } from "@/lib/admin-user-editor";
 import { adminDriverRealName, publicDriverLabel } from "@/lib/driver-display";
+import { isTeslaBetaUser } from "@/lib/tesla-beta";
 import { VERIFICATION_STATUS_LABELS } from "@/lib/verification";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
 import type { Profile } from "@/lib/types/database";
@@ -17,8 +18,26 @@ interface AdminUsersTableProps {
   isAdmin: boolean;
 }
 
+type UserFilter = "all" | "tesla_beta" | "test_mode" | "live_mode";
+
+const FILTER_OPTIONS: { id: UserFilter; label: string }[] = [
+  { id: "all", label: "Alla" },
+  { id: "tesla_beta", label: "Tesla Beta" },
+  { id: "test_mode", label: "Testläge" },
+  { id: "live_mode", label: "Live" },
+];
+
+function matchesUserFilter(user: Profile, filter: UserFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "tesla_beta") return isTeslaBetaUser(user);
+  if (filter === "test_mode") return isTeslaBetaUser(user) && user.test_mode_enabled;
+  if (filter === "live_mode") return isTeslaBetaUser(user) && !user.test_mode_enabled;
+  return true;
+}
+
 export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTableProps) {
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<UserFilter>("all");
   const [users, setUsers] = useState(initialUsers);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
@@ -28,9 +47,11 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return users;
+    const byFilter = users.filter((u) => matchesUserFilter(u, filter));
 
-    return users.filter((u) => {
+    if (!q) return byFilter;
+
+    return byFilter.filter((u) => {
       const idMatch = u.cabradar_user_id?.toLowerCase().includes(q);
       const nameMatch =
         u.nickname?.toLowerCase().includes(q) ||
@@ -40,7 +61,15 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
       const maskedMatch = masked.includes(q);
       return idMatch || nameMatch || last4Match || maskedMatch;
     });
-  }, [users, query]);
+  }, [users, query, filter]);
+
+  const teslaBetaCount = users.filter((u) => isTeslaBetaUser(u)).length;
+  const testModeCount = users.filter(
+    (u) => isTeslaBetaUser(u) && u.test_mode_enabled
+  ).length;
+  const liveModeCount = users.filter(
+    (u) => isTeslaBetaUser(u) && !u.test_mode_enabled
+  ).length;
 
   const pendingCount = users.filter(
     (u) => u.verification_status === "pending_verification" && !u.is_admin
@@ -69,6 +98,36 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
           👤 {pendingCount} förare väntar godkännande — tryck för att granska
         </p>
       )}
+
+      <div className="flex flex-wrap gap-2">
+        {FILTER_OPTIONS.map((option) => {
+          const count =
+            option.id === "all"
+              ? users.length
+              : option.id === "tesla_beta"
+                ? teslaBetaCount
+                : option.id === "test_mode"
+                  ? testModeCount
+                  : liveModeCount;
+
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setFilter(option.id)}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+                filter === option.id
+                  ? "border-[#42A5F5]/50 bg-[#42A5F5]/15 text-white"
+                  : "border-[#3A4048] bg-[#1B1E22]/80 text-[#8A9099] hover:text-white"
+              )}
+            >
+              {option.label}
+              <span className="ml-1.5 text-xs opacity-75">({count})</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="relative">
         <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />

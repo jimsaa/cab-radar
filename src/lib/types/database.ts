@@ -1,7 +1,11 @@
 import type { AlertType, BannerSlot, HelpCategory, StoredAlertType } from "../constants";
 import type { DriverVerificationStatus } from "../verification";
 
-export type MembershipType = "active_driver" | "annual_member" | "inactive";
+export type MembershipType =
+  | "active_driver"
+  | "annual_member"
+  | "inactive"
+  | "tesla_beta";
 
 export type AlertStatus =
   | "pending_review"
@@ -29,6 +33,7 @@ export interface Profile {
   co_admin_emergency_call: boolean;
   co_admin_manage_offers: boolean;
   beta_user: boolean;
+  tesla_beta: boolean;
   founder_badge: boolean;
   trial_active: boolean;
   tesla_view_enabled: boolean;

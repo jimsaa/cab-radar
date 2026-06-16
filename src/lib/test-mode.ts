@@ -1,14 +1,13 @@
 import { alertTypeLabel } from "./constants";
 import type { DriverAlert } from "./types/database";
 
-export const TEST_MODE_BANNER_TITLE = "🧪 TESTLÄGE AKTIVT";
+export const TEST_MODE_BANNER_TITLE = "🧪 TEST MODE";
 export const TEST_MODE_BANNER_SUBTITLE =
-  "Du testar CabRadar. Inga riktiga varningar skickas.";
+  "Rapporter skickas inte till det riktiga nätverket.";
 export const TEST_EMERGENCY_DISCLAIMER =
   "🧪 TESTLÄGE – Ingen verklig nödsignal skickas.";
 export const DISABLE_TEST_MODE_CONFIRM =
-  "Är du säker? Du kommer nu börja skicka riktiga rapporter till CabRadar.";
-
+  "Du lämnar testläget och rapporterar nu till det riktiga nätverket.";
 export function isTestAlert(
   alert: Pick<DriverAlert, "is_test"> | { is_test?: boolean }
 ): boolean {

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   TEST_MODE_BANNER_SUBTITLE,
@@ -11,9 +12,18 @@ interface TestModeBannerProps {
   className?: string;
 }
 
-/** Amber banner shown on all pages when test mode is active. */
+/** Amber banner shown on app pages when test mode is active. */
 export function TestModeBanner({ active, className }: TestModeBannerProps) {
+  const pathname = usePathname();
+
   if (!active) return null;
+  if (
+    pathname.startsWith("/tesla") ||
+    pathname.startsWith("/tab") ||
+    pathname.startsWith("/tesla-beta")
+  ) {
+    return null;
+  }
 
   return (
     <div

@@ -8,7 +8,7 @@ import { ViewModeSwitcher } from "@/components/layout/ViewModeSwitcher";
 import { APP_NAME, APP_HEADER_TAGLINE, NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-const MARKETING_PATHS = ["/coming-soon", "/beta-login"];
+const MARKETING_PATHS = ["/coming-soon", "/beta-login", "/tesla-beta"];
 
 function isMarketingPath(pathname: string): boolean {
   return MARKETING_PATHS.some(

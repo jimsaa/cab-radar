@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { enforceComingSoonWall } from "@/lib/coming-soon-gate";
+import {
+  enforceComingSoonWall,
+  enforceTeslaBetaRouteLock,
+} from "@/lib/coming-soon-gate";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
@@ -11,6 +14,18 @@ export async function middleware(request: NextRequest) {
       gateRedirect.cookies.set(cookie.name, cookie.value);
     });
     return gateRedirect;
+  }
+
+  const teslaBetaRedirect = await enforceTeslaBetaRouteLock(
+    request,
+    supabase,
+    user
+  );
+  if (teslaBetaRedirect) {
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      teslaBetaRedirect.cookies.set(cookie.name, cookie.value);
+    });
+    return teslaBetaRedirect;
   }
 
   return supabaseResponse;

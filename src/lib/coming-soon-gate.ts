@@ -11,6 +11,7 @@ import {
   redirectToComingSoon,
 } from "./coming-soon";
 import { isMissingSchemaError } from "./db-errors";
+import { isTeslaBetaAllowedPath } from "./tesla-beta";
 
 export async function profileHasBetaAppAccess(
   supabase: SupabaseClient,
@@ -87,4 +88,38 @@ export async function enforceComingSoonWall(
   }
 
   return redirectToComingSoon(request);
+}
+
+/** Tesla Beta users are locked to Tesla View and related APIs. */
+export async function enforceTeslaBetaRouteLock(
+  request: NextRequest,
+  supabase: SupabaseClient,
+  user: User | null
+): Promise<NextResponse | null> {
+  if (!user) return null;
+
+  const path = request.nextUrl.pathname;
+  if (isTeslaBetaAllowedPath(path)) return null;
+
+  const full = await supabase
+    .from("profiles")
+    .select("tesla_beta, membership_type, is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (full.error && !isMissingSchemaError(full.error)) {
+    return null;
+  }
+
+  const row = full.data;
+  if (!row || row.is_admin) return null;
+
+  const isTeslaBeta =
+    Boolean(row.tesla_beta) || row.membership_type === "tesla_beta";
+  if (!isTeslaBeta) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/tesla";
+  url.search = "";
+  return NextResponse.redirect(url);
 }
