@@ -401,6 +401,22 @@ export function AdminMessagesPanel({
                     )}
                     &quot;{item.preview}&quot;
                   </p>
+                  {item.total_recipients > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#8A9099]">
+                      <span>
+                        Läst:{" "}
+                        <span className="font-semibold text-[#B0B6BE]">
+                          {item.read_count}/{item.total_recipients}
+                        </span>
+                      </span>
+                      <span>
+                        Oläst:{" "}
+                        <span className="font-semibold text-[#B0B6BE]">
+                          {item.unread_count}/{item.total_recipients}
+                        </span>
+                      </span>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

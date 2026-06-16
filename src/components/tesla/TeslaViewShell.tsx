@@ -10,7 +10,7 @@ import { AdminDispatchMapProvider } from "@/contexts/AdminDispatchMapContext";
 
 import { AdminDispatchMapModal } from "@/components/admin/AdminDispatchMapModal";
 import { TeslaNavigationDebugPanel } from "@/components/admin/TeslaNavigationDebugPanel";
-import { DriverMessageInbox } from "@/components/messages/DriverMessageInbox";
+import { AdminMessageBanner } from "@/components/messages/AdminMessageBanner";
 
 import {
 
@@ -94,13 +94,14 @@ export function TeslaViewShell({ children }: { children: React.ReactNode }) {
 
           >
 
+            <AdminMessageBanner variant="tesla" />
+
             {children}
 
           </div>
 
           <AdminDispatchMapModal />
           <TeslaNavigationDebugPanel />
-          <DriverMessageInbox variant="tesla" />
         </div>
 
       </AdminDispatchMapProvider>
