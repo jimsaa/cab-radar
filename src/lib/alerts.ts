@@ -8,6 +8,7 @@ import {
 } from "./constants";
 import {
   isAlertCurrentlyLive,
+  logLiveFeedTtlDebug,
   NEARBY_ACTIVE_ALERT_RADIUS_M,
 } from "./alert-ttl";
 import { distanceMeters } from "./geo";
@@ -46,8 +47,10 @@ export function shouldPushNotify(
 export async function fetchActiveAlerts(
   supabase: SupabaseClient
 ): Promise<DriverAlert[]> {
-  // Expires standard alerts only — taxi_emergency excluded in SQL (see emergency-rules.ts)
-  await supabase.rpc("expire_stale_alerts");
+  const { error: expireError } = await supabase.rpc("expire_stale_alerts");
+  if (expireError) {
+    console.error("[LIVE FEED TTL] expire_stale_alerts failed:", expireError);
+  }
 
   const { data, error } = await supabase
     .from("driver_alerts")
@@ -58,7 +61,12 @@ export async function fetchActiveAlerts(
     .limit(100);
 
   if (error) throw error;
-  return ((data ?? []) as DriverAlert[]).filter(isAlertCurrentlyLive);
+
+  const rows = (data ?? []) as DriverAlert[];
+  logLiveFeedTtlDebug(rows, "fetchActiveAlerts candidates");
+  const live = rows.filter(isAlertCurrentlyLive);
+  logLiveFeedTtlDebug(live, "fetchActiveAlerts included");
+  return live;
 }
 
 export async function findNearbyActiveAlert(
@@ -184,7 +192,10 @@ export async function fetchPendingAlerts(
 export async function fetchAllActiveAlertsForAdmin(
   supabase: SupabaseClient
 ): Promise<DriverAlert[]> {
-  await supabase.rpc("expire_stale_alerts");
+  const { error: expireError } = await supabase.rpc("expire_stale_alerts");
+  if (expireError) {
+    console.error("[LIVE FEED TTL] expire_stale_alerts failed:", expireError);
+  }
 
   const { data, error } = await supabase
     .from("driver_alerts")
@@ -194,7 +205,12 @@ export async function fetchAllActiveAlertsForAdmin(
     .limit(200);
 
   if (error) throw error;
-  return ((data ?? []) as DriverAlert[]).filter(isAlertCurrentlyLive);
+
+  const rows = (data ?? []) as DriverAlert[];
+  logLiveFeedTtlDebug(rows, "fetchAllActiveAlertsForAdmin candidates");
+  const live = rows.filter(isAlertCurrentlyLive);
+  logLiveFeedTtlDebug(live, "fetchAllActiveAlertsForAdmin included");
+  return live;
 }
 
 /** Admin: immediately close any alert (including Taxi i nöd). */
