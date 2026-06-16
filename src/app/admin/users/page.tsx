@@ -74,8 +74,8 @@ export default async function AdminUsersPage() {
   }
 
   return (
-    <div className="safe-bottom mx-auto max-w-lg px-4 pb-4">
-      <h1 className="py-4 text-xl font-bold">Förare</h1>
+    <div className="safe-bottom mx-auto max-w-3xl px-4 pb-4">
+      <h1 className="py-4 text-2xl font-bold">Användare</h1>
       <AdminNav />
       {orphanAlertCount > 0 && (
         <p

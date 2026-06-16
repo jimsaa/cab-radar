@@ -29,6 +29,11 @@ export interface Profile {
   co_admin_emergency_call: boolean;
   co_admin_manage_offers: boolean;
   beta_user: boolean;
+  founder_badge: boolean;
+  trial_active: boolean;
+  tesla_view_enabled: boolean;
+  co_admin_civil_moderation: boolean;
+  co_admin_user_moderation: boolean;
   fab_enabled: boolean;
   alert_chime_enabled: boolean;
   push_enabled: boolean;

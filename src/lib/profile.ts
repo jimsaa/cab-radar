@@ -42,7 +42,7 @@ export const PROFILE_BASE_COLUMNS =
   "id, display_name, verification_status, is_admin, created_at, updated_at";
 
 export const ADMIN_PROFILE_COLUMNS =
-  "id, display_name, nickname, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, beta_user, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, driver_city, taxi_company_name, taxi_number, test_mode_enabled, created_at";
+  "id, display_name, nickname, phone_number, cabradar_user_id, driver_license_last4, verification_status, is_admin, is_co_admin, co_admin_emergency_call, co_admin_manage_offers, co_admin_civil_moderation, co_admin_user_moderation, beta_user, founder_badge, trial_active, tesla_view_enabled, membership_type, membership_expires_at, monthly_reports_count, monthly_votes_count, monthly_points, total_approved_reports, reward_points_balance, driver_city, taxi_company_name, taxi_number, test_mode_enabled, last_known_at, created_at, updated_at";
 
 export function normalizeProfileRow(row: Record<string, unknown>): Profile {
   const isAdmin = Boolean(row.is_admin);
@@ -91,6 +91,30 @@ export function normalizeProfileRow(row: Record<string, unknown>): Profile {
       : false,
     beta_user: Object.prototype.hasOwnProperty.call(row, "beta_user")
       ? Boolean(row.beta_user)
+      : false,
+    founder_badge: Object.prototype.hasOwnProperty.call(row, "founder_badge")
+      ? Boolean(row.founder_badge)
+      : false,
+    trial_active: Object.prototype.hasOwnProperty.call(row, "trial_active")
+      ? Boolean(row.trial_active)
+      : false,
+    tesla_view_enabled: Object.prototype.hasOwnProperty.call(
+      row,
+      "tesla_view_enabled"
+    )
+      ? Boolean(row.tesla_view_enabled)
+      : true,
+    co_admin_civil_moderation: Object.prototype.hasOwnProperty.call(
+      row,
+      "co_admin_civil_moderation"
+    )
+      ? Boolean(row.co_admin_civil_moderation)
+      : false,
+    co_admin_user_moderation: Object.prototype.hasOwnProperty.call(
+      row,
+      "co_admin_user_moderation"
+    )
+      ? Boolean(row.co_admin_user_moderation)
       : false,
     fab_enabled: row.fab_enabled !== false,
     alert_chime_enabled: row.alert_chime_enabled !== false,
