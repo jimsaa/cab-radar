@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
@@ -29,7 +28,6 @@ const BENEFITS = [
 ] as const;
 
 export function TeslaBetaSignupFlow() {
-  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -116,8 +114,7 @@ export function TeslaBetaSignupFlow() {
       }
 
       void recordDriverActivityFromDevice("login");
-      router.replace(data.redirect ?? "/tesla");
-      router.refresh();
+      window.location.assign(data.redirect ?? "/tesla");
     } catch {
       setError("Ett oväntat fel uppstod. Försök igen.");
       setLoading(false);

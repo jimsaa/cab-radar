@@ -16,7 +16,6 @@ import {
   findDuplicateLicence,
   isMissingColumnError,
   licenceProfileFields,
-  PROFILE_SCHEMA_ERROR,
   profileHasLicenceHashColumn,
 } from "@/lib/signup-profile";
 import {
@@ -36,6 +35,30 @@ interface TeslaBetaSignupBody {
 }
 
 const TESLA_BETA_CITY = "Göteborg";
+
+const TESLA_BETA_SCHEMA_ERROR =
+  "Tesla Beta-kolumner saknas i databasen. Kör migration-tesla-beta.sql i Supabase SQL Editor.";
+
+function isTeslaBetaSchemaError(error: {
+  code?: string;
+  message?: string;
+} | null): boolean {
+  if (!error) return false;
+  if (isMissingColumnError(error)) return true;
+  if (error.code === "22P02") return true;
+  const msg = (error.message ?? "").toLowerCase();
+  return msg.includes("tesla_beta") || msg.includes("membership_type");
+}
+
+async function assertTeslaBetaSchema(
+  service: Awaited<ReturnType<typeof createServiceClient>>
+): Promise<string | null> {
+  const { error } = await service.from("profiles").select("tesla_beta").limit(0);
+  if (isMissingColumnError(error)) {
+    return TESLA_BETA_SCHEMA_ERROR;
+  }
+  return null;
+}
 
 export async function POST(request: Request) {
   console.log("[AUTH] Tesla Beta signup started");
@@ -109,6 +132,12 @@ export async function POST(request: Request) {
 
   try {
     const service = await createServiceClient();
+
+    const schemaError = await assertTeslaBetaSchema(service);
+    if (schemaError) {
+      return NextResponse.json({ error: schemaError }, { status: 503 });
+    }
+
     const useHashColumn = await profileHasLicenceHashColumn(service);
     const licenceFields = licenceProfileFields(licence, licenceHash, useHashColumn);
 
@@ -191,24 +220,9 @@ export async function POST(request: Request) {
           .eq("id", userId);
 
         if (profileError) {
-          if (isMissingColumnError(profileError)) {
-            const { error: minimalError } = await service
-              .from("profiles")
-              .update({
-                nickname,
-                display_name: displayName,
-                ...licenceFields,
-                verification_status: "verified",
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", userId);
-
-            if (minimalError) {
-              await service.auth.admin.deleteUser(userId);
-              return NextResponse.json({ error: PROFILE_SCHEMA_ERROR }, { status: 503 });
-            }
-            profileSaved = true;
-            break;
+          if (isTeslaBetaSchemaError(profileError)) {
+            await service.auth.admin.deleteUser(userId);
+            return NextResponse.json({ error: TESLA_BETA_SCHEMA_ERROR }, { status: 503 });
           }
 
           if (isNicknameConflictError(profileError)) {
@@ -238,6 +252,9 @@ export async function POST(request: Request) {
 
       if (insertError) {
         await service.auth.admin.deleteUser(userId);
+        if (isTeslaBetaSchemaError(insertError)) {
+          return NextResponse.json({ error: TESLA_BETA_SCHEMA_ERROR }, { status: 503 });
+        }
         if (insertError.code === "23505") {
           return NextResponse.json({ error: LICENCE_DUPLICATE_MESSAGE }, { status: 409 });
         }
