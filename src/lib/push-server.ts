@@ -17,6 +17,8 @@ export interface BroadcastPushOptions {
   body: string;
   url?: string;
   excludeUserId?: string;
+  /** When set, only these user IDs receive the push. */
+  userIds?: string[];
 }
 
 export async function broadcastPushToDrivers(
@@ -28,6 +30,9 @@ export async function broadcastPushToDrivers(
   let query = supabase.from("push_subscriptions").select("*");
   if (options.excludeUserId) {
     query = query.neq("user_id", options.excludeUserId);
+  }
+  if (options.userIds?.length) {
+    query = query.in("user_id", options.userIds);
   }
 
   const { data: subs } = await query;

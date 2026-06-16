@@ -10,6 +10,7 @@ import { TeslaNavigationButtons } from "@/components/admin/TeslaNavigationButton
 import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
 import { AdminCivilkollActions } from "@/components/admin/AdminCivilkollActions";
+import { AdminMessagesPanel } from "@/components/admin/AdminMessagesPanel";
 import { ActiveDriversNetworkStatus } from "@/components/admin/ActiveDriversNetworkStatus";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import {
@@ -286,6 +287,7 @@ export function TeslaCommandCenter() {
             <TeslaQuickReportPanel onReported={() => void refresh()} />
           </div>
           <AdminCivilkollActions variant="tesla" />
+          <AdminMessagesPanel variant="tesla" />
         </section>
 
         {/* Center — Live flöde (primary focus) */}
