@@ -24,6 +24,10 @@ import { formatSwedishTime } from "./datetime";
 
 import { publicDriverLabel } from "./driver-display";
 
+import {
+  auditAllActiveMessageRecipients,
+  logAdminMessageRecipientAudit,
+} from "./admin-message-recipient-audit";
 import { fetchActiveDriverNetwork } from "./driver-activity";
 
 import {
@@ -414,6 +418,12 @@ export async function sendAdminMessage(
 
     recipientIds = network.activeDriverIds;
 
+    const audit = await auditAllActiveMessageRecipients(
+      supabase,
+      recipientIds
+    );
+    logAdminMessageRecipientAudit(message, audit);
+
     if (recipientIds.length === 0) {
 
       throw new Error("Inga aktiva förare just nu.");
@@ -478,7 +488,11 @@ export async function sendAdminMessage(
 
   if (readError) throw readError;
 
-
+  console.info("[ADMIN MSG] message_reads inserted", {
+    messageId,
+    recipientCount: recipientIds.length,
+    recipientIds,
+  });
 
   return { messageId, recipientCount: recipientIds.length };
 
