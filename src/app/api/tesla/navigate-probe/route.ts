@@ -1,5 +1,45 @@
 import { NextResponse } from "next/server";
-import { teslaNavigateHttpsUrl } from "@/lib/tesla-navigation";
+import {
+  teslaNavigateHttpsUrl,
+  teslaNavigateHttpsUrlA,
+  teslaNavigateHttpsUrlC,
+  teslaNavigateSchemeUrl,
+} from "@/lib/tesla-navigation";
+import type { TeslaUrlProbeResult, TeslaUrlVariant } from "@/lib/tesla-navigation-debug";
+
+const PROBE_TARGETS: { variant: TeslaUrlVariant; build: (lat: number, lon: number) => string }[] =
+  [
+    { variant: "A", build: teslaNavigateHttpsUrlA },
+    { variant: "B", build: teslaNavigateHttpsUrl },
+    { variant: "C", build: teslaNavigateHttpsUrlC },
+  ];
+
+async function probeUrl(
+  variant: TeslaUrlVariant,
+  url: string
+): Promise<TeslaUrlProbeResult> {
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+      cache: "no-store",
+    });
+
+    const ok = res.ok && res.status < 500;
+    console.log("[TESLA NAV PROBE]", variant, url, "→", res.status, ok ? "OK" : "FAIL");
+
+    return { variant, url, status: res.status, ok };
+  } catch (err) {
+    console.warn("[TESLA NAV PROBE]", variant, url, "fetch failed:", err);
+    return {
+      variant,
+      url,
+      status: 0,
+      ok: false,
+      error: err instanceof Error ? err.message : "fetch failed",
+    };
+  }
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,21 +56,24 @@ export async function GET(request: Request) {
     );
   }
 
-  const url = teslaNavigateHttpsUrl(lat, lon);
+  const variants = await Promise.all(
+    PROBE_TARGETS.map(({ variant, build }) => probeUrl(variant, build(lat, lon)))
+  );
 
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      redirect: "follow",
-      cache: "no-store",
-    });
+  const schemeUrl = teslaNavigateSchemeUrl(lat, lon);
+  variants.push({
+    variant: "scheme",
+    url: schemeUrl,
+    status: 0,
+    ok: false,
+    error: "Custom scheme — not HTTP-probeable from server",
+  });
 
-    const ok = res.ok && res.status < 500;
-    console.log("[TESLA NAV PROBE]", url, "→", res.status, ok ? "OK" : "FAIL");
+  const primary = variants.find((entry) => entry.variant === "B") ?? variants[0];
 
-    return NextResponse.json({ ok, status: res.status });
-  } catch (err) {
-    console.warn("[TESLA NAV PROBE] fetch failed:", err);
-    return NextResponse.json({ ok: false, status: 0 });
-  }
+  return NextResponse.json({
+    ok: primary?.ok === true,
+    status: primary?.status ?? 0,
+    variants,
+  });
 }

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AdminCommandCenterProvider } from "@/contexts/AdminCommandCenterContext";
 import { AdminDispatchMapProvider } from "@/contexts/AdminDispatchMapContext";
 import { AdminDispatchMapModal } from "@/components/admin/AdminDispatchMapModal";
+import { TeslaNavigationDebugPanel } from "@/components/admin/TeslaNavigationDebugPanel";
 import { AdminWideScreenGate } from "@/components/admin/AdminWideScreenGate";
 import {
   ADMIN_COMMAND_CENTER_HEADER_HEIGHT,
@@ -49,6 +50,7 @@ export function AdminCommandCenterShell({
             </AdminWideScreenGate>
           </div>
           <AdminDispatchMapModal />
+          <TeslaNavigationDebugPanel />
         </div>
       </AdminDispatchMapProvider>
     </AdminCommandCenterProvider>

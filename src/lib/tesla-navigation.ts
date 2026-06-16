@@ -1,4 +1,5 @@
 import { googleMapsLink } from "./constants";
+import type { TeslaUrlVariant } from "./tesla-navigation-debug";
 
 export interface NavigationTarget {
   latitude: number | null;
@@ -31,13 +32,48 @@ function coordsPair(
   return { lat, lng };
 }
 
+/** A — /navigate (no _ak prefix). */
+export function teslaNavigateHttpsUrlA(lat: number, lng: number): string {
+  return `https://www.tesla.com/navigate?lat=${lat}&lon=${lng}`;
+}
+
+/** B — /_ak/navigate (legacy CabRadar default). */
 export function teslaNavigateHttpsUrl(lat: number, lng: number): string {
   return `https://www.tesla.com/_ak/navigate?lat=${lat}&lon=${lng}`;
+}
+
+/** C — /ak/navigate. */
+export function teslaNavigateHttpsUrlC(lat: number, lng: number): string {
+  return `https://www.tesla.com/ak/navigate?lat=${lat}&lon=${lng}`;
 }
 
 export function teslaNavigateSchemeUrl(lat: number, lng: number): string {
   return `tesla://navigate?lat=${lat}&lon=${lng}`;
 }
+
+export function teslaNavigateUrlForVariant(
+  variant: TeslaUrlVariant,
+  lat: number,
+  lng: number
+): string {
+  switch (variant) {
+    case "A":
+      return teslaNavigateHttpsUrlA(lat, lng);
+    case "B":
+      return teslaNavigateHttpsUrl(lat, lng);
+    case "C":
+      return teslaNavigateHttpsUrlC(lat, lng);
+    case "scheme":
+      return teslaNavigateSchemeUrl(lat, lng);
+  }
+}
+
+export const TESLA_NAV_URL_VARIANTS: TeslaUrlVariant[] = [
+  "B",
+  "scheme",
+  "A",
+  "C",
+];
 
 export function formatTeslaCoordinatePair(lat: number, lng: number): string {
   return `${lat},${lng}`;
