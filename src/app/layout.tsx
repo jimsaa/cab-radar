@@ -7,6 +7,7 @@ import { TestModeBanner } from "@/components/test-mode/TestModeBanner";
 import { AppToastProvider } from "@/components/ui/AppToast";
 import { APP_NAME, APP_SLOGAN } from "@/lib/constants";
 import { fetchLayoutAdminRole } from "@/lib/admin-access";
+import { isTeslaBetaUser } from "@/lib/tesla-beta";
 import { createClient } from "@/lib/supabase/server";
 
 const inter = Inter({
@@ -45,6 +46,7 @@ export default async function RootLayout({
   let isEmergencyAdmin = false;
   let isLoggedIn = false;
   let testModeEnabled = false;
+  let hideViewSwitcher = false;
   try {
     const supabase = await createClient();
     const {
@@ -57,10 +59,12 @@ export default async function RootLayout({
       isEmergencyAdmin = role.isEmergencyAdmin;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("test_mode_enabled")
+        .select("test_mode_enabled, tesla_beta, membership_type, is_admin")
         .eq("id", user.id)
         .maybeSingle();
       testModeEnabled = Boolean(profile?.test_mode_enabled);
+      hideViewSwitcher =
+        Boolean(profile) && !profile?.is_admin && isTeslaBetaUser(profile);
     }
   } catch {
     // Supabase not configured yet
@@ -74,6 +78,7 @@ export default async function RootLayout({
             isAdmin={isAdmin}
             isEmergencyAdmin={isEmergencyAdmin}
             isLoggedIn={isLoggedIn}
+            hideViewSwitcher={hideViewSwitcher}
           />
           <TestModeBanner active={testModeEnabled} />
           <DriverActivityShell

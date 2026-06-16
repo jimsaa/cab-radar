@@ -5,16 +5,16 @@ import { CockpitViewShell } from "@/components/cockpit/CockpitViewShell";
 
 interface TeslaViewShellProps {
   children: React.ReactNode;
-  isTeslaBeta?: boolean;
-  nickname?: string | null;
+  hideViewSwitcher?: boolean;
+  showTestModeToggle?: boolean;
   testModeEnabled?: boolean;
   userId?: string;
 }
 
 export function TeslaViewShell({
   children,
-  isTeslaBeta = false,
-  nickname,
+  hideViewSwitcher = false,
+  showTestModeToggle = false,
   testModeEnabled = false,
   userId,
 }: TeslaViewShellProps) {
@@ -22,9 +22,9 @@ export function TeslaViewShell({
 
   return (
     <CockpitViewShell
-      subtitle={isTeslaBeta ? "Tesla Beta" : "Tesla View"}
-      isTeslaBeta={isTeslaBeta}
-      nickname={nickname}
+      subtitle="Tesla View"
+      hideViewSwitcher={hideViewSwitcher}
+      showTestModeToggle={showTestModeToggle}
       testModeEnabled={testMode}
       userId={userId}
       onTestModeChange={setTestMode}

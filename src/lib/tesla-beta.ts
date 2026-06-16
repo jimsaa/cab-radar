@@ -22,3 +22,18 @@ export function isTeslaBetaAllowedPath(path: string): boolean {
     (prefix) => path === prefix || path.startsWith(prefix)
   );
 }
+
+/** Tesla Beta drivers land in Tesla View after login. */
+export function teslaBetaLoginRedirect(
+  profile:
+    | (Pick<Profile, "membership_type"> & {
+        tesla_beta?: boolean;
+        is_admin?: boolean;
+      })
+    | null
+    | undefined
+): string | null {
+  if (!profile || profile.is_admin) return null;
+  if (!isTeslaBetaUser(profile)) return null;
+  return "/tesla";
+}

@@ -21,14 +21,14 @@ export default async function TeslaLayout({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "is_admin, tesla_view_enabled, verification_status, tesla_beta, membership_type, nickname, test_mode_enabled"
+      "is_admin, tesla_view_enabled, tesla_beta, membership_type, test_mode_enabled"
     )
     .eq("id", user.id)
     .single();
 
-  const teslaBeta = isTeslaBetaUser(profile);
+  const teslaBetaDriver = isTeslaBetaUser(profile) && !profile?.is_admin;
 
-  if (!profile?.is_admin && profile?.tesla_view_enabled === false && !teslaBeta) {
+  if (!profile?.is_admin && profile?.tesla_view_enabled === false && !teslaBetaDriver) {
     redirect("/");
   }
 
@@ -37,8 +37,8 @@ export default async function TeslaLayout({
 
   return (
     <TeslaViewShell
-      isTeslaBeta={teslaBeta && !profile?.is_admin}
-      nickname={profile?.nickname}
+      hideViewSwitcher={teslaBetaDriver}
+      showTestModeToggle={teslaBetaDriver}
       testModeEnabled={Boolean(profile?.test_mode_enabled)}
       userId={user.id}
     >

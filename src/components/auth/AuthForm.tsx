@@ -252,7 +252,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      let data: { error?: string; ok?: boolean } = {};
+      let data: { error?: string; ok?: boolean; redirect?: string } = {};
       try {
         data = await res.json();
       } catch {
@@ -271,7 +271,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       console.log("[AUTH] Login success");
       void recordDriverActivityFromDevice("login");
-      window.location.assign("/");
+      window.location.assign(data.redirect ?? "/");
     } catch (err) {
       console.error("[AUTH] Login failed:", err);
       setError(MSG_UNEXPECTED);

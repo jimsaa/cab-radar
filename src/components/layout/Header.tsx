@@ -91,10 +91,12 @@ export function Header({
   isAdmin,
   isEmergencyAdmin,
   isLoggedIn,
+  hideViewSwitcher = false,
 }: {
   isAdmin?: boolean;
   isEmergencyAdmin?: boolean;
   isLoggedIn?: boolean;
+  hideViewSwitcher?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -113,7 +115,7 @@ export function Header({
     return (
       <header className="sticky top-0 z-40 border-b border-card-border/60 bg-background/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-2">
-          {isLoggedIn ? (
+          {isLoggedIn && !hideViewSwitcher ? (
             <ViewModeSwitcher variant="app" className="shrink-0" />
           ) : (
             <div className="w-[1px]" aria-hidden />
@@ -155,7 +157,9 @@ export function Header({
             isEmergencyAdmin={isEmergencyAdmin}
             pathname={pathname}
           />
-          {isLoggedIn && <ViewModeSwitcher variant="app" className="shrink-0" />}
+          {isLoggedIn && !hideViewSwitcher && (
+            <ViewModeSwitcher variant="app" className="shrink-0" />
+          )}
         </div>
       </div>
     </header>

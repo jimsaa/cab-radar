@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { translateAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/server";
-
+import { teslaBetaLoginRedirect } from "@/lib/tesla-beta";
 export async function POST(request: Request) {
   let body: { email?: string; password?: string };
   try {
@@ -41,6 +41,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tesla_beta, membership_type, is_admin")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  const redirectTo = teslaBetaLoginRedirect(profile);
+
   console.log("[AUTH] Login success:", email);
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    ...(redirectTo ? { redirect: redirectTo } : {}),
+  });
 }
