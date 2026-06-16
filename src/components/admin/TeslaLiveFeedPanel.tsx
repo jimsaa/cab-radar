@@ -72,14 +72,21 @@ function TeslaReportDetailEmpty() {
   );
 }
 
-function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
+function TeslaReportDetailPanel({
+  item,
+  privacyMode = "admin",
+}: {
+  item: LiveFeedItem;
+  privacyMode?: "admin" | "driving";
+}) {
   const { openMap } = useAdminDispatchMap();
+  const isDriving = privacyMode === "driving";
   const [copied, setCopied] = useState(false);
   const ageLabel = useMemo(
     () => formatRelativeSwedish(item.created_at),
     [item.created_at]
   );
-  const legLine = reporterLegLine(item);
+  const legLine = isDriving ? null : reporterLegLine(item);
   const statusLabel = reporterStatusLabel(item);
 
   async function copyAddress() {
@@ -115,7 +122,7 @@ function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
         <DetailRow label="Tid" value={item.time_label} mono large />
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#8A9099]">
-            Rapporterad av
+            {isDriving ? "Smeknamn" : "Rapporterad av"}
           </p>
           <p className="mt-1 text-xl font-semibold text-white">{item.driver_name}</p>
         </div>
@@ -170,7 +177,7 @@ function TeslaReportDetailPanel({ item }: { item: LiveFeedItem }) {
             address: item.address,
           }}
         />
-        {item.address && (
+        {!isDriving && item.address && (
           <button
             type="button"
             onClick={() => void copyAddress()}
@@ -228,9 +235,13 @@ function DetailRow({
 
 interface TeslaLiveFeedPanelProps {
   items: LiveFeedItem[];
+  privacyMode?: "admin" | "driving";
 }
 
-export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
+export function TeslaLiveFeedPanel({
+  items,
+  privacyMode = "admin",
+}: TeslaLiveFeedPanelProps) {
   const { getReportAttention } = useAdminCommandCenter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -299,7 +310,7 @@ export function TeslaLiveFeedPanel({ items }: TeslaLiveFeedPanelProps) {
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[#1E2125]/40">
         {selected ? (
-          <TeslaReportDetailPanel item={selected} />
+          <TeslaReportDetailPanel item={selected} privacyMode={privacyMode} />
         ) : (
           <TeslaReportDetailEmpty />
         )}

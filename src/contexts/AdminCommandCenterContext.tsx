@@ -50,8 +50,10 @@ const AdminCommandCenterContext =
 
 export function AdminCommandCenterProvider({
   children,
+  snapshotUrl = "/api/admin/command-center-snapshot",
 }: {
   children: React.ReactNode;
+  snapshotUrl?: string;
 }) {
   const [snapshot, setSnapshot] = useState<AdminCommandCenterSnapshot | null>(
     null
@@ -78,7 +80,7 @@ export function AdminCommandCenterProvider({
     setIsRefreshing(true);
 
     try {
-      const res = await fetch("/api/admin/command-center-snapshot", {
+      const res = await fetch(snapshotUrl, {
         cache: "no-store",
       });
       if (!res.ok) return;
@@ -97,7 +99,7 @@ export function AdminCommandCenterProvider({
       refreshInFlight.current = false;
       setIsRefreshing(false);
     }
-  }, []);
+  }, [snapshotUrl]);
 
   const scheduleRefresh = useCallback(
     (immediate = false) => {

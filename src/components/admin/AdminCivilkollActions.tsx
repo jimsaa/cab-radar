@@ -29,12 +29,15 @@ interface AdminCivilkollActionsProps {
   variant?: "tesla" | "dashboard";
   className?: string;
   autoFocus?: boolean;
+  /** Tesla View — lookup only, no admin add flow. */
+  lookupOnly?: boolean;
 }
 
 export function AdminCivilkollActions({
   variant = "tesla",
   className,
   autoFocus = variant === "tesla",
+  lookupOnly = false,
 }: AdminCivilkollActionsProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [registration, setRegistration] = useState("");
@@ -81,7 +84,9 @@ export function AdminCivilkollActions({
 
     setLookupLoading(true);
     try {
-      const res = await fetch("/api/admin/civilkoll/lookup", {
+      const res = await fetch(
+        lookupOnly ? "/api/civilkoll/lookup" : "/api/admin/civilkoll/lookup",
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ registrationNumber: normalized }),
@@ -199,13 +204,14 @@ export function AdminCivilkollActions({
             )}
           />
 
-          <div className="flex gap-2">
+          <div className={lookupOnly ? "space-y-2" : "flex gap-2"}>
             <button
               type="button"
               onClick={() => void handleLookup()}
               disabled={!canAct}
               className={cn(
-                "flex flex-1 items-center justify-center rounded-[14px] border px-4 py-3 text-base font-bold transition active:scale-[0.98] disabled:opacity-40",
+                "flex items-center justify-center rounded-[14px] border px-4 py-3 text-base font-bold transition active:scale-[0.98] disabled:opacity-40",
+                lookupOnly ? "w-full" : "flex-1",
                 isTesla
                   ? "border-[#3B82F6]/50 bg-[#3B82F6]/20 text-white hover:bg-[#3B82F6]/30"
                   : "border-accent/40 bg-accent/15 text-foreground hover:bg-accent/25"
@@ -217,6 +223,7 @@ export function AdminCivilkollActions({
                 "Kontrollera"
               )}
             </button>
+            {!lookupOnly && (
             <button
               type="button"
               onClick={() => void handleAdd()}
@@ -234,6 +241,7 @@ export function AdminCivilkollActions({
                 "Lägg till"
               )}
             </button>
+            )}
           </div>
         </div>
       </div>

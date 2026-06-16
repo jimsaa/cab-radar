@@ -35,6 +35,15 @@ export function ownProfileDisplayLabel(identity: DriverIdentity): string {
   return "Okänd förare";
 }
 
+/** Tesla View — nickname only; never leg, ID, or real name. */
+export function teslaDrivingDriverLabel(
+  identity: Pick<DriverIdentity, "nickname">
+): string {
+  const nickname = identity.nickname?.trim();
+  if (nickname) return nickname;
+  return "Okänd förare";
+}
+
 /** Real/legal name — admin visibility only. */
 export function adminDriverRealName(
   identity: Pick<DriverIdentity, "display_name">

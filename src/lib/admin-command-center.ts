@@ -21,7 +21,11 @@ import { isPresenceFresh, PRESENCE_STALE_MS } from "./emergency-privacy";
 import { fetchActiveDriverNetwork } from "./driver-activity";
 import { fetchAllHelpArticles } from "./help";
 import { fetchAllBanners, fetchAllDeals } from "./deals";
-import { publicDriverLabel, adminDriverRealName } from "./driver-display";
+import {
+  publicDriverLabel,
+  adminDriverRealName,
+  teslaDrivingDriverLabel,
+} from "./driver-display";
 import {
   formatRelativeSwedish,
   formatSwedishDateTime,
@@ -401,6 +405,90 @@ export function buildLiveFeed(
         is_test: Boolean(alert.is_test),
       };
     });
+}
+
+const EMPTY_DRIVING_COUNTS: AdminBadgeCounts = {
+  emergency: 0,
+  alerts: 0,
+  users: 0,
+  feedback: 0,
+  support: 0,
+  partner: 0,
+  civilkoll: 0,
+};
+
+const EMPTY_DRIVING_STATS: AdminCommandCenterStats = {
+  activeDeals: 0,
+  activeBanners: 0,
+  liveHelp: 0,
+  activeDrivers: 0,
+  lastDriverActivityAt: null,
+  verifiedDrivers: 0,
+  activeReports: 0,
+};
+
+async function loadDrivingFeedCreators(
+  supabase: SupabaseClient,
+  alerts: DriverAlert[]
+): Promise<Map<string, LiveFeedCreator>> {
+  const ids = [
+    ...new Set(alerts.map((a) => a.created_by).filter((id): id is string => !!id)),
+  ];
+  if (ids.length === 0) return new Map();
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, nickname, verification_status")
+    .in("id", ids);
+
+  const map = new Map<string, LiveFeedCreator>();
+  for (const row of data ?? []) {
+    map.set(row.id as string, {
+      label: teslaDrivingDriverLabel({
+        nickname: row.nickname as string | null,
+      }),
+      real_name: null,
+      driver_license_last4: null,
+      verification_status: (row.verification_status as string | null) ?? null,
+    });
+  }
+  return map;
+}
+
+/** Privacy-safe live feed for Tesla View — nicknames only, no admin data. */
+export async function fetchTeslaDrivingSnapshot(
+  serviceSupabase: SupabaseClient,
+  options: { alertChimeEnabled: boolean }
+): Promise<AdminCommandCenterSnapshot> {
+  const { alertChimeEnabled } = options;
+  const activeAlerts = await fetchAllActiveAlertsForAdmin(serviceSupabase);
+  const creatorProfiles = await loadDrivingFeedCreators(
+    serviceSupabase,
+    activeAlerts
+  );
+  const liveFeed = buildLiveFeed(activeAlerts, creatorProfiles).filter(
+    (item) => !item.is_test
+  );
+
+  return {
+    counts: EMPTY_DRIVING_COUNTS,
+    stats: EMPTY_DRIVING_STATS,
+    emergencies: [],
+    activeAlerts: [],
+    pendingAlerts: [],
+    recentEvents: [],
+    liveFeed,
+    testLiveFeed: [],
+    drivers: [],
+    pendingUsers: [],
+    testModeDrivers: [],
+    pendingCivil: [],
+    testPendingCivil: [],
+    activeOffers: [],
+    alertChimeEnabled,
+    isFullAdmin: false,
+    canViewEmergencyPhone: false,
+  };
 }
 
 export async function fetchAdminCommandCenterSnapshot(
