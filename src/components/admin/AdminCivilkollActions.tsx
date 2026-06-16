@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { useAdminToast } from "@/components/admin/AdminToast";
+import { useAdminCommandCenterOptional } from "@/contexts/AdminCommandCenterContext";
 import {
   formatCivilkollObservedDate,
   isValidRegistrationNumber,
@@ -18,11 +21,17 @@ type LookupModal = {
 type AddModal = {
   kind: "created" | "exists";
   registrationNumber: string;
+  message: string;
+};
+
+type ErrorModal = {
+  message: string;
 };
 
 type ActiveModal =
   | { type: "lookup"; data: LookupModal }
   | { type: "add"; data: AddModal }
+  | { type: "error"; data: ErrorModal }
   | null;
 
 interface AdminCivilkollActionsProps {
@@ -39,7 +48,10 @@ export function AdminCivilkollActions({
   autoFocus = variant === "tesla",
   lookupOnly = false,
 }: AdminCivilkollActionsProps) {
+  const showToast = useAdminToast();
+  const commandCenter = useAdminCommandCenterOptional();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [registration, setRegistration] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
@@ -58,6 +70,10 @@ export function AdminCivilkollActions({
     setRegistration("");
     focusInput();
   }, [focusInput]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (autoFocus) focusInput();
@@ -87,10 +103,11 @@ export function AdminCivilkollActions({
       const res = await fetch(
         lookupOnly ? "/api/civilkoll/lookup" : "/api/admin/civilkoll/lookup",
         {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registrationNumber: normalized }),
-      });
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ registrationNumber: normalized }),
+        }
+      );
 
       const data = (await res.json()) as {
         error?: string;
@@ -100,8 +117,10 @@ export function AdminCivilkollActions({
       };
 
       if (!res.ok) {
-        console.error("[CIVILKOLL LOOKUP]", data.error ?? res.status);
-        inputRef.current?.focus();
+        const message = data.error ?? "Kunde inte söka i CivilKoll.";
+        console.error("[CIVILKOLL LOOKUP]", message);
+        showToast(message, { variant: "error" });
+        setModal({ type: "error", data: { message } });
         return;
       }
 
@@ -113,13 +132,26 @@ export function AdminCivilkollActions({
           lastVerifiedAt: data.lastVerifiedAt ?? null,
         },
       });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Kunde inte söka i CivilKoll.";
+      console.error("[CIVILKOLL LOOKUP]", err);
+      showToast(message, { variant: "error" });
+      setModal({ type: "error", data: { message } });
     } finally {
       setLookupLoading(false);
     }
   }
 
   async function handleAdd() {
+    console.log("Admin Civil Add:", normalized);
+
     if (!canAct) {
+      if (!isValidRegistrationNumber(normalized)) {
+        const message = "Ogiltigt registreringsnummer.";
+        showToast(message, { variant: "error" });
+        setModal({ type: "error", data: { message } });
+      }
       inputRef.current?.focus();
       return;
     }
@@ -134,29 +166,60 @@ export function AdminCivilkollActions({
 
       const data = (await res.json()) as {
         error?: string;
+        message?: string;
         status?: "created" | "exists";
         registrationNumber?: string;
       };
 
       if (!res.ok) {
-        console.error("[CIVILKOLL ADD]", data.error ?? res.status);
-        inputRef.current?.focus();
+        const message = data.error ?? "Kunde inte lägga till i CivilKoll.";
+        console.error("[CIVILKOLL ADD]", message, res.status);
+        showToast(message, { variant: "error" });
+        setModal({ type: "error", data: { message } });
         return;
       }
+
+      const reg = data.registrationNumber ?? normalized;
+      const isCreated = data.status !== "exists";
+      const message =
+        data.message ??
+        (isCreated
+          ? `✅ ${reg} har lagts till direkt i CivilKoll.`
+          : `${reg} finns redan i CivilKoll.`);
+
+      showToast(message, { variant: isCreated ? "success" : "info" });
+      void commandCenter?.refresh();
 
       setModal({
         type: "add",
         data: {
-          kind: data.status === "exists" ? "exists" : "created",
-          registrationNumber: data.registrationNumber ?? normalized,
+          kind: isCreated ? "created" : "exists",
+          registrationNumber: reg,
+          message,
         },
       });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Kunde inte lägga till i CivilKoll.";
+      console.error("[CIVILKOLL ADD]", err);
+      showToast(message, { variant: "error" });
+      setModal({ type: "error", data: { message } });
     } finally {
       setAddLoading(false);
     }
   }
 
   const isTesla = variant === "tesla";
+
+  const modalContent =
+    modal &&
+    (modal.type === "lookup" ? (
+      <LookupResultModal data={modal.data} onClose={handleCloseModal} isTesla={isTesla} />
+    ) : modal.type === "add" ? (
+      <AddResultModal data={modal.data} onClose={handleCloseModal} isTesla={isTesla} />
+    ) : (
+      <ErrorResultModal data={modal.data} onClose={handleCloseModal} isTesla={isTesla} />
+    ));
 
   return (
     <>
@@ -188,7 +251,13 @@ export function AdminCivilkollActions({
               )
             }
             onKeyDown={(event) => {
-              if (event.key === "Enter") void handleLookup();
+              if (event.key === "Enter") {
+                if (event.shiftKey && !lookupOnly) {
+                  void handleAdd();
+                } else {
+                  void handleLookup();
+                }
+              }
             }}
             placeholder="ABC123"
             autoComplete="off"
@@ -224,77 +293,94 @@ export function AdminCivilkollActions({
               )}
             </button>
             {!lookupOnly && (
-            <button
-              type="button"
-              onClick={() => void handleAdd()}
-              disabled={!canAct}
-              className={cn(
-                "flex flex-1 items-center justify-center rounded-[14px] border px-4 py-3 text-base font-bold transition active:scale-[0.98] disabled:opacity-40",
-                isTesla
-                  ? "border-[#22C55E]/50 bg-[#22C55E]/15 text-white hover:bg-[#22C55E]/25"
-                  : "border-success/40 bg-success/15 text-foreground hover:bg-success/25"
-              )}
-            >
-              {addLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                "Lägg till"
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={() => void handleAdd()}
+                disabled={!canAct}
+                className={cn(
+                  "flex flex-1 items-center justify-center rounded-[14px] border px-4 py-3 text-base font-bold transition active:scale-[0.98] disabled:opacity-40",
+                  isTesla
+                    ? "border-[#22C55E]/50 bg-[#22C55E]/15 text-white hover:bg-[#22C55E]/25"
+                    : "border-success/40 bg-success/15 text-foreground hover:bg-success/25"
+                )}
+              >
+                {addLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Lägg till"
+                )}
+              </button>
             )}
           </div>
         </div>
       </div>
 
-      {modal && (
-        <div
-          className="fixed inset-0 z-[600] flex items-center justify-center bg-black/75 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="civilkoll-modal-title"
-        >
-          {modal.type === "lookup" ? (
-            <LookupResultModal
-              data={modal.data}
-              onClose={handleCloseModal}
-            />
-          ) : (
-            <AddResultModal data={modal.data} onClose={handleCloseModal} />
-          )}
-        </div>
-      )}
+      {mounted &&
+        modalContent &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[650] flex items-center justify-center bg-black/75 p-4"
+            role="dialog"
+            aria-modal="true"
+            onClick={handleCloseModal}
+          >
+            <div onClick={(event) => event.stopPropagation()}>{modalContent}</div>
+          </div>,
+          document.body
+        )}
     </>
+  );
+}
+
+function modalShellClass(isTesla: boolean, tone: "success" | "warn" | "error" | "neutral") {
+  if (!isTesla) {
+    return cn(
+      "w-full max-w-md rounded-2xl border px-6 py-8 text-center shadow-2xl",
+      tone === "success" && "border-success/50 bg-success/[0.06]",
+      tone === "warn" && "border-amber-400/50 bg-amber-400/[0.06]",
+      tone === "error" && "border-danger/50 bg-danger/[0.06]",
+      tone === "neutral" && "border-card-border bg-card"
+    );
+  }
+
+  return cn(
+    "w-full max-w-md rounded-[18px] border px-6 py-8 text-center shadow-2xl",
+    tone === "success" && "border-[#22C55E]/50 bg-[#262B31]",
+    tone === "warn" && "border-amber-400/50 bg-[#262B31]",
+    tone === "error" && "border-[#FF3B30]/50 bg-[#262B31]",
+    tone === "neutral" && "border-[#3A4048] bg-[#262B31]"
   );
 }
 
 function LookupResultModal({
   data,
   onClose,
+  isTesla,
 }: {
   data: LookupModal;
   onClose: () => void;
+  isTesla: boolean;
 }) {
   const isKnown = data.kind === "known";
 
   return (
     <div
-      className={cn(
-        "w-full max-w-md rounded-2xl border px-6 py-8 text-center shadow-2xl",
-        isKnown
-          ? "border-success/50 bg-success/[0.06] shadow-[0_0_28px_rgba(52,211,153,0.12)]"
-          : "border-danger/50 bg-danger/[0.06] shadow-[0_0_28px_rgba(239,68,68,0.12)]"
-      )}
+      className={modalShellClass(isTesla, isKnown ? "success" : "error")}
+      aria-labelledby="civilkoll-modal-title"
     >
       <div className="mx-auto flex flex-col items-center gap-3">
         {isKnown ? (
           <CheckCircle2
-            className="h-9 w-9 text-success"
+            className={cn("h-9 w-9", isTesla ? "text-[#22C55E]" : "text-success")}
             strokeWidth={2.25}
             aria-hidden
           />
         ) : (
           <Circle
-            className="h-9 w-9 fill-danger text-danger"
+            className={cn(
+              "h-9 w-9 fill-current",
+              isTesla ? "text-[#FF3B30]" : "text-danger"
+            )}
             strokeWidth={0}
             aria-hidden
           />
@@ -304,21 +390,34 @@ function LookupResultModal({
           id="civilkoll-modal-title"
           className={cn(
             "text-2xl font-black tracking-tight",
-            isKnown ? "text-success" : "text-danger"
+            isKnown
+              ? isTesla
+                ? "text-[#22C55E]"
+                : "text-success"
+              : isTesla
+                ? "text-[#FF3B30]"
+                : "text-danger"
           )}
         >
           {isKnown ? "🟢 KÄND CIVIL" : "🔴 EJ KÄND"}
         </h2>
 
-        <p className="text-lg leading-relaxed text-foreground">
-          <span className="font-mono font-bold">{data.registrationNumber}</span>{" "}
+        <p
+          className={cn(
+            "text-lg leading-relaxed",
+            isTesla ? "text-[#B0B6BE]" : "text-foreground"
+          )}
+        >
+          <span className="font-mono font-bold text-white">
+            {data.registrationNumber}
+          </span>{" "}
           {isKnown
             ? "finns registrerad i CivilKoll."
             : "finns inte registrerad i CivilKoll."}
         </p>
 
         {isKnown && data.lastVerifiedAt && (
-          <p className="text-sm text-muted">
+          <p className={cn("text-sm", isTesla ? "text-[#8A9099]" : "text-muted")}>
             Senast verifierad:{" "}
             {formatCivilkollObservedDate(data.lastVerifiedAt)}
           </p>
@@ -327,7 +426,12 @@ function LookupResultModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 w-full rounded-[14px] border border-card-border bg-card px-6 py-4 text-lg font-bold text-foreground transition hover:bg-card/80 active:scale-[0.98]"
+          className={cn(
+            "mt-4 w-full rounded-[14px] border px-6 py-4 text-lg font-bold transition active:scale-[0.98]",
+            isTesla
+              ? "border-[#3A4048] bg-[#1B1E22] text-white hover:bg-[#2a3038]"
+              : "border-card-border bg-card text-foreground hover:bg-card/80"
+          )}
         >
           OK
         </button>
@@ -339,31 +443,32 @@ function LookupResultModal({
 function AddResultModal({
   data,
   onClose,
+  isTesla,
 }: {
   data: AddModal;
   onClose: () => void;
+  isTesla: boolean;
 }) {
   const isCreated = data.kind === "created";
 
   return (
     <div
-      className={cn(
-        "w-full max-w-md rounded-2xl border px-6 py-8 text-center shadow-2xl",
-        isCreated
-          ? "border-success/50 bg-success/[0.06] shadow-[0_0_28px_rgba(52,211,153,0.12)]"
-          : "border-amber-400/50 bg-amber-400/[0.06] shadow-[0_0_28px_rgba(251,191,36,0.12)]"
-      )}
+      className={modalShellClass(isTesla, isCreated ? "success" : "warn")}
+      aria-labelledby="civilkoll-modal-title"
     >
       <div className="mx-auto flex flex-col items-center gap-3">
         {isCreated ? (
           <CheckCircle2
-            className="h-9 w-9 text-success"
+            className={cn("h-9 w-9", isTesla ? "text-[#22C55E]" : "text-success")}
             strokeWidth={2.25}
             aria-hidden
           />
         ) : (
           <Circle
-            className="h-9 w-9 fill-amber-400 text-amber-400"
+            className={cn(
+              "h-9 w-9 fill-current",
+              isTesla ? "text-amber-400" : "text-amber-400"
+            )}
             strokeWidth={0}
             aria-hidden
           />
@@ -373,23 +478,93 @@ function AddResultModal({
           id="civilkoll-modal-title"
           className={cn(
             "text-2xl font-black tracking-tight",
-            isCreated ? "text-success" : "text-amber-300"
+            isCreated
+              ? isTesla
+                ? "text-[#22C55E]"
+                : "text-success"
+              : isTesla
+                ? "text-amber-300"
+                : "text-amber-300"
           )}
         >
           {isCreated ? "🟢 CIVIL REGISTRERAD" : "🟡 FINNS REDAN"}
         </h2>
 
-        <p className="text-lg leading-relaxed text-foreground">
-          <span className="font-mono font-bold">{data.registrationNumber}</span>{" "}
-          {isCreated
-            ? "har lagts till i CivilKoll."
-            : "finns redan registrerad."}
+        <p
+          className={cn(
+            "text-lg leading-relaxed",
+            isTesla ? "text-[#B0B6BE]" : "text-foreground"
+          )}
+        >
+          {data.message}
         </p>
 
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 w-full rounded-[14px] border border-card-border bg-card px-6 py-4 text-lg font-bold text-foreground transition hover:bg-card/80 active:scale-[0.98]"
+          className={cn(
+            "mt-4 w-full rounded-[14px] border px-6 py-4 text-lg font-bold transition active:scale-[0.98]",
+            isTesla
+              ? "border-[#3A4048] bg-[#1B1E22] text-white hover:bg-[#2a3038]"
+              : "border-card-border bg-card text-foreground hover:bg-card/80"
+          )}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ErrorResultModal({
+  data,
+  onClose,
+  isTesla,
+}: {
+  data: ErrorModal;
+  onClose: () => void;
+  isTesla: boolean;
+}) {
+  return (
+    <div
+      className={modalShellClass(isTesla, "error")}
+      aria-labelledby="civilkoll-error-title"
+    >
+      <div className="mx-auto flex flex-col items-center gap-3">
+        <Circle
+          className={cn(
+            "h-9 w-9 fill-current",
+            isTesla ? "text-[#FF3B30]" : "text-danger"
+          )}
+          strokeWidth={0}
+          aria-hidden
+        />
+        <h2
+          id="civilkoll-error-title"
+          className={cn(
+            "text-2xl font-black tracking-tight",
+            isTesla ? "text-[#FF3B30]" : "text-danger"
+          )}
+        >
+          Kunde inte spara
+        </h2>
+        <p
+          className={cn(
+            "text-base leading-relaxed",
+            isTesla ? "text-[#B0B6BE]" : "text-foreground"
+          )}
+        >
+          {data.message}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className={cn(
+            "mt-4 w-full rounded-[14px] border px-6 py-4 text-lg font-bold transition active:scale-[0.98]",
+            isTesla
+              ? "border-[#3A4048] bg-[#1B1E22] text-white hover:bg-[#2a3038]"
+              : "border-card-border bg-card text-foreground hover:bg-card/80"
+          )}
         >
           OK
         </button>

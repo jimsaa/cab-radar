@@ -688,7 +688,7 @@ export async function createManualRegistryEntry(
   if (error) throw error;
 }
 
-/** Tesla quick-add — no duplicate when already approved in civil_registry. */
+/** Tesla quick-add — bypasses moderation; inserts or re-approves in civil_registry. */
 export async function quickAddCivilRegistryEntry(
   supabase: SupabaseClient,
   adminUserId: string,
@@ -700,18 +700,22 @@ export async function quickAddCivilRegistryEntry(
     throw new Error("Ogiltigt registreringsnummer.");
   }
 
-  const { data: existing, error: fetchError } = await supabase
+  console.log("[CIVILKOLL QUICK] insert attempt:", normalized, "admin:", adminUserId);
+
+  const { data: approvedRow, error: approvedError } = await supabase
     .from(REGISTRY_TABLE)
-    .select("id, status, last_observed_at")
+    .select("id, last_observed_at")
     .eq("registration_number", normalized)
+    .eq("status", "approved")
     .maybeSingle();
 
-  if (fetchError) throw fetchError;
+  if (approvedError) throw approvedError;
 
-  if (existing?.status === "approved") {
+  if (approvedRow) {
+    console.log("[CIVILKOLL QUICK] already approved:", normalized);
     return {
       status: "exists",
-      lastObservedAt: (existing.last_observed_at as string | null) ?? null,
+      lastObservedAt: (approvedRow.last_observed_at as string | null) ?? null,
     };
   }
 
@@ -719,8 +723,7 @@ export async function quickAddCivilRegistryEntry(
   const observedDate = now.slice(0, 10);
   const adminNote = buildQuickCivilAdminNote(options?.city);
 
-  const fullInsert = {
-    registration_number: normalized,
+  const approvedPayload = {
     admin_note: adminNote,
     observation_count: 1,
     last_observed_at: observedDate,
@@ -730,13 +733,67 @@ export async function quickAddCivilRegistryEntry(
     status: "approved" as const,
   };
 
+  const { data: staleRows, error: staleError } = await supabase
+    .from(REGISTRY_TABLE)
+    .select("id, status")
+    .eq("registration_number", normalized)
+    .neq("status", "approved")
+    .limit(1);
+
+  if (staleError) throw staleError;
+
+  const staleRow = staleRows?.[0];
+
+  if (staleRow) {
+    console.log("[CIVILKOLL QUICK] re-approving existing row:", staleRow.id);
+    let { error: updateError } = await supabase
+      .from(REGISTRY_TABLE)
+      .update(approvedPayload)
+      .eq("id", staleRow.id);
+
+    if (updateError) {
+      const message = updateError.message?.toLowerCase() ?? "";
+      const sourceRejected =
+        message.includes("source") || updateError.code === "23514";
+
+      if (sourceRejected || isMissingSchemaError(updateError)) {
+        ({ error: updateError } = await supabase
+          .from(REGISTRY_TABLE)
+          .update({ ...approvedPayload, source: "admin_manual" as const })
+          .eq("id", staleRow.id));
+      }
+
+      if (updateError && isMissingSchemaError(updateError)) {
+        ({ error: updateError } = await supabase
+          .from(REGISTRY_TABLE)
+          .update({
+            last_observed_at: observedDate,
+            status: "approved" as const,
+          })
+          .eq("id", staleRow.id));
+      }
+    }
+
+    if (updateError) {
+      console.error("[CIVILKOLL QUICK] re-approve failed:", updateError);
+      throw updateError;
+    }
+
+    console.log("[CIVILKOLL QUICK] re-approve success:", normalized);
+    return { status: "created" };
+  }
+
+  const fullInsert = {
+    registration_number: normalized,
+    ...approvedPayload,
+  };
+
   let { error: insertError } = await supabase
     .from(REGISTRY_TABLE)
     .insert(fullInsert);
 
   if (insertError) {
-    const message =
-      insertError.message?.toLowerCase() ?? "";
+    const message = insertError.message?.toLowerCase() ?? "";
     const sourceRejected =
       message.includes("source") || insertError.code === "23514";
 
@@ -751,12 +808,17 @@ export async function quickAddCivilRegistryEntry(
       ({ error: insertError } = await supabase.from(REGISTRY_TABLE).insert({
         registration_number: normalized,
         last_observed_at: observedDate,
+        status: "approved" as const,
       }));
     }
   }
 
-  if (insertError) throw insertError;
+  if (insertError) {
+    console.error("[CIVILKOLL QUICK] insert failed:", insertError);
+    throw insertError;
+  }
 
+  console.log("[CIVILKOLL QUICK] insert success:", normalized);
   return { status: "created" };
 }
 
