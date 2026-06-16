@@ -76,7 +76,10 @@ export default async function RootLayout({
             isLoggedIn={isLoggedIn}
           />
           <TestModeBanner active={testModeEnabled} />
-          <DriverActivityShell enabled={isLoggedIn && !isAdmin} />
+          <DriverActivityShell
+            activityEnabled={isLoggedIn && !isAdmin}
+            messageBannerEnabled={isLoggedIn}
+          />
           <main className="flex-1">{children}</main>
           <BottomNav />
         </AppToastProvider>

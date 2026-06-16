@@ -20,7 +20,7 @@ export function AdminMessageBanner({ variant = "mobile" }: AdminMessageBannerPro
 
   const pollInbox = useCallback(async () => {
     try {
-      const res = await fetch("/api/messages/inbox");
+      const res = await fetch("/api/messages/inbox", { cache: "no-store" });
       const data = (await res.json()) as {
         ok?: boolean;
         message?: DriverInboxMessage | null;
@@ -41,8 +41,19 @@ export function AdminMessageBanner({ variant = "mobile" }: AdminMessageBannerPro
 
   useEffect(() => {
     void pollInbox();
-    const id = window.setInterval(() => void pollInbox(), ADMIN_MESSAGE_POLL_MS);
-    return () => window.clearInterval(id);
+    const intervalId = window.setInterval(() => void pollInbox(), ADMIN_MESSAGE_POLL_MS);
+
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        void pollInbox();
+      }
+    }
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [pollInbox]);
 
   async function markRead(readId: string) {
@@ -70,7 +81,7 @@ export function AdminMessageBanner({ variant = "mobile" }: AdminMessageBannerPro
   return (
     <div
       className={cn(
-        "shrink-0 border-b px-4 py-3",
+        "sticky top-0 z-[120] shrink-0 border-b px-4 py-3",
         message.important
           ? isTesla
             ? "border-amber-400/50 bg-amber-500/15"

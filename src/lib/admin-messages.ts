@@ -561,125 +561,56 @@ async function driverHasBlockingEmergency(
 
 
 export async function fetchDriverUnreadMessage(
-
   supabase: SupabaseClient,
-
   userId: string
-
 ): Promise<{ message: DriverInboxMessage | null; blockForEmergency: boolean }> {
-
   const blockForEmergency = await driverHasBlockingEmergency(supabase, userId);
-
   if (blockForEmergency) {
-
+    console.info("[MSG INBOX] blocked by active taxi emergency", { userId });
     return { message: null, blockForEmergency: true };
-
   }
 
-
-
-  const { data, error } = await supabase
-
+  const { data: readRow, error: readError } = await supabase
     .from("message_reads")
-
-    .select(
-
-      `
-
-      id,
-
-      message_id,
-
-      created_at,
-
-      messages (
-
-        message,
-
-        important,
-
-        created_at
-
-      )
-
-    `
-
-    )
-
+    .select("id, message_id, created_at")
     .eq("user_id", userId)
-
     .is("read_at", null)
-
     .order("created_at", { ascending: true })
-
     .limit(1)
-
     .maybeSingle();
 
+  if (readError) throw readError;
+  if (!readRow) return { message: null, blockForEmergency: false };
 
+  const { data: msgRow, error: msgError } = await supabase
+    .from("messages")
+    .select("message, important, created_at")
+    .eq("id", readRow.message_id)
+    .maybeSingle();
 
-  if (error) throw error;
+  if (msgError) throw msgError;
 
-  if (!data) return { message: null, blockForEmergency: false };
-
-
-
-  const msg = data.messages as
-
-    | {
-
-        message: string;
-
-        important: boolean;
-
-        created_at: string;
-
-      }
-
-    | {
-
-        message: string;
-
-        important: boolean;
-
-        created_at: string;
-
-      }[]
-
-    | null;
-
-
-
-  const payload = Array.isArray(msg) ? msg[0] : msg;
-
-  if (!payload) return { message: null, blockForEmergency: false };
-
-
+  if (!msgRow) {
+    console.error("[MSG INBOX] unread read row without accessible message", {
+      userId,
+      readId: readRow.id,
+      messageId: readRow.message_id,
+    });
+    return { message: null, blockForEmergency: false };
+  }
 
   return {
-
     blockForEmergency: false,
-
     message: {
-
-      read_id: data.id as string,
-
-      message_id: data.message_id as string,
-
-      message: payload.message,
-
-      important: Boolean(payload.important),
-
+      read_id: readRow.id as string,
+      message_id: readRow.message_id as string,
+      message: msgRow.message,
+      important: Boolean(msgRow.important),
       sender_label: ADMIN_MESSAGE_SENDER_LABEL,
-
-      created_at: payload.created_at,
-
-      time_label: formatAdminMessageTime(payload.created_at),
-
+      created_at: msgRow.created_at,
+      time_label: formatAdminMessageTime(msgRow.created_at),
     },
-
   };
-
 }
 
 
