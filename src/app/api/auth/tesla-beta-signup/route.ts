@@ -293,7 +293,6 @@ export async function POST(request: Request) {
       tesla_beta: true,
       beta_user: true,
       test_mode_enabled: true,
-      tesla_view_enabled: true,
       preferred_view: "tesla",
       welcome_pending: false,
       updated_at: new Date().toISOString(),
@@ -326,6 +325,7 @@ export async function POST(request: Request) {
           }
 
           await service.auth.admin.deleteUser(userId);
+          console.error("[AUTH] Tesla Beta profile update failed:", profileError);
           return NextResponse.json(
             { error: "Det gick inte att skapa kontot." },
             { status: 500 }

@@ -4,6 +4,9 @@
 alter table public.profiles
   add column if not exists tesla_beta boolean not null default false;
 
+alter table public.profiles
+  add column if not exists tesla_view_enabled boolean not null default true;
+
 comment on column public.profiles.tesla_beta is
   'Tesla Beta tester: restricted to Tesla View, auto-approved on signup';
 
