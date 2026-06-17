@@ -1,4 +1,4 @@
-import type { AdminCommandCenterSnapshot } from "@/lib/admin-command-center";
+import type { AdminCommandCenterSnapshot, LiveFeedItem } from "@/lib/admin-command-center";
 import { alertTypeIcon, alertTypeLabel } from "@/lib/constants";
 import { laserIconSvgMarkup } from "@/components/icons/LaserIcon";
 import { allVehicleCheckIconSvgMarkup } from "@/components/icons/AllVehicleCheckIcon";
@@ -17,6 +17,25 @@ export interface DispatchMapReport {
   timeLabel: string;
   description: string | null;
   isEmergency: boolean;
+}
+
+export function liveFeedItemToDispatchReport(
+  item: LiveFeedItem
+): DispatchMapReport | null {
+  if (item.latitude == null || item.longitude == null) return null;
+
+  return {
+    id: item.id,
+    type: item.type,
+    typeLabel: item.type_label,
+    typeIcon: item.type_icon,
+    latitude: item.latitude,
+    longitude: item.longitude,
+    location: item.address || item.location,
+    timeLabel: item.time_label,
+    description: item.description,
+    isEmergency: item.type === "taxi_emergency",
+  };
 }
 
 export interface DispatchMarkerStyle {

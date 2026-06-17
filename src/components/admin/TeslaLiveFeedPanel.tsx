@@ -82,6 +82,7 @@ export function TeslaReportDetailPanel({
 }) {
   const { openMap } = useAdminDispatchMap();
   const isDriving = privacyMode === "driving";
+  const isEmergency = item.type === "taxi_emergency";
   const [copied, setCopied] = useState(false);
   const ageLabel = useMemo(
     () => formatRelativeSwedish(item.created_at),
@@ -151,14 +152,16 @@ export function TeslaReportDetailPanel({
         </div>
       )}
 
-      {(item.latitude != null || item.longitude != null) && (
+      {(item.latitude != null || item.longitude != null) && !isDriving && (
         <p className="mt-4 font-mono text-xs text-[#6B7280]">
           {formatCoordinate(item.latitude)}, {formatCoordinate(item.longitude)}
         </p>
       )}
 
       <div className="mt-8 space-y-3">
-        {item.latitude != null && item.longitude != null && (
+        {item.latitude != null &&
+          item.longitude != null &&
+          !(isDriving && isEmergency) && (
           <button
             type="button"
             onClick={() => openMap(item.id)}
@@ -168,14 +171,28 @@ export function TeslaReportDetailPanel({
             Visa på karta
           </button>
         )}
-        <TeslaNavigationButtons
-          size="large"
-          target={{
-            latitude: item.latitude,
-            longitude: item.longitude,
-            address: item.address,
-          }}
-        />
+        {isDriving && isEmergency && (
+          <TeslaNavigationButtons
+            size="large"
+            hideMapsLink
+            teslaLabel="Skicka till Tesla Navigation"
+            target={{
+              latitude: item.latitude,
+              longitude: item.longitude,
+              address: item.address,
+            }}
+          />
+        )}
+        {!isDriving && (
+          <TeslaNavigationButtons
+            size="large"
+            target={{
+              latitude: item.latitude,
+              longitude: item.longitude,
+              address: item.address,
+            }}
+          />
+        )}
         {!isDriving && item.address && (
           <button
             type="button"

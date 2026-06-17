@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { useAdminCommandCenter } from "@/contexts/AdminCommandCenterContext";
 import { AdminCivilkollActions } from "@/components/admin/AdminCivilkollActions";
 import { AdminMessagesPanel } from "@/components/admin/AdminMessagesPanel";
 import { TeslaLiveFeedPanel } from "@/components/admin/TeslaLiveFeedPanel";
-import { TeslaNetworkMap } from "@/components/admin/TeslaNetworkMap";
 import { TeslaQuickReportPanel } from "@/components/admin/TeslaQuickReportPanel";
+import { TeslaDrivingReportMap } from "@/components/tesla/TeslaDrivingReportMap";
 import { ADMIN_COMMAND_CENTER_HEADER_HEIGHT } from "@/components/admin/TeslaCommandCenterHeader";
 
 interface TabDrivingModeProps {
@@ -19,6 +19,11 @@ export function TabDrivingMode({ isAdmin = false }: TabDrivingModeProps) {
   const { snapshot, refresh } = useAdminCommandCenter();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const items = snapshot?.liveFeed ?? [];
+
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedReportId) ?? null,
+    [items, selectedReportId]
+  );
 
   return (
     <div
@@ -60,7 +65,9 @@ export function TabDrivingMode({ isAdmin = false }: TabDrivingModeProps) {
               LIVE-flöde
             </h2>
             <p className="mt-0.5 text-[10px] text-[#8A9099]">
-              Välj en rapport · Detaljer visas till höger
+              {snapshot?.testModeEnabled
+                ? "Testläge — dina testrapporter visas här (syns bara för dig)"
+                : "Välj en rapport · Platsen visas på kartan till höger"}
             </p>
           </div>
           <TeslaLiveFeedPanel
@@ -82,9 +89,7 @@ export function TabDrivingMode({ isAdmin = false }: TabDrivingModeProps) {
               onSelectId={setSelectedReportId}
             />
           </div>
-          <div className="shrink-0 border-t border-[#3A4048]">
-            <TeslaNetworkMap height={280} className="min-h-0" />
-          </div>
+          <TeslaDrivingReportMap selectedItem={selectedItem} height={280} />
         </section>
       </div>
     </div>
