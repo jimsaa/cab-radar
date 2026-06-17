@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getSupabaseUrl } from "@/lib/supabase/env";
 import {
   getSupabaseConfigError,
   isSupabaseConnectionError,
@@ -14,7 +15,6 @@ import {
 import { hashLicence } from "@/lib/licence.server";
 import {
   findDuplicateLicence,
-  isMissingColumnError,
   licenceProfileFields,
   profileHasLicenceHashColumn,
 } from "@/lib/signup-profile";
@@ -39,25 +39,120 @@ const TESLA_BETA_CITY = "Göteborg";
 const TESLA_BETA_SCHEMA_ERROR =
   "Tesla Beta-kolumner saknas i databasen. Kör migration-tesla-beta.sql i Supabase SQL Editor.";
 
+const TESLA_BETA_CACHE_ERROR =
+  "Tesla Beta-kolumner finns i databasen men API-cachen är inte uppdaterad. Kör i Supabase SQL Editor: NOTIFY pgrst, 'reload schema'; och försök igen om en minut.";
+
+function supabaseProjectRef(): string {
+  try {
+    return new URL(getSupabaseUrl()).hostname.split(".")[0] ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+function isPostgrestSchemaCacheError(error: {
+  code?: string;
+  message?: string;
+} | null): boolean {
+  if (!error) return false;
+  if (error.code === "PGRST204") return true;
+  return (error.message ?? "").toLowerCase().includes("schema cache");
+}
+
+function isPostgresMissingColumnError(error: {
+  code?: string;
+  message?: string;
+} | null): boolean {
+  if (!error) return false;
+  if (error.code === "42703") return true;
+  const msg = (error.message ?? "").toLowerCase();
+  return msg.includes("does not exist") && !msg.includes("schema cache");
+}
+
 function isTeslaBetaSchemaError(error: {
   code?: string;
   message?: string;
 } | null): boolean {
   if (!error) return false;
-  if (isMissingColumnError(error)) return true;
+  if (isPostgresMissingColumnError(error)) return true;
   if (error.code === "22P02") return true;
   const msg = (error.message ?? "").toLowerCase();
   return msg.includes("tesla_beta") || msg.includes("membership_type");
 }
 
+export async function probeTeslaBetaSchema(
+  service: Awaited<ReturnType<typeof createServiceClient>>
+): Promise<{ ok: boolean; projectRef: string; detail?: string }> {
+  const projectRef = supabaseProjectRef();
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const column = await service.from("profiles").select("tesla_beta").limit(1);
+    if (!column.error) {
+      const enumCheck = await service
+        .from("profiles")
+        .select("id")
+        .eq("membership_type", "tesla_beta")
+        .limit(0);
+
+      if (enumCheck.error?.code === "22P02") {
+        return {
+          ok: false,
+          projectRef,
+          detail: "membership_type enum saknar värdet tesla_beta",
+        };
+      }
+      if (enumCheck.error && !isPostgrestSchemaCacheError(enumCheck.error)) {
+        return { ok: false, projectRef, detail: enumCheck.error.message };
+      }
+      return { ok: true, projectRef };
+    }
+
+    if (isPostgrestSchemaCacheError(column.error)) {
+      if (attempt < 3) {
+        await new Promise((r) => setTimeout(r, 750 * (attempt + 1)));
+        continue;
+      }
+      return { ok: false, projectRef, detail: "postgrest_schema_cache" };
+    }
+
+    if (isPostgresMissingColumnError(column.error)) {
+      return { ok: false, projectRef, detail: "tesla_beta column missing" };
+    }
+
+    return { ok: false, projectRef, detail: column.error.message };
+  }
+
+  return { ok: false, projectRef, detail: "schema_probe_failed" };
+}
+
 async function assertTeslaBetaSchema(
   service: Awaited<ReturnType<typeof createServiceClient>>
 ): Promise<string | null> {
-  const { error } = await service.from("profiles").select("tesla_beta").limit(0);
-  if (isMissingColumnError(error)) {
-    return TESLA_BETA_SCHEMA_ERROR;
+  const probe = await probeTeslaBetaSchema(service);
+  if (probe.ok) return null;
+
+  if (probe.detail === "postgrest_schema_cache") {
+    return TESLA_BETA_CACHE_ERROR;
   }
-  return null;
+
+  return `${TESLA_BETA_SCHEMA_ERROR} (Supabase-projekt: ${probe.projectRef})`;
+}
+
+/** Diagnostic — open in browser to verify production DB matches your migration. */
+export async function GET() {
+  const configError = getSupabaseConfigError();
+  if (configError) {
+    return NextResponse.json({ ok: false, error: configError }, { status: 503 });
+  }
+
+  try {
+    const service = await createServiceClient();
+    const probe = await probeTeslaBetaSchema(service);
+    return NextResponse.json(probe);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

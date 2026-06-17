@@ -75,3 +75,6 @@ begin
   end if;
 end;
 $$;
+
+-- Refresh PostgREST schema cache so API routes see new columns immediately
+notify pgrst, 'reload schema';
