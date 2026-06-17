@@ -302,7 +302,7 @@ export function TeslaCommandCenter() {
           <div className="min-h-0 flex-1 overflow-hidden">
             <TeslaLiveFeedPanel items={snapshot?.liveFeed ?? []} />
           </div>
-          <AdminMessagesPanel variant="tesla" />
+          <AdminMessagesPanel variant="tesla" collapsible />
         </section>
 
         {/* Right — network status + map */}

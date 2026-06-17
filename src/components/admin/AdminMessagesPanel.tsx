@@ -13,18 +13,25 @@ import { cn } from "@/lib/utils";
 
 type RecipientMode = "all" | "user";
 
+const ADMIN_MESSAGES_HIDDEN_KEY = "cabradar_admin_messages_hidden";
+
 interface AdminMessagesPanelProps {
   variant?: "tesla" | "dashboard";
   className?: string;
+  /** Allow collapsing to a slim bar (admin command center). */
+  collapsible?: boolean;
 }
 
 export function AdminMessagesPanel({
   variant = "tesla",
   className,
+  collapsible = false,
 }: AdminMessagesPanelProps) {
   const showToast = useAdminToast();
   const isTesla = variant === "tesla";
+  const canCollapse = collapsible && isTesla;
   const [mounted, setMounted] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -65,6 +72,25 @@ export function AdminMessagesPanel({
     setMounted(true);
     void loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (!canCollapse) return;
+    try {
+      setCollapsed(window.localStorage.getItem(ADMIN_MESSAGES_HIDDEN_KEY) === "1");
+    } catch {
+      // Storage unavailable — default to expanded.
+    }
+  }, [canCollapse]);
+
+  function setPanelCollapsed(next: boolean) {
+    setCollapsed(next);
+    if (!canCollapse) return;
+    try {
+      window.localStorage.setItem(ADMIN_MESSAGES_HIDDEN_KEY, next ? "1" : "0");
+    } catch {
+      // Ignore storage errors.
+    }
+  }
 
   const filteredDrivers = useMemo(() => {
     const q = driverQuery.trim().toLowerCase();
@@ -326,6 +352,27 @@ export function AdminMessagesPanel({
 
   return (
     <>
+      {canCollapse && collapsed ? (
+        <button
+          type="button"
+          onClick={() => setPanelCollapsed(false)}
+          className={cn(
+            "flex w-full shrink-0 items-center justify-between gap-3 border-t border-[#3A4048] px-4 py-2.5 text-left transition hover:bg-[#2a3038]/50 active:scale-[0.995]",
+            className
+          )}
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold text-[#B0B6BE]">
+            <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+            Meddelanden
+            {history.length > 0 && (
+              <span className="font-normal text-[#8A9099]">
+                · {history.length} skickade
+              </span>
+            )}
+          </span>
+          <span className="text-xs text-[#8A9099]">Klicka för att visa</span>
+        </button>
+      ) : (
       <div
         className={cn(
           isTesla
@@ -334,14 +381,27 @@ export function AdminMessagesPanel({
           className
         )}
       >
-        <h3
-          className={cn(
-            "mb-3 text-xs font-bold uppercase tracking-widest",
-            isTesla ? "text-[#8A9099]" : "text-muted"
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3
+            className={cn(
+              "text-xs font-bold uppercase tracking-widest",
+              isTesla ? "text-[#8A9099]" : "text-muted"
+            )}
+          >
+            💬 Meddelanden
+          </h3>
+          {canCollapse && (
+            <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-[#8A9099]">
+              <input
+                type="checkbox"
+                checked={collapsed}
+                onChange={(e) => setPanelCollapsed(e.target.checked)}
+                className="h-4 w-4 rounded accent-[#42A5F5]"
+              />
+              Dölj
+            </label>
           )}
-        >
-          💬 Meddelanden
-        </h3>
+        </div>
 
         <button
           type="button"
@@ -423,6 +483,7 @@ export function AdminMessagesPanel({
           )}
         </div>
       </div>
+      )}
 
       {mounted && modal && createPortal(modal, document.body)}
     </>
