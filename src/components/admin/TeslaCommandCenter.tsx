@@ -287,10 +287,9 @@ export function TeslaCommandCenter() {
             <TeslaQuickReportPanel onReported={() => void refresh()} />
           </div>
           <AdminCivilkollActions variant="tesla" />
-          <AdminMessagesPanel variant="tesla" />
         </section>
 
-        {/* Center — Live flöde (primary focus) */}
+        {/* Center — Live flöde (primary focus) + meddelanden */}
         <section className="col-span-6 flex min-h-0 flex-col rounded-[18px] border border-[#3A4048] bg-[#262B31]">
           <div className="shrink-0 border-b border-[#3A4048] px-4 py-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-[#B0B6BE]">
@@ -300,7 +299,10 @@ export function TeslaCommandCenter() {
               Tryck på en rapport · Skicka till Tesla för navigation
             </p>
           </div>
-          <TeslaLiveFeedPanel items={snapshot?.liveFeed ?? []} />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TeslaLiveFeedPanel items={snapshot?.liveFeed ?? []} />
+          </div>
+          <AdminMessagesPanel variant="tesla" />
         </section>
 
         {/* Right — network status + map */}

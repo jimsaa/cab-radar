@@ -15,7 +15,9 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("verification_status, is_admin, alert_chime_enabled")
+    .select(
+      "verification_status, is_admin, alert_chime_enabled, test_mode_enabled"
+    )
     .eq("id", user.id)
     .single();
 
@@ -27,6 +29,8 @@ export async function GET() {
     const service = await createServiceClient();
     const snapshot = await fetchTeslaDrivingSnapshot(service, {
       alertChimeEnabled: profile.alert_chime_enabled !== false,
+      userId: user.id,
+      testModeEnabled: Boolean(profile.test_mode_enabled),
     });
 
     return NextResponse.json({ ok: true, snapshot });

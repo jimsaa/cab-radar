@@ -145,6 +145,30 @@ export interface AdminCommandCenterSnapshot {
   alertChimeEnabled: boolean;
   isFullAdmin: boolean;
   canViewEmergencyPhone: boolean;
+  /** True when the current driver has test mode on (Tesla driving snapshot). */
+  testModeEnabled?: boolean;
+}
+
+/** Live feed for Tesla View — hide test reports except the driver's own while in test mode. */
+export function filterTeslaDrivingLiveFeed(
+  allFeed: LiveFeedItem[],
+  activeAlerts: DriverAlert[],
+  options: { userId?: string; testModeEnabled?: boolean }
+): LiveFeedItem[] {
+  const { userId, testModeEnabled } = options;
+
+  if (testModeEnabled && userId) {
+    const ownTestAlertIds = new Set(
+      activeAlerts
+        .filter((alert) => alert.is_test && alert.created_by === userId)
+        .map((alert) => alert.id)
+    );
+    return allFeed.filter(
+      (item) => !item.is_test || ownTestAlertIds.has(item.id)
+    );
+  }
+
+  return allFeed.filter((item) => !item.is_test);
 }
 
 export function formatCommandCenterDriverLabel(driver: {
@@ -458,17 +482,23 @@ async function loadDrivingFeedCreators(
 /** Privacy-safe live feed for Tesla View — nicknames only, no admin data. */
 export async function fetchTeslaDrivingSnapshot(
   serviceSupabase: SupabaseClient,
-  options: { alertChimeEnabled: boolean }
+  options: {
+    alertChimeEnabled: boolean;
+    userId?: string;
+    testModeEnabled?: boolean;
+  }
 ): Promise<AdminCommandCenterSnapshot> {
-  const { alertChimeEnabled } = options;
+  const { alertChimeEnabled, userId, testModeEnabled } = options;
   const activeAlerts = await fetchAllActiveAlertsForAdmin(serviceSupabase);
   const creatorProfiles = await loadDrivingFeedCreators(
     serviceSupabase,
     activeAlerts
   );
-  const liveFeed = buildLiveFeed(activeAlerts, creatorProfiles).filter(
-    (item) => !item.is_test
-  );
+  const allFeed = buildLiveFeed(activeAlerts, creatorProfiles);
+  const liveFeed = filterTeslaDrivingLiveFeed(allFeed, activeAlerts, {
+    userId,
+    testModeEnabled,
+  });
 
   return {
     counts: EMPTY_DRIVING_COUNTS,
@@ -488,6 +518,7 @@ export async function fetchTeslaDrivingSnapshot(
     alertChimeEnabled,
     isFullAdmin: false,
     canViewEmergencyPhone: false,
+    testModeEnabled: Boolean(testModeEnabled),
   };
 }
 
