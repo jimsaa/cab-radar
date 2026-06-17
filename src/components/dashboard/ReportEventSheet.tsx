@@ -14,13 +14,11 @@ import {
 import { isEmergencyReportButton } from "@/lib/report-alert-mapping";
 import {
   adminReportSuccessToast,
+  reportSubmitErrorMessage,
   reportSuccessToast,
   submitDriverAlert,
 } from "@/lib/submit-alert";
-import {
-  ADMIN_REPORT_SUBMIT_ERROR,
-  useAdminToast,
-} from "@/components/admin/AdminToast";
+import { useAdminToast } from "@/components/admin/AdminToast";
 import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 
 interface ReportEventSheetProps {
@@ -101,8 +99,8 @@ export function ReportEventSheet({
 
       const { message, variant } = reportSuccessToast(data.type, alert.is_test);
       showToast(message, { variant });
-    } catch {
-      showToast(ADMIN_REPORT_SUBMIT_ERROR, { variant: "error" });
+    } catch (err) {
+      showToast(reportSubmitErrorMessage(err), { variant: "error" });
       throw new Error("report submit failed");
     }
   }

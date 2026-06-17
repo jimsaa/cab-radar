@@ -1,4 +1,5 @@
-import { createAlert, alertNeedsAdmin, shouldPushNotify } from "@/lib/alerts";
+import { alertNeedsAdmin, shouldPushNotify } from "@/lib/alerts";
+import { formatAlertCreateError } from "@/lib/alert-create-errors";
 import { alertTypeHasDuplicateCheck } from "@/lib/alert-ttl";
 import { recordDriverActivityAt } from "@/lib/driver-activity-client";
 import { geolocationErrorMessage } from "@/lib/geolocation-errors";
@@ -8,26 +9,6 @@ import { syncMembershipProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/client";
 
 import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
-
-
-
-async function profileTestModeEnabled(userId: string): Promise<boolean> {
-
-  const supabase = createClient();
-
-  const { data } = await supabase
-
-    .from("profiles")
-
-    .select("test_mode_enabled")
-
-    .eq("id", userId)
-
-    .maybeSingle();
-
-  return Boolean(data?.test_mode_enabled);
-
-}
 
 export function reportSubmitErrorMessage(err: unknown): string {
   if (
@@ -43,12 +24,22 @@ export function reportSubmitErrorMessage(err: unknown): string {
   }
 
   if (err instanceof Error && err.message.trim()) {
-    return `Kunde inte skicka rapport: ${err.message}`;
+    const message = err.message.trim();
+    if (message.startsWith("Kunde inte skicka rapport")) return message;
+    if (
+      message.includes("Kontroll av alla fordon") ||
+      message.includes("migration-alert")
+    ) {
+      return message;
+    }
+    return `Kunde inte skicka rapport: ${message}`;
   }
 
   if (err && typeof err === "object" && "message" in err) {
     const message = String((err as { message: unknown }).message ?? "").trim();
-    if (message) return `Kunde inte skicka rapport: ${message}`;
+    if (message) {
+      return formatAlertCreateError(err, undefined);
+    }
   }
 
   return "Kunde inte skicka rapport. Försök igen.";
@@ -62,11 +53,27 @@ export async function submitDriverAlert(
 
 ): Promise<DriverAlert> {
 
-  const supabase = createClient();
+  const isTestOverride = data.is_test;
 
-  const isTest = data.is_test ?? (await profileTestModeEnabled(userId));
+  const res = await fetch("/api/alerts/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...data, is_test: isTestOverride }),
+  });
 
-  const alert = await createAlert(supabase, userId, { ...data, is_test: isTest });
+  const payload = (await res.json()) as {
+    ok?: boolean;
+    alert?: DriverAlert;
+    error?: string;
+  };
+
+  if (!res.ok || !payload.ok || !payload.alert) {
+    throw new Error(
+      payload.error ?? "Kunde inte skicka rapport. Försök igen."
+    );
+  }
+
+  const alert = payload.alert;
 
   if (data.latitude != null && data.longitude != null) {
     void recordDriverActivityAt(
@@ -78,7 +85,9 @@ export async function submitDriverAlert(
 
 
 
-  if (!isTest) {
+  if (!alert.is_test) {
+
+    const supabase = createClient();
 
     void syncMembershipProfile(supabase, userId).catch((err) => {
 
