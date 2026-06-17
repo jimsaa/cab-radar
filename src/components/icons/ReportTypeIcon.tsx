@@ -1,6 +1,9 @@
 import { alertTypeIcon } from "@/lib/alert-types";
+import { isSvgReportType } from "@/lib/svg-report-types";
+import { AllVehicleCheckIcon } from "@/components/icons/AllVehicleCheckIcon";
 import { LaserIcon } from "@/components/icons/LaserIcon";
-import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";import { cn } from "@/lib/utils";
+import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
+import { cn } from "@/lib/utils";
 
 export type ReportTypeIconVariant = "default" | "badge" | "large" | "tesla";
 
@@ -11,7 +14,7 @@ const VARIANT_CLASS: Record<ReportTypeIconVariant, string> = {
   tesla: "h-9 w-9",
 };
 
-const LASER_STROKE: Record<ReportTypeIconVariant, number> = {
+const SVG_STROKE: Record<ReportTypeIconVariant, number> = {
   default: 1.75,
   badge: 1.85,
   large: 1.5,
@@ -29,6 +32,10 @@ interface ReportTypeIconProps {
 
 function resolveLaser(type?: string, reportId?: string): boolean {
   return type === "laser" || reportId === "laser";
+}
+
+function resolveAllVehicleCheck(type?: string, reportId?: string): boolean {
+  return type === "all_vehicle_check" || reportId === "all_vehicle_check";
 }
 
 function resolveQueue(type?: string, reportId?: string): boolean {
@@ -54,17 +61,30 @@ export function ReportTypeIcon({
     );
   }
 
+  if (resolveAllVehicleCheck(type, reportId)) {
+    return (
+      <AllVehicleCheckIcon
+        className={cn(sizeClass, "text-amber-400", className)}
+        strokeWidth={SVG_STROKE[variant]}
+      />
+    );
+  }
+
   if (resolveLaser(type, reportId)) {
     return (
       <LaserIcon
         className={cn(sizeClass, "text-current", className)}
-        strokeWidth={LASER_STROKE[variant]}
+        strokeWidth={SVG_STROKE[variant]}
       />
     );
   }
 
   const iconType = type ?? reportId ?? "";
   const emoji = alertTypeIcon(iconType);
+
+  if (!emoji && isSvgReportType(iconType)) {
+    return null;
+  }
 
   return (
     <span

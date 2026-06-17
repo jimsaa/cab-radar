@@ -10,6 +10,7 @@ AS $$
   SELECT CASE p_type
     WHEN 'traffic_control' THEN interval '15 minutes'
     WHEN 'laser' THEN interval '15 minutes'
+    WHEN 'all_vehicle_check' THEN interval '15 minutes'
     WHEN 'slow_traffic' THEN interval '15 minutes'
     WHEN 'total_stop' THEN interval '15 minutes'
     WHEN 'total_stop_accident' THEN interval '15 minutes'
@@ -72,6 +73,7 @@ WHERE status = 'active'
   AND type IN (
     'traffic_control',
     'laser',
+    'all_vehicle_check',
     'slow_traffic',
     'total_stop',
     'total_stop_accident',

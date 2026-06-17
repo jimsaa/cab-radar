@@ -10,6 +10,7 @@ export const ADMIN_BG_FLASH_MS = 5000;
 
 export type AdminReportAttentionKind =
   | "laser"
+  | "all_vehicle_check"
   | "traffic_control"
   | "slow_traffic"
   | "total_stop"
@@ -30,6 +31,10 @@ const ATTENTION_BY_KIND: Record<
   laser: {
     borderClass: "admin-report-border-laser",
     pulseClass: "admin-report-pulse-laser",
+  },
+  all_vehicle_check: {
+    borderClass: "admin-report-border-all-vehicle-check",
+    pulseClass: "admin-report-pulse-all-vehicle-check",
   },
   traffic_control: {
     borderClass: "admin-report-border-taxikontroll",
@@ -61,6 +66,8 @@ export function adminReportAttentionKind(type: string): AdminReportAttentionKind
   switch (type) {
     case "laser":
       return "laser";
+    case "all_vehicle_check":
+      return "all_vehicle_check";
     case "traffic_control":
     case "roadwork":
       return "traffic_control";

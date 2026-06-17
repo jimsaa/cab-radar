@@ -78,6 +78,23 @@ export const DASHBOARD_REPORT_TYPES: DashboardReportType[] = [
 
   {
 
+    id: "all_vehicle_check",
+
+    label: "Kontroll av alla fordon",
+
+    description:
+      "Kontroll där alla fordon stoppas (polis, tull, kronofogden etc).",
+
+    icon: "",
+
+    borderClass: "border-amber-500/50",
+
+    glowClass: "shadow-amber-500/10",
+
+  },
+
+  {
+
     id: "ko",
 
     label: "Kö",

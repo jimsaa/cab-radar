@@ -1,6 +1,7 @@
 import { createAlert, alertNeedsAdmin, shouldPushNotify } from "@/lib/alerts";
 import { alertTypeHasDuplicateCheck } from "@/lib/alert-ttl";
 import { recordDriverActivityAt } from "@/lib/driver-activity-client";
+import { geolocationErrorMessage } from "@/lib/geolocation-errors";
 
 import { syncMembershipProfile } from "@/lib/profile";
 
@@ -28,7 +29,30 @@ async function profileTestModeEnabled(userId: string): Promise<boolean> {
 
 }
 
+export function reportSubmitErrorMessage(err: unknown): string {
+  if (
+    err &&
+    typeof err === "object" &&
+    "code" in err &&
+    typeof (err as GeolocationPositionError).code === "number"
+  ) {
+    const geoCode = (err as GeolocationPositionError).code;
+    if (geoCode >= 1 && geoCode <= 3) {
+      return geolocationErrorMessage(err);
+    }
+  }
 
+  if (err instanceof Error && err.message.trim()) {
+    return `Kunde inte skicka rapport: ${err.message}`;
+  }
+
+  if (err && typeof err === "object" && "message" in err) {
+    const message = String((err as { message: unknown }).message ?? "").trim();
+    if (message) return `Kunde inte skicka rapport: ${message}`;
+  }
+
+  return "Kunde inte skicka rapport. Försök igen.";
+}
 
 export async function submitDriverAlert(
 
@@ -220,6 +244,8 @@ export function adminReportSuccessToast(
       return "✅ Taxikontroll rapporterad";
     case "laser":
       return "✅ Laser rapporterad";
+    case "all_vehicle_check":
+      return "✅ Kontroll av alla fordon rapporterad";
     case "slow_traffic":
       return "✅ Kö rapporterad";
     case "total_stop":

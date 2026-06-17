@@ -6,6 +6,7 @@ import type { DriverAlert } from "./types/database";
 export const LIVE_NETWORK_ALERT_TYPES = [
   "traffic_control",
   "laser",
+  "all_vehicle_check",
   "slow_traffic",
   "total_stop",
   "accident",
@@ -26,6 +27,7 @@ export const LIVE_FEED_FILTER_OPTIONS: LiveFeedFilterOption[] = [
   { id: "all", label: "Alla" },
   { id: "traffic_control", label: "Taxikontroll", icon: "🚕" },
   { id: "laser", label: "Laser" },
+  { id: "all_vehicle_check", label: "Kontroll av alla fordon" },
   { id: "slow_traffic", label: "Kö", icon: "🚗🚗🚗" },
   { id: "total_stop", label: "Stopp", icon: "⛔" },
   { id: "accident", label: "Olycka", icon: "🚑" },

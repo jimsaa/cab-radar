@@ -7,6 +7,7 @@ import {
 } from "@/lib/dashboard-report-types";
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
 import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
+import { isSvgReportType } from "@/lib/svg-report-types";
 import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { cn } from "@/lib/utils";
 
@@ -69,8 +70,8 @@ export function ReportEventGrid({
               />
             ) : item.id === "ko" ? (
               <QueueTrafficIcon />
-            ) : item.id === "laser" ? (
-              <ReportTypeIcon reportId="laser" />
+            ) : isSvgReportType(item.id) ? (
+              <ReportTypeIcon reportId={item.id} />
             ) : (
               <span className="text-3xl leading-none" aria-hidden>
                 {item.icon}

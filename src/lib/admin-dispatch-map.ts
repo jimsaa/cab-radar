@@ -1,6 +1,7 @@
 import type { AdminCommandCenterSnapshot } from "@/lib/admin-command-center";
 import { alertTypeIcon, alertTypeLabel } from "@/lib/constants";
 import { laserIconSvgMarkup } from "@/components/icons/LaserIcon";
+import { allVehicleCheckIconSvgMarkup } from "@/components/icons/AllVehicleCheckIcon";
 import type { EmergencyAlertWithDriver } from "@/lib/emergency";
 import { emergencyLocationLabel } from "@/lib/emergency";
 import { PUBLIC_EMERGENCY_LABEL } from "@/lib/emergency-privacy";
@@ -39,6 +40,11 @@ const MARKER_STYLES: Record<string, DispatchMarkerStyle> = {
     border: "#C084FC",
     fill: "#9333EA",
     glow: "rgba(168,85,247,0.55)",
+  },
+  all_vehicle_check: {
+    border: "#FBBF24",
+    fill: "#F59E0B",
+    glow: "rgba(245,158,11,0.55)",
   },
   slow_traffic: {
     border: "#FB923C",
@@ -154,7 +160,9 @@ export function dispatchReportMarkerHtml(
   const iconMarkup =
     report.type === "laser"
       ? laserIconSvgMarkup({ size: report.isEmergency ? 18 : 16 })
-      : report.typeIcon || alertTypeIcon(report.type);
+      : report.type === "all_vehicle_check"
+        ? allVehicleCheckIconSvgMarkup({ size: report.isEmergency ? 18 : 16 })
+        : report.typeIcon || alertTypeIcon(report.type);
 
   return `<div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:${style.fill};border:3px solid ${style.border};font-size:${report.isEmergency ? 18 : 16}px;${ring}">${iconMarkup}</div>`;
 }

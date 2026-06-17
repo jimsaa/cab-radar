@@ -14,6 +14,7 @@ export const DEFAULT_LIVE_TTL_MINUTES = 15;
 export const ALERT_TTL_MINUTES: Partial<Record<AlertType, number | null>> = {
   traffic_control: DEFAULT_LIVE_TTL_MINUTES,
   laser: DEFAULT_LIVE_TTL_MINUTES,
+  all_vehicle_check: DEFAULT_LIVE_TTL_MINUTES,
   slow_traffic: DEFAULT_LIVE_TTL_MINUTES,
   total_stop: DEFAULT_LIVE_TTL_MINUTES,
   accident: DEFAULT_LIVE_TTL_MINUTES,
@@ -30,6 +31,7 @@ const LEGACY_LIVE_TTL_MINUTES: Partial<Record<StoredAlertType, number>> = {
 export const DUPLICATE_CHECK_ALERT_TYPES: AlertType[] = [
   "traffic_control",
   "laser",
+  "all_vehicle_check",
   "slow_traffic",
   "total_stop",
   "accident",

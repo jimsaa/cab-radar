@@ -24,9 +24,9 @@ import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 
 import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 
-import { getCurrentPosition, reverseGeocode } from "@/lib/geolocation";
+import { isSvgReportType } from "@/lib/svg-report-types";
 
-import { geolocationErrorMessage } from "@/lib/geolocation-errors";
+import { getCurrentPosition, reverseGeocode } from "@/lib/geolocation";
 
 import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
 
@@ -34,10 +34,9 @@ import { isEmergencyReportButton } from "@/lib/report-alert-mapping";
 
 import {
 
+  reportSubmitErrorMessage,
   reportSuccessToast,
-
   submitDriverAlert,
-
 } from "@/lib/submit-alert";
 
 import { createClient } from "@/lib/supabase/client";
@@ -175,9 +174,7 @@ export function TeslaQuickReportPanel({
       showToast(message, { variant });
 
     } catch (err) {
-
-      showToast(geolocationErrorMessage(err), { variant: "error" });
-
+      showToast(reportSubmitErrorMessage(err), { variant: "error" });
     } finally {
 
       setSubmittingId(null);
@@ -272,9 +269,9 @@ export function TeslaQuickReportPanel({
 
                 <QueueTrafficIcon className="h-9 w-10" />
 
-              ) : item.id === "laser" ? (
+              ) : isSvgReportType(item.id) ? (
 
-                <ReportTypeIcon reportId="laser" variant="tesla" />
+                <ReportTypeIcon reportId={item.id} variant="tesla" />
 
               ) : (
 

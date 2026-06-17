@@ -27,6 +27,7 @@ export const DRIVER_CITY_OTHER_MARKER = "Annan";
 export const LOCAL_CITY_FILTERED_ALERT_TYPES = [
   "traffic_control",
   "laser",
+  "all_vehicle_check",
   "slow_traffic",
   "total_stop",
   "accident",

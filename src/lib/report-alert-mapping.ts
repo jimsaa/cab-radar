@@ -7,6 +7,7 @@ export type ReportButtonId =
   | "ko"
   | "taxikontroll"
   | "laser"
+  | "all_vehicle_check"
   | "olycka"
   | "nod";
 
@@ -16,6 +17,7 @@ export const REPORT_BUTTON_TO_ALERT_TYPE: Record<ReportButtonId, AlertType> = {
   ko: "slow_traffic",
   taxikontroll: "traffic_control",
   laser: "laser",
+  all_vehicle_check: "all_vehicle_check",
   olycka: "accident",
   nod: "taxi_emergency",
 };
@@ -35,6 +37,7 @@ const ALERT_TYPE_TO_REPORT_BUTTON: Partial<
   slow_traffic: "ko",
   traffic_control: "taxikontroll",
   laser: "laser",
+  all_vehicle_check: "all_vehicle_check",
   accident: "olycka",
   taxi_emergency: "nod",
 };

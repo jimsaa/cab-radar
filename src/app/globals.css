@@ -439,6 +439,16 @@ body {
   }
 }
 
+@keyframes admin-pulse-tesla-amber {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgba(245, 158, 11, 0.28);
+  }
+}
+
 @keyframes admin-pulse-tesla-green {
   0%,
   100% {
@@ -471,6 +481,10 @@ body {
 
 .admin-command-center .admin-pulse-laser {
   animation: admin-pulse-tesla-laser 3.5s ease-in-out infinite;
+}
+
+.admin-command-center .admin-pulse-all-vehicle-check {
+  animation: admin-pulse-tesla-amber 3.5s ease-in-out infinite;
 }
 
 .admin-command-center .admin-pulse-success {
@@ -537,6 +551,36 @@ body {
     box-shadow:
       inset 0 0 0 1px rgba(168, 85, 247, 0.2),
       0 0 6px rgba(168, 85, 247, 0.06);
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+
+@keyframes admin-report-attention-all-vehicle-check {
+  0% {
+    box-shadow:
+      inset 0 0 0 2px rgba(245, 158, 11, 0.75),
+      0 0 20px rgba(245, 158, 11, 0.32);
+  }
+  15%,
+  35%,
+  55% {
+    box-shadow:
+      inset 0 0 0 2px rgba(245, 158, 11, 0.95),
+      0 0 24px rgba(245, 158, 11, 0.4);
+  }
+  25%,
+  45%,
+  65% {
+    box-shadow:
+      inset 0 0 0 1px rgba(245, 158, 11, 0.55),
+      0 0 14px rgba(245, 158, 11, 0.18);
+  }
+  85% {
+    box-shadow:
+      inset 0 0 0 1px rgba(245, 158, 11, 0.2),
+      0 0 6px rgba(245, 158, 11, 0.06);
   }
   100% {
     box-shadow: none;
@@ -711,6 +755,10 @@ body {
   box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.65);
 }
 
+.admin-report-border-all-vehicle-check {
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.65);
+}
+
 .admin-report-border-taxikontroll {
   box-shadow: inset 0 0 0 1px rgba(244, 196, 48, 0.65);
 }
@@ -737,6 +785,10 @@ body {
 
 .admin-report-pulse-laser {
   animation: admin-report-attention-laser 5s ease-out forwards;
+}
+
+.admin-report-pulse-all-vehicle-check {
+  animation: admin-report-attention-all-vehicle-check 5s ease-out forwards;
 }
 
 .admin-report-pulse-taxikontroll {
