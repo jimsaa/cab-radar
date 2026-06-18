@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AlertValidationPrompt } from "@/components/alerts/AlertValidationPrompt";
+import { TaxiControlReportModal } from "@/components/alerts/TaxiControlReportModal";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { DashboardSafetyBanner } from "@/components/dashboard/RecentEventsList";
 import { RadarLatestReports } from "@/components/dashboard/RadarLatestReports";
@@ -9,17 +10,29 @@ import { ReportEventGrid } from "@/components/dashboard/ReportEventGrid";
 import { ReportEventSheet } from "@/components/dashboard/ReportEventSheet";
 import { GsiDispatchCard } from "@/components/gsi/GsiDispatchCard";
 import { SjAnkomsterCard } from "@/components/sj/SjAnkomsterCard";
+import { useAppToast } from "@/components/ui/AppToast";
 import { useAlertValidationPrompt } from "@/hooks/useAlertValidationPrompt";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useEmergencyGpsTracking } from "@/hooks/useEmergencyGpsTracking";
 import type { DashboardReportType } from "@/lib/dashboard-report-types";
+import { reportAlertType } from "@/lib/dashboard-report-types";
 import {
   filterAlertsForDriverFeed,
   getOwnActiveEmergency,
 } from "@/lib/emergency-driver";
-import { logAlertButtonPressed } from "@/lib/report-alert-mapping";
+import {
+  isEmergencyReportButton,
+  isTaxiControlReportButton,
+  logAlertButtonPressed,
+} from "@/lib/report-alert-mapping";
 import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
-import type { DriverAlert } from "@/lib/types/database";
+import {
+  reportSubmitErrorMessage,
+  reportSuccessToast,
+  submitDriverAlert,
+  submitInstantDriverReport,
+} from "@/lib/submit-alert";
+import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 
 interface DashboardClientProps {
   initialAlerts: DriverAlert[];
@@ -44,8 +57,13 @@ export function DashboardClient({
   showNationalEmergencies = false,
   isAdmin = false,
 }: DashboardClientProps) {
+  const showToast = useAppToast();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [taxiControlOpen, setTaxiControlOpen] = useState(false);
   const [reportPreset, setReportPreset] = useState<DashboardReportType | null>(
+    null
+  );
+  const [instantSubmittingId, setInstantSubmittingId] = useState<string | null>(
     null
   );
 
@@ -107,8 +125,48 @@ export function DashboardClient({
   function openReport(item: DashboardReportType) {
     if (!canReport || !userId) return;
     logAlertButtonPressed(item.id);
-    setReportPreset(item);
-    setSheetOpen(true);
+
+    if (isEmergencyReportButton(item.id)) {
+      setReportPreset(item);
+      setSheetOpen(true);
+      return;
+    }
+
+    if (isTaxiControlReportButton(item.id)) {
+      setTaxiControlOpen(true);
+      return;
+    }
+
+    void submitInstant(item);
+  }
+
+  async function submitInstant(item: DashboardReportType) {
+    if (!userId || instantSubmittingId) return;
+
+    setInstantSubmittingId(item.id);
+    try {
+      const alert = await submitInstantDriverReport(userId, item);
+      updateAlert(alert);
+      const { message, variant } = reportSuccessToast(
+        reportAlertType(item),
+        alert.is_test
+      );
+      showToast(message, { variant });
+    } catch (err) {
+      showToast(reportSubmitErrorMessage(err), { variant: "error" });
+    } finally {
+      setInstantSubmittingId(null);
+    }
+  }
+
+  async function handleTaxiControlSubmit(data: CreateAlertInput) {
+    if (!userId) return;
+
+    const alert = await submitDriverAlert(userId, data);
+    updateAlert(alert);
+    setTaxiControlOpen(false);
+    const { message, variant } = reportSuccessToast("traffic_control", alert.is_test);
+    showToast(message, { variant });
   }
 
   function handleEmergencyClosed(alertId: string) {
@@ -126,7 +184,7 @@ export function DashboardClient({
         <h2 className="mb-3 text-base font-bold">Rapportera händelse</h2>
         <ReportEventGrid
           onSelect={openReport}
-          disabled={!canReport}
+          disabled={!canReport || Boolean(instantSubmittingId)}
           emergencyActive={Boolean(ownActiveEmergency)}
         />
         {!canReport && (
@@ -150,15 +208,24 @@ export function DashboardClient({
       <DashboardSafetyBanner className="mt-6" />
 
       {userId && (
-        <ReportEventSheet
-          userId={userId}
-          open={sheetOpen}
-          preset={reportPreset}
-          activeOwnEmergency={ownActiveEmergency}
-          onClose={() => setSheetOpen(false)}
-          onCreated={updateAlert}
-          onEmergencyClosed={handleEmergencyClosed}
-        />
+        <>
+          <TaxiControlReportModal
+            open={taxiControlOpen}
+            variant="app"
+            onClose={() => setTaxiControlOpen(false)}
+            onSubmit={handleTaxiControlSubmit}
+          />
+
+          <ReportEventSheet
+            userId={userId}
+            open={sheetOpen}
+            preset={reportPreset}
+            activeOwnEmergency={ownActiveEmergency}
+            onClose={() => setSheetOpen(false)}
+            onCreated={updateAlert}
+            onEmergencyClosed={handleEmergencyClosed}
+          />
+        </>
       )}
 
       <AlertValidationPrompt

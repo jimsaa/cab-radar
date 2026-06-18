@@ -30,6 +30,10 @@ export function isEmergencyReportButton(id: ReportButtonId): boolean {
   return id === "nod";
 }
 
+export function isTaxiControlReportButton(id: ReportButtonId): boolean {
+  return id === "taxikontroll";
+}
+
 const ALERT_TYPE_TO_REPORT_BUTTON: Partial<
   Record<AlertType, ReportButtonId>
 > = {

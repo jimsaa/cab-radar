@@ -1,13 +1,19 @@
 import { alertNeedsAdmin, shouldPushNotify } from "@/lib/alerts";
 import { formatAlertCreateError } from "@/lib/alert-create-errors";
 import { alertTypeHasDuplicateCheck } from "@/lib/alert-ttl";
+import {
+  type DashboardReportType,
+  reportAlertType,
+} from "@/lib/dashboard-report-types";
 import { recordDriverActivityAt } from "@/lib/driver-activity-client";
 import { geolocationErrorMessage } from "@/lib/geolocation-errors";
-
+import { getCurrentPosition, reverseGeocode } from "@/lib/geolocation";
+import {
+  logAlertButtonPressed,
+  type ReportButtonId,
+} from "@/lib/report-alert-mapping";
 import { syncMembershipProfile } from "@/lib/profile";
-
 import { createClient } from "@/lib/supabase/client";
-
 import type { CreateAlertInput, DriverAlert } from "@/lib/types/database";
 
 export function reportSubmitErrorMessage(err: unknown): string {
@@ -117,6 +123,30 @@ export async function submitDriverAlert(
 
   return alert;
 
+}
+
+/** One-click report from dashboard button — GPS + geocode + create. */
+export async function submitInstantDriverReport(
+  userId: string,
+  item: Pick<DashboardReportType, "id" | "label">,
+  options?: { description?: string }
+): Promise<DriverAlert> {
+  logAlertButtonPressed(item.id as ReportButtonId);
+
+  const pos = await getCurrentPosition();
+  const geo = await reverseGeocode(pos.latitude, pos.longitude);
+  const alertType = reportAlertType(item as DashboardReportType);
+
+  return submitDriverAlert(userId, {
+    type: alertType,
+    title: item.label,
+    description: options?.description?.trim() ?? "",
+    latitude: pos.latitude,
+    longitude: pos.longitude,
+    road_address: geo.road_address,
+    city: geo.city,
+    is_major: false,
+  });
 }
 
 
