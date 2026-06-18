@@ -39,6 +39,7 @@ export default async function TeslaLayout({
     <TeslaViewShell
       hideViewSwitcher={teslaBetaDriver}
       showTestModeToggle={teslaBetaDriver}
+      showLogoutButton={teslaBetaDriver}
       testModeEnabled={Boolean(profile?.test_mode_enabled)}
       userId={user.id}
     >

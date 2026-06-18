@@ -7,6 +7,7 @@ interface TeslaViewShellProps {
   children: React.ReactNode;
   hideViewSwitcher?: boolean;
   showTestModeToggle?: boolean;
+  showLogoutButton?: boolean;
   testModeEnabled?: boolean;
   userId?: string;
 }
@@ -15,6 +16,7 @@ export function TeslaViewShell({
   children,
   hideViewSwitcher = false,
   showTestModeToggle = false,
+  showLogoutButton = false,
   testModeEnabled = false,
   userId,
 }: TeslaViewShellProps) {
@@ -25,6 +27,7 @@ export function TeslaViewShell({
       subtitle="Tesla View"
       hideViewSwitcher={hideViewSwitcher}
       showTestModeToggle={showTestModeToggle}
+      showLogoutButton={showLogoutButton}
       testModeEnabled={testMode}
       userId={userId}
       onTestModeChange={setTestMode}

@@ -19,6 +19,7 @@ interface CockpitViewShellProps {
   snapshotUrl?: string;
   hideViewSwitcher?: boolean;
   showTestModeToggle?: boolean;
+  showLogoutButton?: boolean;
   testModeEnabled?: boolean;
   userId?: string;
   onTestModeChange?: (enabled: boolean) => void;
@@ -31,6 +32,7 @@ export function CockpitViewShell({
   snapshotUrl = "/api/tesla/driving-snapshot",
   hideViewSwitcher = false,
   showTestModeToggle = false,
+  showLogoutButton = false,
   testModeEnabled = false,
   userId,
   onTestModeChange,
@@ -63,6 +65,7 @@ export function CockpitViewShell({
             contextHint="Systemet uppdateras automatiskt"
             hideViewSwitcher={hideViewSwitcher}
             showTestModeToggle={showTestModeToggle}
+            showLogoutButton={showLogoutButton}
             testModeEnabled={testModeEnabled}
             userId={userId}
             onTestModeChange={onTestModeChange}

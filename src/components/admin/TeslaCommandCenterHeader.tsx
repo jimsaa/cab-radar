@@ -6,6 +6,7 @@ import { GsiDispatchAdminButton } from "@/components/gsi/GsiDispatchAdminButton"
 import { ViewModeSwitcher } from "@/components/layout/ViewModeSwitcher";
 import { SjAnkomsterAdminButton } from "@/components/sj/SjAnkomsterAdminButton";
 import { TeslaBetaTestModeToggle } from "@/components/tesla/TeslaBetaTestModeToggle";
+import { TeslaLogoutButton } from "@/components/tesla/TeslaLogoutButton";
 import { APP_NAME } from "@/lib/constants";
 import {
   formatSwedishClockNow,
@@ -51,6 +52,7 @@ export interface TeslaCommandCenterHeaderProps {
   contextHint?: string;
   hideViewSwitcher?: boolean;
   showTestModeToggle?: boolean;
+  showLogoutButton?: boolean;
   testModeEnabled?: boolean;
   userId?: string;
   onTestModeChange?: (enabled: boolean) => void;
@@ -63,6 +65,7 @@ export function TeslaCommandCenterHeader({
   contextHint = "Systemet uppdateras automatiskt",
   hideViewSwitcher = false,
   showTestModeToggle = false,
+  showLogoutButton = false,
   testModeEnabled = false,
   userId,
   onTestModeChange,
@@ -120,6 +123,7 @@ export function TeslaCommandCenterHeader({
           )}
           <GsiDispatchAdminButton />
           <SjAnkomsterAdminButton />
+          {showLogoutButton && <TeslaLogoutButton />}
           <SwedishDateTimeDisplay />
         </div>
       </div>
