@@ -64,7 +64,7 @@ export function ReportTypeIcon({
   if (resolveAllVehicleCheck(type, reportId)) {
     return (
       <AllVehicleCheckIcon
-        className={cn(sizeClass, "text-amber-400", className)}
+        className={cn(sizeClass, "text-current", className)}
         strokeWidth={SVG_STROKE[variant]}
       />
     );

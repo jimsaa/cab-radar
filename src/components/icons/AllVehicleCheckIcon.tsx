@@ -4,7 +4,7 @@ const VIEWBOX = "0 0 24 24";
 
 /**
  * Filled silhouette — traffic officer in stop/direct pose (inspired by checkpoint icon).
- * Uses currentColor so UI can apply amber warning styling.
+ * Uses currentColor so parent text color controls fill (e.g. white on Tesla buttons).
  */
 function AllVehicleCheckIconPaths() {
   return (
