@@ -51,3 +51,23 @@ export function adminDriverRealName(
   const real = identity.display_name?.trim();
   return real || null;
 }
+
+/**
+ * Admin user list/editor — nickname first, then real name, then ID/leg.
+ * Unlike {@link publicDriverLabel}, never hides display_name from staff.
+ */
+export function adminDriverListLabel(identity: DriverIdentity): string {
+  const nickname = identity.nickname?.trim();
+  if (nickname) return nickname;
+
+  const realName = identity.display_name?.trim();
+  if (realName) return realName;
+
+  const cabradarId = identity.cabradar_user_id?.trim();
+  if (cabradarId) return cabradarId;
+
+  const last4 = identity.driver_license_last4?.trim();
+  if (last4) return `Taxi ${maskLicenceLast4(last4)}`;
+
+  return "Okänd förare";
+}

@@ -270,6 +270,7 @@ begin
   insert into public.profiles (
     id,
     display_name,
+    nickname,
     phone_number,
     driver_license_number,
     verification_status
@@ -277,6 +278,7 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
+    nullif(trim(new.raw_user_meta_data ->> 'nickname'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'phone_number'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'driver_license_number'), ''),
     'pending_verification'

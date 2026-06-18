@@ -6,7 +6,10 @@ import { AdminUserEditor } from "@/components/admin/AdminUserEditor";
 import {
   adminUserStatusBadges,
 } from "@/lib/admin-user-editor";
-import { adminDriverRealName, publicDriverLabel } from "@/lib/driver-display";
+import {
+  adminDriverListLabel,
+  adminDriverRealName,
+} from "@/lib/driver-display";
 import { isTeslaBetaUser } from "@/lib/tesla-beta";
 import { VERIFICATION_STATUS_LABELS } from "@/lib/verification";
 import { maskLicenceLast4 } from "@/lib/licence.shared";
@@ -149,6 +152,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
         ) : (
           filtered.map((u) => {
             const badges = adminUserStatusBadges(u);
+            const listLabel = adminDriverListLabel(u);
             const realName = adminDriverRealName(u);
 
             return (
@@ -160,9 +164,9 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xl font-bold text-white">
-                      {publicDriverLabel(u)}
+                      {listLabel}
                     </p>
-                    {realName && realName !== publicDriverLabel(u) && (
+                    {realName && realName !== listLabel && (
                       <p className="mt-0.5 truncate text-sm text-[#8A9099]">
                         {realName}
                       </p>

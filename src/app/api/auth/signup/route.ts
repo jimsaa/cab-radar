@@ -233,6 +233,7 @@ export async function POST(request: Request) {
               await supabase.auth.admin.updateUserById(userId, {
                 user_metadata: {
                   display_name: displayName || userEmail.split("@")[0],
+                  nickname,
                   phone_number: phoneNumber || "",
                   driver_license_number: licence,
                 },
@@ -272,9 +273,25 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (existingProfile) {
+        const { error: retryError } = await supabase
+          .from("profiles")
+          .update({
+            ...licenceFields,
+            ...onboardingFields,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId);
+
+        if (retryError && !isMissingColumnError(retryError)) {
+          console.error("[AUTH] Signup profile retry failed", retryError);
+          await supabase.auth.admin.deleteUser(userId);
+          return { ok: false, error: "Det gick inte att skapa kontot.", status: 500 };
+        }
+
         await supabase.auth.admin.updateUserById(userId, {
           user_metadata: {
             display_name: displayName || userEmail.split("@")[0],
+            nickname,
             phone_number: phoneNumber || "",
             driver_license_number: licence,
           },

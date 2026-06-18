@@ -7,6 +7,16 @@ import {
   PROFILE_MINIMAL_COLUMNS,
 } from "@/lib/profile";
 import type { AdminUserDetail } from "@/lib/admin-user-editor";
+import { normalizeNickname } from "@/lib/driver-nickname";
+
+function nicknameFromAuthMetadata(
+  metadata: Record<string, unknown> | undefined
+): string | null {
+  const raw = metadata?.nickname;
+  if (typeof raw !== "string") return null;
+  const normalized = normalizeNickname(raw);
+  return normalized || null;
+}
 
 export async function GET(
   _request: Request,
@@ -81,6 +91,25 @@ export async function GET(
     ...normalizeProfileRow(profileRow),
     email: authUser?.user?.email ?? null,
   };
+
+  const recoveredNickname = nicknameFromAuthMetadata(
+    authUser?.user?.user_metadata as Record<string, unknown> | undefined
+  );
+  if (!detail.nickname?.trim() && recoveredNickname) {
+    detail.nickname = recoveredNickname;
+    const { error: repairError } = await service
+      .from("profiles")
+      .update({
+        nickname: recoveredNickname,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", driverId)
+      .is("nickname", null);
+
+    if (repairError) {
+      console.warn("[ADMIN] nickname backfill from auth metadata failed:", repairError);
+    }
+  }
 
   return NextResponse.json({ ok: true, user: detail });
 }

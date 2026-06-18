@@ -11,7 +11,10 @@ import {
   type AdminUserEditorForm,
 } from "@/lib/admin-user-editor";
 import { formatSwedishDate } from "@/lib/datetime";
-import { adminDriverRealName, publicDriverLabel } from "@/lib/driver-display";
+import {
+  adminDriverListLabel,
+  adminDriverRealName,
+} from "@/lib/driver-display";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 
@@ -321,6 +324,7 @@ export function AdminUserEditor({
   }
 
   const badges = detail ? adminUserStatusBadges(detail) : [];
+  const listLabel = detail ? adminDriverListLabel(detail) : null;
   const realName = detail ? adminDriverRealName(detail) : null;
   const phone = form?.phoneNumber?.replace(/\s/g, "");
 
@@ -346,9 +350,9 @@ export function AdminUserEditor({
               id="admin-user-editor-title"
               className="mt-1 truncate text-2xl font-bold text-white"
             >
-              {detail ? publicDriverLabel(detail) : "Laddar…"}
+              {detail ? adminDriverListLabel(detail) : "Laddar…"}
             </h2>
-            {realName && (
+            {realName && realName !== listLabel && (
               <p className="mt-1 text-base text-[#B0B6BE]">{realName}</p>
             )}
           </div>

@@ -1,6 +1,6 @@
 import {
+  adminDriverListLabel,
   adminDriverRealName,
-  publicDriverLabel,
   type DriverIdentity,
 } from "@/lib/driver-display";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ export function AdminDriverIdentity({
   secondaryClassName,
   layout = "stacked",
 }: AdminDriverIdentityProps) {
-  const nickname = publicDriverLabel(driver);
+  const nickname = adminDriverListLabel(driver);
   const realName = adminDriverRealName(driver);
 
   if (!realName || realName === nickname) {
