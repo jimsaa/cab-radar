@@ -84,6 +84,121 @@ function buildQuickCivilAdminNote(city?: string | null): string {
   return cityPart ? `Snabb Civil · ${cityPart}` : "Snabb Civil";
 }
 
+type RegistryLookupRow = {
+  id: string;
+  last_observed_at?: string | null;
+  status?: string | null;
+};
+
+/** Lookup by registration — falls back when status column is not migrated yet. */
+async function fetchRegistryByNumber(
+  supabase: SupabaseClient,
+  registrationNumber: string,
+  options?: { approvedOnly?: boolean }
+): Promise<{
+  row: RegistryLookupRow | null;
+  statusColumnAvailable: boolean;
+}> {
+  const approvedOnly = options?.approvedOnly ?? true;
+
+  if (approvedOnly) {
+    const withStatus = await supabase
+      .from(REGISTRY_TABLE)
+      .select("id, last_observed_at, status")
+      .eq("registration_number", registrationNumber)
+      .eq("status", "approved")
+      .maybeSingle();
+
+    if (!withStatus.error) {
+      return {
+        row: withStatus.data as RegistryLookupRow | null,
+        statusColumnAvailable: true,
+      };
+    }
+
+    if (!isMissingSchemaError(withStatus.error)) {
+      throw withStatus.error;
+    }
+  }
+
+  const legacy = await supabase
+    .from(REGISTRY_TABLE)
+    .select("id, last_observed_at")
+    .eq("registration_number", registrationNumber)
+    .maybeSingle();
+
+  if (legacy.error) throw legacy.error;
+
+  return {
+    row: legacy.data as RegistryLookupRow | null,
+    statusColumnAvailable: false,
+  };
+}
+
+async function insertRegistryWithFallbacks(
+  supabase: SupabaseClient,
+  payloads: {
+    full: Record<string, unknown>;
+    manualSource: Record<string, unknown>;
+    minimal: Record<string, unknown>;
+  }
+): Promise<void> {
+  let { error } = await supabase.from(REGISTRY_TABLE).insert(payloads.full);
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? "";
+    const sourceRejected =
+      message.includes("source") || error.code === "23514";
+
+    if (sourceRejected || isMissingSchemaError(error)) {
+      ({ error } = await supabase.from(REGISTRY_TABLE).insert(payloads.manualSource));
+    }
+  }
+
+  if (error && isMissingSchemaError(error)) {
+    ({ error } = await supabase.from(REGISTRY_TABLE).insert(payloads.minimal));
+  }
+
+  if (error) throw error;
+}
+
+async function updateRegistryWithFallbacks(
+  supabase: SupabaseClient,
+  rowId: string,
+  payloads: {
+    full: Record<string, unknown>;
+    manualSource: Record<string, unknown>;
+    minimal: Record<string, unknown>;
+  }
+): Promise<void> {
+  let { error } = await supabase
+    .from(REGISTRY_TABLE)
+    .update(payloads.full)
+    .eq("id", rowId);
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? "";
+    const sourceRejected =
+      message.includes("source") || error.code === "23514";
+
+    if (sourceRejected || isMissingSchemaError(error)) {
+      ({ error } = await supabase
+        .from(REGISTRY_TABLE)
+        .update(payloads.manualSource)
+        .eq("id", rowId));
+    }
+  }
+
+  if (error && isMissingSchemaError(error)) {
+    ({ error } = await supabase
+      .from(REGISTRY_TABLE)
+      .update(payloads.minimal)
+      .eq("id", rowId));
+  }
+
+  if (error) throw error;
+}
+
 type RawSubmissionRow = Record<string, unknown>;
 
 function normalizeSubmissionRow(row: RawSubmissionRow): CivilSubmission {
@@ -702,20 +817,16 @@ export async function quickAddCivilRegistryEntry(
 
   console.log("[CIVILKOLL QUICK] insert attempt:", normalized, "admin:", adminUserId);
 
-  const { data: approvedRow, error: approvedError } = await supabase
-    .from(REGISTRY_TABLE)
-    .select("id, last_observed_at")
-    .eq("registration_number", normalized)
-    .eq("status", "approved")
-    .maybeSingle();
-
-  if (approvedError) throw approvedError;
+  const { row: approvedRow, statusColumnAvailable } = await fetchRegistryByNumber(
+    supabase,
+    normalized
+  );
 
   if (approvedRow) {
     console.log("[CIVILKOLL QUICK] already approved:", normalized);
     return {
       status: "exists",
-      lastObservedAt: (approvedRow.last_observed_at as string | null) ?? null,
+      lastObservedAt: approvedRow.last_observed_at ?? null,
     };
   }
 
@@ -733,48 +844,29 @@ export async function quickAddCivilRegistryEntry(
     status: "approved" as const,
   };
 
-  const { data: staleRows, error: staleError } = await supabase
-    .from(REGISTRY_TABLE)
-    .select("id, status")
-    .eq("registration_number", normalized)
-    .neq("status", "approved")
-    .limit(1);
+  let staleRow: RegistryLookupRow | undefined;
 
-  if (staleError) throw staleError;
+  if (statusColumnAvailable) {
+    const { data: staleRows, error: staleError } = await supabase
+      .from(REGISTRY_TABLE)
+      .select("id, status")
+      .eq("registration_number", normalized)
+      .neq("status", "approved")
+      .limit(1);
 
-  const staleRow = staleRows?.[0];
+    if (staleError) throw staleError;
+    staleRow = staleRows?.[0] as RegistryLookupRow | undefined;
+  }
 
   if (staleRow) {
     console.log("[CIVILKOLL QUICK] re-approving existing row:", staleRow.id);
-    let { error: updateError } = await supabase
-      .from(REGISTRY_TABLE)
-      .update(approvedPayload)
-      .eq("id", staleRow.id);
-
-    if (updateError) {
-      const message = updateError.message?.toLowerCase() ?? "";
-      const sourceRejected =
-        message.includes("source") || updateError.code === "23514";
-
-      if (sourceRejected || isMissingSchemaError(updateError)) {
-        ({ error: updateError } = await supabase
-          .from(REGISTRY_TABLE)
-          .update({ ...approvedPayload, source: "admin_manual" as const })
-          .eq("id", staleRow.id));
-      }
-
-      if (updateError && isMissingSchemaError(updateError)) {
-        ({ error: updateError } = await supabase
-          .from(REGISTRY_TABLE)
-          .update({
-            last_observed_at: observedDate,
-            status: "approved" as const,
-          })
-          .eq("id", staleRow.id));
-      }
-    }
-
-    if (updateError) {
+    try {
+      await updateRegistryWithFallbacks(supabase, staleRow.id, {
+        full: approvedPayload,
+        manualSource: { ...approvedPayload, source: "admin_manual" as const },
+        minimal: { last_observed_at: observedDate },
+      });
+    } catch (updateError) {
       console.error("[CIVILKOLL QUICK] re-approve failed:", updateError);
       throw updateError;
     }
@@ -788,32 +880,16 @@ export async function quickAddCivilRegistryEntry(
     ...approvedPayload,
   };
 
-  let { error: insertError } = await supabase
-    .from(REGISTRY_TABLE)
-    .insert(fullInsert);
-
-  if (insertError) {
-    const message = insertError.message?.toLowerCase() ?? "";
-    const sourceRejected =
-      message.includes("source") || insertError.code === "23514";
-
-    if (sourceRejected || isMissingSchemaError(insertError)) {
-      ({ error: insertError } = await supabase.from(REGISTRY_TABLE).insert({
-        ...fullInsert,
-        source: "admin_manual" as const,
-      }));
-    }
-
-    if (insertError && isMissingSchemaError(insertError)) {
-      ({ error: insertError } = await supabase.from(REGISTRY_TABLE).insert({
+  try {
+    await insertRegistryWithFallbacks(supabase, {
+      full: fullInsert,
+      manualSource: { ...fullInsert, source: "admin_manual" as const },
+      minimal: {
         registration_number: normalized,
         last_observed_at: observedDate,
-        status: "approved" as const,
-      }));
-    }
-  }
-
-  if (insertError) {
+      },
+    });
+  } catch (insertError) {
     console.error("[CIVILKOLL QUICK] insert failed:", insertError);
     throw insertError;
   }
