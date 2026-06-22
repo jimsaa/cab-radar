@@ -24,6 +24,7 @@ interface AdminUserEditorProps {
   isAdmin: boolean;
   onClose: () => void;
   onSaved: (profile: Profile) => void;
+  onDeleted?: (userId: string) => void;
 }
 
 function LargeToggle({
@@ -153,9 +154,11 @@ export function AdminUserEditor({
   isAdmin,
   onClose,
   onSaved,
+  onDeleted,
 }: AdminUserEditorProps) {
   const [loading, setLoading] = useState(!initialProfile);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [detail, setDetail] = useState<AdminUserDetail | null>(
     initialProfile ? { ...initialProfile, email: null } : null
   );
@@ -282,6 +285,47 @@ export function AdminUserEditor({
           message: data.error ?? "Kunde inte blockera användaren.",
         });
       }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!isAdmin || detail?.is_admin) return;
+
+    setSaving(true);
+    setFeedback(null);
+
+    try {
+      const res = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ driverId: userId }),
+      });
+
+      const data = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+      };
+
+      if (!res.ok || !data.ok) {
+        setFeedback({
+          type: "error",
+          message: data.error ?? "Kunde inte radera användaren.",
+        });
+        setConfirmDelete(false);
+        return;
+      }
+
+      onDeleted?.(userId);
+      onClose();
+    } catch {
+      setFeedback({
+        type: "error",
+        message: "Kunde inte radera användaren.",
+      });
+      setConfirmDelete(false);
     } finally {
       setSaving(false);
     }
@@ -715,6 +759,48 @@ export function AdminUserEditor({
           >
             Återställ lösenord
           </button>
+
+          {confirmDelete ? (
+            <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4">
+              <p className="text-base font-semibold text-red-200">
+                Radera användaren permanent?
+              </p>
+              <p className="mt-2 text-sm text-red-200/80">
+                Detta tar bort kontot och profilen. Det går inte att ångra.
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-2xl border border-[#3A4048] bg-[#262B31] px-4 py-4 text-base font-semibold text-[#B0B6BE] disabled:opacity-50"
+                >
+                  Avbryt
+                </button>
+                <button
+                  type="button"
+                  disabled={!isAdmin || saving || detail?.is_admin}
+                  onClick={() => void handleDelete()}
+                  className="rounded-2xl border border-red-600/60 bg-red-600/20 px-4 py-4 text-base font-bold text-red-200 disabled:opacity-50"
+                >
+                  {saving ? (
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  ) : (
+                    "Ja, radera"
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={!isAdmin || saving || detail?.is_admin}
+              onClick={() => setConfirmDelete(true)}
+              className="w-full rounded-2xl border border-red-600/50 bg-red-600/10 px-4 py-4 text-base font-bold text-red-300 disabled:opacity-50"
+            >
+              Radera användare
+            </button>
+          )}
         </footer>
       </div>
     </div>

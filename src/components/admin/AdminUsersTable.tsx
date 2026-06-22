@@ -88,6 +88,11 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
     );
   }
 
+  function handleDeleted(deletedId: string) {
+    setUsers((prev) => prev.filter((u) => u.id !== deletedId));
+    setSelectedUserId(null);
+  }
+
   return (
     <div className="space-y-4">
       {!isAdmin && (
@@ -215,6 +220,7 @@ export function AdminUsersTable({ users: initialUsers, isAdmin }: AdminUsersTabl
           isAdmin={isAdmin}
           onClose={() => setSelectedUserId(null)}
           onSaved={handleSaved}
+          onDeleted={handleDeleted}
         />
       )}
     </div>
