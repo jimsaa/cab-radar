@@ -1,14 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isMissingSchemaError } from "@/lib/db-errors";
+import { isNicknameConflictError } from "@/lib/driver-nickname";
 import { licenceLast4 } from "./licence.shared";
+import {
+  logSignupFailure,
+  mapSignupProfileError,
+  type SignupFailureStep,
+} from "./signup-route-errors";
 
 export function isMissingColumnError(error: {
   code?: string;
   message?: string;
 } | null): boolean {
-  if (!error) return false;
-  if (error.code === "PGRST204" || error.code === "42703") return true;
-  const msg = (error.message ?? "").toLowerCase();
-  return msg.includes("schema cache") || msg.includes("does not exist");
+  return isMissingSchemaError(error);
 }
 
 /** Detect whether profiles.driver_license_hash is available in PostgREST schema. */
@@ -73,4 +77,183 @@ export async function findDuplicateLicence(
 }
 
 export const PROFILE_SCHEMA_ERROR =
-  "Databasen saknar registreringskolumner. Kör migration-signup-profile-fix.sql i Supabase SQL Editor.";
+  "Databasen saknar registreringskolumner. Kör migration-signup-unified-trigger.sql i Supabase SQL Editor.";
+
+export interface SignupOnboardingFields {
+  phone_number: string;
+  driver_city: string;
+  taxi_company_name: string;
+  nickname: string;
+  taxi_number?: string | null;
+}
+
+function omitUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined)
+  ) as Partial<T>;
+}
+
+async function generateCabradarUserId(
+  supabase: SupabaseClient
+): Promise<string | null> {
+  const { data, error } = await supabase.rpc("generate_cabradar_user_id");
+  if (error) {
+    console.warn("[AUTH] generate_cabradar_user_id RPC failed:", error);
+    return null;
+  }
+  return typeof data === "string" ? data : null;
+}
+
+async function updateProfileWithFallbacks(
+  supabase: SupabaseClient,
+  userId: string,
+  payloads: Record<string, unknown>[],
+  step: SignupFailureStep
+): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
+  let lastError: { code?: string; message?: string; details?: string } | null =
+    null;
+
+  for (const payload of payloads) {
+    const { error } = await supabase
+      .from("profiles")
+      .update(payload)
+      .eq("id", userId);
+
+    if (!error) {
+      return { ok: true };
+    }
+
+    lastError = error;
+    if (isMissingColumnError(error)) {
+      continue;
+    }
+
+    if (isNicknameConflictError(error) || error.code === "23505") {
+      const mapped = mapSignupProfileError(error, step);
+      return { ok: false, message: mapped.message, status: mapped.status };
+    }
+
+    logSignupFailure(step, error, { userId, payloadKeys: Object.keys(payload) });
+  }
+
+  const mapped = mapSignupProfileError(lastError, step);
+  return { ok: false, message: mapped.message, status: mapped.status };
+}
+
+export async function saveSignupProfile(
+  supabase: SupabaseClient,
+  userId: string,
+  displayName: string,
+  licenceFields: Record<string, string | null>,
+  onboarding: SignupOnboardingFields
+): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
+  const updatedAt = new Date().toISOString();
+  const onboardingPayload = omitUndefined({
+    phone_number: onboarding.phone_number,
+    driver_city: onboarding.driver_city,
+    taxi_company_name: onboarding.taxi_company_name,
+    nickname: onboarding.nickname,
+    taxi_number: onboarding.taxi_number ?? undefined,
+  });
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const { data: profile, error: profileSelectError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profileSelectError && !isMissingColumnError(profileSelectError)) {
+      logSignupFailure("profile_lookup", profileSelectError, { userId, attempt });
+    }
+
+    if (profile) {
+      const { nickname: _nickname, ...withoutNickname } = onboardingPayload;
+      return updateProfileWithFallbacks(
+        supabase,
+        userId,
+        [
+          { ...licenceFields, ...onboardingPayload, updated_at: updatedAt },
+          { ...licenceFields, ...withoutNickname, updated_at: updatedAt },
+          {
+            ...licenceFields,
+            phone_number: onboarding.phone_number,
+            updated_at: updatedAt,
+          },
+          { ...licenceFields, updated_at: updatedAt },
+        ],
+        "profile_update"
+      );
+    }
+
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  const cabradarUserId = await generateCabradarUserId(supabase);
+  const insertPayloads: Record<string, unknown>[] = [
+    {
+      id: userId,
+      display_name: displayName,
+      cabradar_user_id: cabradarUserId,
+      ...onboardingPayload,
+      ...licenceFields,
+      verification_status: "pending_verification",
+    },
+    {
+      id: userId,
+      display_name: displayName,
+      cabradar_user_id: cabradarUserId,
+      nickname: onboarding.nickname,
+      phone_number: onboarding.phone_number,
+      ...licenceFields,
+      verification_status: "pending_verification",
+    },
+    {
+      id: userId,
+      display_name: displayName,
+      cabradar_user_id: cabradarUserId,
+      phone_number: onboarding.phone_number,
+      ...licenceFields,
+      verification_status: "pending_verification",
+    },
+    {
+      id: userId,
+      display_name: displayName,
+      cabradar_user_id: cabradarUserId,
+      verification_status: "pending_verification",
+    },
+  ];
+
+  let lastInsertError: { code?: string; message?: string; details?: string } | null =
+    null;
+
+  for (const payload of insertPayloads) {
+    const cleaned = Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== undefined)
+    );
+
+    const { error: insertError } = await supabase.from("profiles").insert(cleaned);
+
+    if (!insertError) {
+      return { ok: true };
+    }
+
+    lastInsertError = insertError;
+    if (isMissingColumnError(insertError)) {
+      continue;
+    }
+
+    if (insertError.code === "23505") {
+      const mapped = mapSignupProfileError(insertError, "profile_insert");
+      return { ok: false, message: mapped.message, status: mapped.status };
+    }
+
+    logSignupFailure("profile_insert", insertError, {
+      userId,
+      payloadKeys: Object.keys(cleaned),
+    });
+  }
+
+  const mapped = mapSignupProfileError(lastInsertError, "profile_insert");
+  return { ok: false, message: mapped.message, status: mapped.status };
+}

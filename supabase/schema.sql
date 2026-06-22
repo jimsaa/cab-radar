@@ -273,6 +273,7 @@ begin
     nickname,
     phone_number,
     driver_license_number,
+    cabradar_user_id,
     verification_status
   )
   values (
@@ -281,8 +282,10 @@ begin
     nullif(trim(new.raw_user_meta_data ->> 'nickname'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'phone_number'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'driver_license_number'), ''),
+    public.generate_cabradar_user_id(),
     'pending_verification'
-  );
+  )
+  on conflict (id) do nothing;
   return new;
 end;
 $$;

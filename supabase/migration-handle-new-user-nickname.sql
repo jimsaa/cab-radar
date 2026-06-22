@@ -1,5 +1,5 @@
 -- Copy nickname from auth metadata when profiles are auto-created on signup.
--- Safe to re-run.
+-- Safe to re-run. Prefer migration-signup-unified-trigger.sql for new deployments.
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
@@ -14,6 +14,7 @@ BEGIN
     nickname,
     phone_number,
     driver_license_number,
+    cabradar_user_id,
     verification_status
   )
   VALUES (
@@ -22,8 +23,10 @@ BEGIN
     nullif(trim(new.raw_user_meta_data ->> 'nickname'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'phone_number'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'driver_license_number'), ''),
+    public.generate_cabradar_user_id(),
     'pending_verification'
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
 $$;

@@ -3,7 +3,6 @@ import { createServiceClient } from "@/lib/supabase/server";
 import {
   getSupabaseConfigError,
   isSupabaseConnectionError,
-  translateSupabaseAuthError,
 } from "@/lib/supabase/config-check";
 import {
   isValidLicence,
@@ -16,8 +15,8 @@ import {
   findDuplicateLicence,
   isMissingColumnError,
   licenceProfileFields,
-  PROFILE_SCHEMA_ERROR,
   profileHasLicenceHashColumn,
+  saveSignupProfile,
 } from "@/lib/signup-profile";
 import {
   isNicknameConflictError,
@@ -25,6 +24,11 @@ import {
   normalizeNickname,
   validateNickname,
 } from "@/lib/driver-nickname";
+import {
+  formatSignupAuthError,
+  logSignupFailure,
+  mapSignupProfileError,
+} from "@/lib/signup-route-errors";
 
 interface SignupBody {
   email?: string;
@@ -47,7 +51,7 @@ export async function POST(request: Request) {
 
   const configError = getSupabaseConfigError();
   if (configError) {
-    console.error("[AUTH] Signup failed:", configError);
+    console.error("[AUTH] Signup failed: config", configError);
     return NextResponse.json({ error: configError }, { status: 503 });
   }
 
@@ -55,7 +59,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch (err) {
-    console.error("[AUTH] Signup failed:", err);
+    logSignupFailure("validation", err);
     return NextResponse.json(
       { error: "Ett oväntat fel uppstod. Försök igen." },
       { status: 400 }
@@ -73,14 +77,15 @@ export async function POST(request: Request) {
   const licence = normalizeLicenceInput(body.driverLicenseNumber ?? "");
 
   if (!email || !password) {
-    console.error("[AUTH] Signup failed: missing email or password");
+    logSignupFailure("validation", "missing email or password");
     return NextResponse.json(
-      { error: "Det gick inte att skapa kontot." },
+      { error: "E-post och lösenord krävs." },
       { status: 400 }
     );
   }
 
   const userEmail = email;
+  const resolvedDisplayName = displayName || userEmail.split("@")[0];
 
   if (password.length < 6) {
     return NextResponse.json(
@@ -105,7 +110,7 @@ export async function POST(request: Request) {
   }
 
   if (!isValidLicence(licence)) {
-    console.error("[AUTH] Signup failed: invalid licence");
+    logSignupFailure("validation", "invalid licence");
     return NextResponse.json({ error: LICENCE_INVALID_MESSAGE }, { status: 400 });
   }
 
@@ -116,7 +121,7 @@ export async function POST(request: Request) {
   const nickname = normalizeNickname(nicknameRaw ?? "");
 
   if (!process.env.LICENCE_HASH_SECRET) {
-    console.error("[AUTH] Signup failed: LICENCE_HASH_SECRET not configured");
+    logSignupFailure("validation", "LICENCE_HASH_SECRET missing");
     return NextResponse.json(
       { error: "Ett oväntat fel uppstod. Försök igen." },
       { status: 503 }
@@ -127,7 +132,7 @@ export async function POST(request: Request) {
   try {
     licenceHash = hashLicence(licence);
   } catch (err) {
-    console.error("[AUTH] Signup failed: licence hash", err);
+    logSignupFailure("validation", err);
     return NextResponse.json(
       { error: "Ett oväntat fel uppstod. Försök igen." },
       { status: 503 }
@@ -139,16 +144,27 @@ export async function POST(request: Request) {
     const useHashColumn = await profileHasLicenceHashColumn(supabase);
     const licenceFields = licenceProfileFields(licence, licenceHash, useHashColumn);
 
+    console.log("[AUTH] Signup profile schema:", {
+      useHashColumn,
+      licenceFieldKeys: Object.keys(licenceFields),
+    });
+
     if (await findDuplicateLicence(supabase, licence, licenceHash, useHashColumn)) {
-      console.error("[AUTH] Signup failed: duplicate licence");
+      logSignupFailure("validation", "duplicate licence");
       return NextResponse.json({ error: LICENCE_DUPLICATE_MESSAGE }, { status: 409 });
     }
 
-    const { data: nicknameTaken } = await supabase
+    const { data: nicknameTaken, error: nicknameLookupError } = await supabase
       .from("profiles")
       .select("id")
       .ilike("nickname", nickname)
       .maybeSingle();
+
+    if (nicknameLookupError && !isMissingColumnError(nicknameLookupError)) {
+      logSignupFailure("nickname_check", nicknameLookupError);
+      const mapped = mapSignupProfileError(nicknameLookupError, "nickname_check");
+      return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+    }
 
     if (nicknameTaken) {
       return NextResponse.json({ error: NICKNAME_TAKEN_MESSAGE }, { status: 409 });
@@ -159,233 +175,95 @@ export async function POST(request: Request) {
       password,
       email_confirm: true,
       user_metadata: {
-        display_name: displayName || userEmail.split("@")[0],
-        phone_number: phoneNumber || "",
+        display_name: resolvedDisplayName,
+        nickname,
+        phone_number: phoneNumber,
       },
     });
 
     console.log("[AUTH] Supabase signup response:", {
       userId: authData?.user?.id ?? null,
       error: authError?.message ?? null,
+      code: authError?.code ?? null,
     });
 
     if (authError || !authData.user) {
       const msg = authError?.message ?? "unknown auth error";
-      console.error("[AUTH] Signup failed:", msg);
+      logSignupFailure("auth_create", authError ?? msg, { email: userEmail });
       if (isSupabaseConnectionError(msg)) {
         return NextResponse.json(
           { error: "Det gick inte att ansluta till servern." },
           { status: 503 }
         );
       }
-      if (msg.toLowerCase().includes("already")) {
-        return NextResponse.json(
-          { error: "E-postadressen är redan registrerad." },
-          { status: 409 }
-        );
-      }
       return NextResponse.json(
-        { error: translateSupabaseAuthError(msg) },
+        { error: formatSignupAuthError(msg) },
         { status: 400 }
       );
     }
 
-    console.log("[AUTH] Profile creation started");
-
     const userId = authData.user.id;
+    console.log("[AUTH] Profile creation started", { userId });
 
-    async function saveLicenceOnProfile(): Promise<
-      { ok: true; cabradarUserId: string | null } | { ok: false; error: string; status: number }
-    > {
-      const onboardingFields = {
+    const profileResult = await saveSignupProfile(
+      supabase,
+      userId,
+      resolvedDisplayName,
+      licenceFields,
+      {
         phone_number: phoneNumber,
         driver_city: driverCity,
         taxi_company_name: taxiCompanyName,
         nickname,
-        ...(taxiNumber ? { taxi_number: taxiNumber } : {}),
-      };
-
-      for (let attempt = 0; attempt < 8; attempt++) {
-        const { data: profile, error: profileSelectError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", userId)
-          .maybeSingle();
-
-        if (profileSelectError && !isMissingColumnError(profileSelectError)) {
-          console.error("[AUTH] profile lookup failed", profileSelectError);
-        }
-
-        if (profile) {
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .update({
-              ...licenceFields,
-              ...onboardingFields,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", userId);
-
-          if (profileError) {
-            console.error("[AUTH] Signup failed: profile licence update", profileError);
-
-            if (isMissingColumnError(profileError)) {
-              await supabase.auth.admin.updateUserById(userId, {
-                user_metadata: {
-                  display_name: displayName || userEmail.split("@")[0],
-                  nickname,
-                  phone_number: phoneNumber || "",
-                  driver_license_number: licence,
-                },
-              });
-              console.warn(
-                "[AUTH] Licence stored in user metadata — run migration-signup-profile-fix.sql"
-              );
-              return { ok: true, cabradarUserId: null };
-            }
-
-            await supabase.auth.admin.deleteUser(userId);
-            if (profileError.code === "23505") {
-              return {
-                ok: false,
-                error:
-                  profileError.message?.includes("nickname") ||
-                  profileError.details?.includes("nickname")
-                    ? NICKNAME_TAKEN_MESSAGE
-                    : LICENCE_DUPLICATE_MESSAGE,
-                status: 409,
-              };
-            }
-            return { ok: false, error: "Det gick inte att skapa kontot.", status: 500 };
-          }
-
-          return { ok: true, cabradarUserId: null };
-        }
-
-        await new Promise((r) => setTimeout(r, 250));
-      }
-
-      // Profile may already exist from auth trigger — final lookup
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (existingProfile) {
-        const { error: retryError } = await supabase
-          .from("profiles")
-          .update({
-            ...licenceFields,
-            ...onboardingFields,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", userId);
-
-        if (retryError && !isMissingColumnError(retryError)) {
-          console.error("[AUTH] Signup profile retry failed", retryError);
-          await supabase.auth.admin.deleteUser(userId);
-          return { ok: false, error: "Det gick inte att skapa kontot.", status: 500 };
-        }
-
-        await supabase.auth.admin.updateUserById(userId, {
-          user_metadata: {
-            display_name: displayName || userEmail.split("@")[0],
-            nickname,
-            phone_number: phoneNumber || "",
-            driver_license_number: licence,
-          },
-        });
-        return { ok: true, cabradarUserId: null };
-      }
-
-      const { error: insertError } = await supabase.from("profiles").insert({
-        id: userId,
-        display_name: displayName || userEmail.split("@")[0],
-        nickname,
-        ...licenceFields,
-        phone_number: phoneNumber,
-        driver_city: driverCity,
-        taxi_company_name: taxiCompanyName,
         taxi_number: taxiNumber,
-      });
-
-      if (insertError) {
-        console.error("[AUTH] Signup failed: profile insert", insertError);
-
-        if (isMissingColumnError(insertError)) {
-          const { error: minimalInsertError } = await supabase.from("profiles").insert({
-            id: userId,
-            display_name: displayName || userEmail.split("@")[0],
-          });
-
-          if (minimalInsertError) {
-            if (minimalInsertError.code === "23505") {
-              await supabase.auth.admin.updateUserById(userId, {
-                user_metadata: {
-                  display_name: displayName || userEmail.split("@")[0],
-                  phone_number: phoneNumber || "",
-                  driver_license_number: licence,
-                },
-              });
-              return { ok: true, cabradarUserId: null };
-            }
-            console.error("[AUTH] Signup failed: minimal profile insert", minimalInsertError);
-            await supabase.auth.admin.deleteUser(userId);
-            return { ok: false, error: PROFILE_SCHEMA_ERROR, status: 503 };
-          }
-
-          await supabase.auth.admin.updateUserById(userId, {
-            user_metadata: {
-              display_name: displayName || userEmail.split("@")[0],
-              phone_number: phoneNumber || "",
-              driver_license_number: licence,
-            },
-          });
-
-          console.warn(
-            "[AUTH] Profile created without licence columns — run migration-signup-profile-fix.sql"
-          );
-          return { ok: true, cabradarUserId: null };
-        }
-
-        await supabase.auth.admin.deleteUser(userId);
-        if (insertError.code === "23505") {
-          return { ok: false, error: LICENCE_DUPLICATE_MESSAGE, status: 409 };
-        }
-        return { ok: false, error: "Det gick inte att skapa kontot.", status: 500 };
       }
+    );
 
-      return { ok: true, cabradarUserId: null };
-    }
-
-    const profileResult = await saveLicenceOnProfile();
     if (!profileResult.ok) {
+      logSignupFailure("profile_update", profileResult.message, { userId });
+      await supabase.auth.admin.deleteUser(userId);
       return NextResponse.json(
-        { error: profileResult.error },
+        { error: profileResult.message },
         { status: profileResult.status }
       );
     }
 
-    console.log("[AUTH] Profile creation success");
-    console.log("[AUTH] Signup completed");
+    await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        display_name: resolvedDisplayName,
+        nickname,
+        phone_number: phoneNumber,
+        ...(useHashColumn ? {} : { driver_license_number: licence }),
+      },
+    });
+
+    console.log("[AUTH] Profile creation success", { userId });
+    console.log("[AUTH] Signup completed", { userId });
     return NextResponse.json({
       ok: true,
       message: "Kontot har skapats och väntar på godkännande.",
-      cabradarUserId: profileResult.cabradarUserId,
+      cabradarUserId: null,
       needsEmailConfirm: false,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[AUTH] Signup failed:", err);
+    logSignupFailure("unexpected", err);
     if (isSupabaseConnectionError(msg)) {
       return NextResponse.json(
         { error: "Det gick inte att ansluta till servern." },
         { status: 503 }
       );
     }
+    if (isNicknameConflictError(err as { code?: string })) {
+      return NextResponse.json({ error: NICKNAME_TAKEN_MESSAGE }, { status: 409 });
+    }
     return NextResponse.json(
-      { error: "Ett oväntat fel uppstod. Försök igen." },
+      {
+        error:
+          process.env.NODE_ENV === "development"
+            ? `Ett oväntat fel uppstod: ${msg}`
+            : "Ett oväntat fel uppstod. Försök igen.",
+      },
       { status: 500 }
     );
   }
