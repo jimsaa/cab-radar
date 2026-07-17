@@ -34,7 +34,7 @@ const FULL_LINKS = [
   { href: "/admin/waitlist", label: "Intresse", icon: Mail },
   { href: "/admin/feedback", label: "Synpunkter", icon: MessageSquare },
   { href: "/admin/support", label: "Support", icon: Headphones },
-  { href: "/admin/partner", label: "Samarbetspartner", icon: Handshake },
+  { href: "/admin/partner", label: "Partner Leads", icon: Handshake },
 ];
 
 const EMERGENCY_ONLY_LINKS = [

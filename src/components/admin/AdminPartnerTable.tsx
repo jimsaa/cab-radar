@@ -2,7 +2,7 @@
 
 import type { PartnerLead } from "@/lib/types/database";
 import { formatSwedishDateTime } from "@/lib/datetime";
-import { AdminStatusList } from "./AdminStatusList";
+import { AdminStatusList, PARTNER_STATUS_LABELS } from "./AdminStatusList";
 
 export function AdminPartnerTable({ leads }: { leads: PartnerLead[] }) {
   return (
@@ -10,7 +10,10 @@ export function AdminPartnerTable({ leads }: { leads: PartnerLead[] }) {
       items={leads}
       table="partner_leads"
       searchPlaceholder="Sök företag, kontakt eller telefon…"
-      emptyMessage="Inga partnerförfrågningar."
+      emptyMessage="Inga partner leads."
+      statusLabels={PARTNER_STATUS_LABELS}
+      markContactedLabel="Mark as Contacted"
+      markClosedLabel="Mark as Closed"
       searchFilter={(item, q) => {
         const upper = q.toUpperCase();
         return (

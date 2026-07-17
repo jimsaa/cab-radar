@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { BrandHeader } from "@/components/branding/BrandHeader";
 import { clearSignupSuccess } from "@/lib/signup-success";
-import { ONBOARDING_PENDING_MESSAGE } from "@/lib/verification";
 
 const REDIRECT_SECONDS = 8;
 
@@ -38,7 +37,7 @@ export function SignupSuccessScreen({
 
   const infoText = needsEmailConfirm
     ? "Kontrollera din e-post och bekräfta ditt konto innan du loggar in."
-    : ONBOARDING_PENDING_MESSAGE;
+    : "Ditt konto är aktiverat. Logga in direkt — TEST-läge är på tills du stänger av det under Inställningar. Alla rapporter är TEST tills dess.";
 
   return (
     <div className="safe-bottom mx-auto max-w-lg px-4 py-8">
@@ -49,15 +48,15 @@ export function SignupSuccessScreen({
           <CheckCircle2 className="h-10 w-10 text-success" strokeWidth={2.5} />
         </div>
 
-        <h1 className="text-xl font-bold tracking-tight">🚕 Förarkonto skapat!</h1>
+        <h1 className="text-xl font-bold tracking-tight">Konto aktiverat!</h1>
 
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Ditt konto har skapats och väntar på godkännande.
+          Välkommen till CabRadar — gratis för alla taxiförare.
         </p>
 
         <div className="mt-5 rounded-xl border border-card-border bg-background/90 px-4 py-4 text-left">
           <p className="text-center text-sm font-semibold text-accent-bright">
-            ⏳ Väntar godkännande
+            ✓ Redo att logga in
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted">{infoText}</p>
         </div>
@@ -74,10 +73,6 @@ export function SignupSuccessScreen({
             Ditt användar-ID visas i Inställningar efter inloggning.
           </p>
         )}
-
-        <p className="mt-3 text-xs leading-relaxed text-muted">
-          Spara ditt användar-ID om du behöver kontakta administratören.
-        </p>
 
         <button
           type="button"

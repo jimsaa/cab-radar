@@ -241,7 +241,8 @@ export async function POST(request: Request) {
     console.log("[AUTH] Signup completed", { userId });
     return NextResponse.json({
       ok: true,
-      message: "Kontot har skapats och väntar på godkännande.",
+      message:
+        "Kontot är aktiverat. Logga in och börja använda CabRadar — TEST-läge är på tills du stänger av det.",
       cabradarUserId: null,
       needsEmailConfirm: false,
     });

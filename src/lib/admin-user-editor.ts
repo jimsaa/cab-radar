@@ -71,6 +71,7 @@ export function profileToMembershipPlan(
   if (profile.beta_user) return "beta_user";
   if (profile.membership_type === "annual_member") return "premium_yearly";
   if (profile.membership_type === "active_driver") return "premium_monthly";
+  if (profile.membership_type === "free") return "free_trial";
   return "free_trial";
 }
 

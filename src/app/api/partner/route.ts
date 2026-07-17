@@ -32,9 +32,12 @@ export async function POST(request: Request) {
   if (!phone || phone.length < 6) {
     return NextResponse.json({ error: "Telefonnummer krävs." }, { status: 400 });
   }
-  if (!offerDescription || offerDescription.length < 10) {
+  if (!email || !email.includes("@")) {
+    return NextResponse.json({ error: "E-post krävs." }, { status: 400 });
+  }
+  if (!offerDescription || offerDescription.length < 5) {
     return NextResponse.json(
-      { error: "Beskriv ditt erbjudande." },
+      { error: "Meddelande krävs." },
       { status: 400 }
     );
   }

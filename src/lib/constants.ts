@@ -1,6 +1,6 @@
 export const APP_NAME = "CabRadar";
-export const APP_SLOGAN = "Den digitala co-piloten för taxiförare.";
-export const APP_HEADER_TAGLINE = "Den digitala co-piloten för taxiförare.";
+export const APP_SLOGAN = "The digital co-pilot for taxi drivers.";
+export const APP_HEADER_TAGLINE = "The digital co-pilot for taxi drivers.";
 
 export {
   ALERT_TYPES,

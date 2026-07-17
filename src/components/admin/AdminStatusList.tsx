@@ -14,9 +14,10 @@ const FILTER_OPTIONS: Array<MessageStatus | "all"> = [
   "klar",
 ];
 
-const FILTER_LABELS: Record<MessageStatus | "all", string> = {
-  all: "Alla",
-  ...FEEDBACK_STATUS_LABELS,
+export const PARTNER_STATUS_LABELS: Record<MessageStatus, string> = {
+  ny: "New",
+  behandlas: "Contacted",
+  klar: "Closed",
 };
 
 interface AdminStatusListProps<T extends { id: string; status: MessageStatus; created_at: string }> {
@@ -27,6 +28,9 @@ interface AdminStatusListProps<T extends { id: string; status: MessageStatus; cr
   renderHeader: (item: T) => React.ReactNode;
   renderBody: (item: T) => React.ReactNode;
   emptyMessage?: string;
+  statusLabels?: Record<MessageStatus, string>;
+  markContactedLabel?: string;
+  markClosedLabel?: string;
 }
 
 export function AdminStatusList<T extends { id: string; status: MessageStatus; created_at: string }>({
@@ -37,10 +41,18 @@ export function AdminStatusList<T extends { id: string; status: MessageStatus; c
   renderHeader,
   renderBody,
   emptyMessage = "Inga poster hittades.",
+  statusLabels = FEEDBACK_STATUS_LABELS,
+  markContactedLabel = "Markera behandlas",
+  markClosedLabel = "Markera klar",
 }: AdminStatusListProps<T>) {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<MessageStatus | "all">("all");
   const [search, setSearch] = useState("");
+
+  const filterLabels: Record<MessageStatus | "all", string> = {
+    all: "Alla",
+    ...statusLabels,
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim();
@@ -80,7 +92,7 @@ export function AdminStatusList<T extends { id: string; status: MessageStatus; c
                 : "bg-card border border-card-border text-muted"
             )}
           >
-            {FILTER_LABELS[option]}
+            {filterLabels[option]}
           </button>
         ))}
       </div>
@@ -96,7 +108,7 @@ export function AdminStatusList<T extends { id: string; status: MessageStatus; c
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">{renderHeader(item)}</div>
-                <StatusBadge status={item.status} />
+                <StatusBadge status={item.status} labels={statusLabels} />
               </div>
               <div className="mt-3">{renderBody(item)}</div>
               {item.status !== "klar" && (
@@ -107,7 +119,7 @@ export function AdminStatusList<T extends { id: string; status: MessageStatus; c
                       onClick={() => setStatus(item.id, "behandlas")}
                       className="btn-secondary flex-1 !min-h-[36px] !py-2 text-xs"
                     >
-                      Markera behandlas
+                      {markContactedLabel}
                     </button>
                   )}
                   <button
@@ -115,7 +127,7 @@ export function AdminStatusList<T extends { id: string; status: MessageStatus; c
                     onClick={() => setStatus(item.id, "klar")}
                     className="btn-secondary flex-1 !min-h-[36px] !py-2 text-xs"
                   >
-                    Markera klar
+                    {markClosedLabel}
                   </button>
                 </div>
               )}
@@ -127,7 +139,13 @@ export function AdminStatusList<T extends { id: string; status: MessageStatus; c
   );
 }
 
-function StatusBadge({ status }: { status: MessageStatus }) {
+function StatusBadge({
+  status,
+  labels,
+}: {
+  status: MessageStatus;
+  labels: Record<MessageStatus, string>;
+}) {
   return (
     <span
       className={cn(
@@ -139,7 +157,7 @@ function StatusBadge({ status }: { status: MessageStatus }) {
             : "bg-success/15 text-success"
       )}
     >
-      {FEEDBACK_STATUS_LABELS[status]}
+      {labels[status]}
     </span>
   );
 }

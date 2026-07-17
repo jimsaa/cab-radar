@@ -169,18 +169,42 @@ export async function saveSignupProfile(
 
     if (profile) {
       const { nickname: _nickname, ...withoutNickname } = onboardingPayload;
+      const activation = {
+        verification_status: "verified",
+        membership_type: "free",
+        test_mode_enabled: true,
+        verified_at: updatedAt,
+        welcome_pending: true,
+      };
       return updateProfileWithFallbacks(
         supabase,
         userId,
         [
-          { ...licenceFields, ...onboardingPayload, updated_at: updatedAt },
-          { ...licenceFields, ...withoutNickname, updated_at: updatedAt },
+          {
+            ...licenceFields,
+            ...onboardingPayload,
+            ...activation,
+            updated_at: updatedAt,
+          },
+          {
+            ...licenceFields,
+            ...withoutNickname,
+            ...activation,
+            updated_at: updatedAt,
+          },
           {
             ...licenceFields,
             phone_number: onboarding.phone_number,
+            ...activation,
             updated_at: updatedAt,
           },
-          { ...licenceFields, updated_at: updatedAt },
+          { ...licenceFields, ...activation, updated_at: updatedAt },
+          {
+            ...licenceFields,
+            verification_status: "verified",
+            test_mode_enabled: true,
+            updated_at: updatedAt,
+          },
         ],
         "profile_update"
       );
@@ -190,6 +214,14 @@ export async function saveSignupProfile(
   }
 
   const cabradarUserId = await generateCabradarUserId(supabase);
+  const activation = {
+    verification_status: "verified",
+    membership_type: "free",
+    test_mode_enabled: true,
+    verified_at: updatedAt,
+    welcome_pending: true,
+  };
+
   const insertPayloads: Record<string, unknown>[] = [
     {
       id: userId,
@@ -197,7 +229,7 @@ export async function saveSignupProfile(
       cabradar_user_id: cabradarUserId,
       ...onboardingPayload,
       ...licenceFields,
-      verification_status: "pending_verification",
+      ...activation,
     },
     {
       id: userId,
@@ -206,7 +238,7 @@ export async function saveSignupProfile(
       nickname: onboarding.nickname,
       phone_number: onboarding.phone_number,
       ...licenceFields,
-      verification_status: "pending_verification",
+      ...activation,
     },
     {
       id: userId,
@@ -214,13 +246,16 @@ export async function saveSignupProfile(
       cabradar_user_id: cabradarUserId,
       phone_number: onboarding.phone_number,
       ...licenceFields,
-      verification_status: "pending_verification",
+      verification_status: "verified",
+      membership_type: "free",
+      test_mode_enabled: true,
     },
     {
       id: userId,
       display_name: displayName,
       cabradar_user_id: cabradarUserId,
-      verification_status: "pending_verification",
+      verification_status: "verified",
+      test_mode_enabled: true,
     },
   ];
 

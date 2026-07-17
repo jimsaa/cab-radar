@@ -1,5 +1,5 @@
 -- Unified signup trigger: CabRadar ID + nickname + phone on auth user create.
--- Fixes normal signup when migration-handle-new-user-nickname removed cabradar_user_id.
+-- Free onboarding: verified + free membership + test mode (see also migration-free-onboarding.sql).
 -- Safe to re-run. Run in Supabase SQL Editor.
 
 ALTER TABLE public.profiles
@@ -8,7 +8,10 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS phone_number text,
   ADD COLUMN IF NOT EXISTS driver_license_number text,
   ADD COLUMN IF NOT EXISTS driver_license_hash text,
-  ADD COLUMN IF NOT EXISTS driver_license_last4 text;
+  ADD COLUMN IF NOT EXISTS driver_license_last4 text,
+  ADD COLUMN IF NOT EXISTS test_mode_enabled boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS verified_at timestamptz,
+  ADD COLUMN IF NOT EXISTS welcome_pending boolean NOT NULL DEFAULT false;
 
 CREATE OR REPLACE FUNCTION public.generate_cabradar_user_id()
 RETURNS text
@@ -56,7 +59,11 @@ BEGIN
     phone_number,
     driver_license_number,
     cabradar_user_id,
-    verification_status
+    verification_status,
+    membership_type,
+    test_mode_enabled,
+    verified_at,
+    welcome_pending
   )
   VALUES (
     new.id,
@@ -65,7 +72,11 @@ BEGIN
     nullif(trim(new.raw_user_meta_data ->> 'phone_number'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'driver_license_number'), ''),
     public.generate_cabradar_user_id(),
-    'pending_verification'
+    'verified',
+    'free',
+    true,
+    now(),
+    true
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
@@ -77,4 +88,4 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-NOTIFY pgrst, 'reload schema';
+SELECT pg_notify('pgrst', 'reload schema');

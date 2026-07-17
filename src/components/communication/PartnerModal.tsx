@@ -8,8 +8,7 @@ import {
   useAutoClose,
 } from "@/components/ui/ModalShell";
 
-const SUCCESS =
-  "✅ Tack för ditt intresse!\nVi kontaktar dig inom kort.";
+const SUCCESS = "✅ Tack! Vi hör av oss snart.";
 
 interface PartnerModalProps {
   open: boolean;
@@ -21,7 +20,7 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
   const [contactPerson, setContactPerson] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [offerDescription, setOfferDescription] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -31,7 +30,7 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
     setContactPerson("");
     setPhone("");
     setEmail("");
-    setOfferDescription("");
+    setMessage("");
     setError(null);
     setSuccess(false);
     setLoading(false);
@@ -58,7 +57,7 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
           contactPerson,
           phone,
           email,
-          offerDescription,
+          offerDescription: message,
         }),
       });
       const data = await res.json();
@@ -81,15 +80,15 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
       ) : (
         <>
           <h2 id="partner-title" className="text-lg font-bold">
-            Erbjudanden för Sveriges taxiförare
+            Vill du synas här?
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Kan du ge våra förare rabatter eller erbjudanden? Fyll i dina uppgifter
-            så kontaktar vi dig inom kort.
+            Nå tusentals taxiförare varje vecka genom CabRadar. Fyll i formuläret
+            så kontaktar vi dig.
           </p>
           <form onSubmit={handleSubmit} className="mt-4 space-y-3">
             <label className="flex flex-col gap-1">
-              <span className="text-sm text-muted">Företagsnamn</span>
+              <span className="text-sm text-muted">Företag</span>
               <input
                 className="field"
                 value={companyName}
@@ -111,7 +110,7 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm text-muted">Telefonnummer</span>
+              <span className="text-sm text-muted">Telefon</span>
               <input
                 className="field"
                 type="tel"
@@ -129,16 +128,17 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
                 autoComplete="email"
                 disabled={loading}
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm text-muted">Beskriv ditt erbjudande</span>
+              <span className="text-sm text-muted">Meddelande</span>
               <textarea
                 className="field min-h-[100px] resize-none"
-                value={offerDescription}
-                onChange={(e) => setOfferDescription(e.target.value)}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={3}
                 disabled={loading}
@@ -149,7 +149,11 @@ export function PartnerModal({ open, onClose }: PartnerModalProps) {
                 {error}
               </p>
             )}
-            <ModalActions onCancel={handleClose} loading={loading} />
+            <ModalActions
+              onCancel={handleClose}
+              loading={loading}
+              submitLabel="Skicka"
+            />
           </form>
         </>
       )}

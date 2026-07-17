@@ -8,12 +8,16 @@ import { ViewModeSwitcher } from "@/components/layout/ViewModeSwitcher";
 import { APP_NAME, APP_HEADER_TAGLINE, NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-const MARKETING_PATHS = ["/coming-soon", "/beta-login", "/tesla-beta"];
+const MARKETING_PATHS = ["/coming-soon", "/beta-login", "/tesla-beta", "/signup"];
 
 function isMarketingPath(pathname: string): boolean {
   return MARKETING_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
+}
+
+function isGuestLanding(pathname: string, isLoggedIn?: boolean): boolean {
+  return !isLoggedIn && (pathname === "/" || isMarketingPath(pathname));
 }
 
 const NAV_ITEMS = [
@@ -100,7 +104,7 @@ export function Header({
 }) {
   const pathname = usePathname();
 
-  if (isMarketingPath(pathname)) {
+  if (isGuestLanding(pathname, isLoggedIn) || isMarketingPath(pathname)) {
     return null;
   }
 
@@ -166,10 +170,16 @@ export function Header({
   );
 }
 
-export function BottomNav() {
+export function BottomNav({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const pathname = usePathname();
 
-  if (isMarketingPath(pathname) || pathname.startsWith("/admin") || pathname.startsWith("/tesla") || pathname.startsWith("/tab")) {
+  if (
+    isGuestLanding(pathname, isLoggedIn) ||
+    isMarketingPath(pathname) ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/tesla") ||
+    pathname.startsWith("/tab")
+  ) {
     return null;
   }
 

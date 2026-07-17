@@ -86,7 +86,7 @@ export default async function RootLayout({
             messageBannerEnabled={isLoggedIn}
           />
           <main className="flex-1">{children}</main>
-          <BottomNav />
+          <BottomNav isLoggedIn={isLoggedIn} />
         </AppToastProvider>
       </body>
     </html>

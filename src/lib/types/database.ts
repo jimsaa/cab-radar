@@ -5,7 +5,8 @@ export type MembershipType =
   | "active_driver"
   | "annual_member"
   | "inactive"
-  | "tesla_beta";
+  | "tesla_beta"
+  | "free";
 
 export type AlertStatus =
   | "pending_review"

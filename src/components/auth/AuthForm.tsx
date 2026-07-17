@@ -14,7 +14,7 @@ import {
 import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
 import Link from "next/link";
 import { AlertCircle, Shield } from "lucide-react";
-import { LICENCE_PRIVACY_MESSAGE, ONBOARDING_PENDING_MESSAGE } from "@/lib/verification";
+import { LICENCE_PRIVACY_MESSAGE } from "@/lib/verification";
 import {
   DRIVER_CITY_OPTIONS,
   isValidDriverCitySelection,
@@ -31,7 +31,8 @@ interface AuthFormProps {
 }
 
 const MSG_LOADING = "Bearbetar...";
-const MSG_SIGNUP_SUCCESS = "Kontot har skapats.";
+const MSG_SIGNUP_SUCCESS =
+  "Kontot är aktiverat. Logga in och börja använda CabRadar.";
 const MSG_SIGNUP_ERROR = "Det gick inte att skapa kontot.";
 const MSG_LOGIN_ERROR = "Fel e-post eller lösenord.";
 const MSG_UNEXPECTED = "Ett oväntat fel uppstod. Försök igen.";
@@ -482,7 +483,8 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       {mode === "signup" && (
         <p className="text-xs leading-relaxed text-muted">
-          {ONBOARDING_PENDING_MESSAGE}
+          Kontot aktiveras direkt. TEST-läge är på tills du stänger av det —
+          alla rapporter är TEST tills dess.
         </p>
       )}
 
