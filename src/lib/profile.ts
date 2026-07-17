@@ -4,6 +4,7 @@ import {
   fetchContributionCountsFromSource,
   mergeContributionCounts,
 } from "./contribution";
+import { MEMBERSHIP_ENABLED } from "./membership";
 import type { Profile } from "./types/database";
 import { normalizePreferredView } from "./preferred-view";
 
@@ -242,12 +243,15 @@ export async function syncMembershipProfile(
   supabase: SupabaseClient,
   userId: string
 ): Promise<Profile | null> {
-  const { error: rpcError } = await supabase.rpc("sync_membership_for_user", {
-    p_user_id: userId,
-  });
+  // When membership is disabled, skip recalculation so inactive users are not demoted/blocked.
+  if (MEMBERSHIP_ENABLED) {
+    const { error: rpcError } = await supabase.rpc("sync_membership_for_user", {
+      p_user_id: userId,
+    });
 
-  if (rpcError && !isMissingSchemaError(rpcError)) {
-    console.warn("[PROFILE] sync_membership_for_user failed:", rpcError);
+    if (rpcError && !isMissingSchemaError(rpcError)) {
+      console.warn("[PROFILE] sync_membership_for_user failed:", rpcError);
+    }
   }
 
   const profile = await fetchCurrentProfile(supabase, userId);

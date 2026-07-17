@@ -1,6 +1,5 @@
 import { LiveFeedClient } from "@/components/live/LiveFeedClient";
 import { BannerSlot } from "@/components/layout/BannerSlot";
-import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 import { fetchActiveAlerts } from "@/lib/alerts";
 import { fetchBannerForSlot } from "@/lib/deals";
@@ -88,16 +87,6 @@ export default async function LivePage() {
         </p>
         {verificationStatus && !isVerified && (
           <VerificationStatusBanner status={verificationStatus} className="mb-4" />
-        )}
-        {profile && <MembershipGateBanner profile={profile} className="mb-4" />}
-        {isVerified && (
-          <div className="rounded-2xl border border-dashed border-card-border p-8 text-center">
-            <p className="text-3xl mb-2">🔒</p>
-            <p className="font-medium">Medlemskap krävs</p>
-            <Link href="/settings" className="mt-3 inline-block btn-primary text-sm">
-              Se medlemskap
-            </Link>
-          </div>
         )}
       </div>
     );

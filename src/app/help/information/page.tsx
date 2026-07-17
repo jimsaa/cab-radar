@@ -1,5 +1,4 @@
 import { CabRadarGuideView } from "@/components/help/CabRadarGuideView";
-import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 import { CABRADAR_GUIDE_TITLE } from "@/lib/cabradar-guide";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
@@ -49,18 +48,6 @@ export default async function HelpInformationPage() {
           status={profile.verification_status}
           className="mb-4"
         />
-      )}
-
-      {profile && <MembershipGateBanner profile={profile} className="mb-4" />}
-
-      {userId && !hasAccess && (
-        <div className="rounded-2xl border border-dashed border-card-border p-8 text-center">
-          <p className="text-3xl mb-2">🔒</p>
-          <p className="font-medium">Medlemskap krävs</p>
-          <Link href="/settings" className="mt-3 inline-block btn-primary text-sm">
-            Se medlemskap
-          </Link>
-        </div>
       )}
 
       {hasAccess && <CabRadarGuideView />}

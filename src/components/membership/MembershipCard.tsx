@@ -5,6 +5,7 @@ import { CreditCard, Crown, Users } from "lucide-react";
 import type { Profile } from "@/lib/types/database";
 import {
   ANNUAL_MEMBERSHIP_PRICE_SEK,
+  MEMBERSHIP_ENABLED,
   MEMBERSHIP_THRESHOLDS,
   formatMembershipExpiry,
   hasAnnualMembership,
@@ -28,9 +29,11 @@ export function MembershipCard({ profile }: MembershipCardProps) {
   const isBeta = isBetaUser(profile);
   const hasAccess = hasCabRadarAccess(profile);
   const isAnnual = hasAnnualMembership(profile);
-  const needsPaywall = verified && !hasAccess && !isBeta;
+  const needsPaywall =
+    MEMBERSHIP_ENABLED && verified && !hasAccess && !isBeta;
 
   async function buyMembership() {
+    if (!MEMBERSHIP_ENABLED) return;
     setLoading(true);
     setError(null);
     try {
@@ -48,6 +51,25 @@ export function MembershipCard({ profile }: MembershipCardProps) {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Membership system inactive — show free status only (no paywall / activity).
+  if (!MEMBERSHIP_ENABLED) {
+    return (
+      <section className="rounded-2xl border border-card-border bg-card p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <Crown className="h-5 w-5 text-accent" />
+          <h2 className="font-semibold">CabRadar</h2>
+        </div>
+        <p className="text-sm font-semibold text-success">
+          ✓ Gratis för alla taxiförare
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Full tillgång till Radar, LIVE, CivilKoll och rapportering. TEST-läge
+          styrs separat under Inställningar.
+        </p>
+      </section>
+    );
   }
 
   return (
@@ -84,20 +106,20 @@ export function MembershipCard({ profile }: MembershipCardProps) {
             !isBeta &&
             profile.membership_type === "active_driver" &&
             meetsContributionRequirements(profile) && (
-            <p className="mt-2 text-sm text-muted leading-relaxed">
-              Tack för att du hjälper andra förare. Din tillgång har förlängts
-              utan kostnad.
-            </p>
-          )}
+              <p className="mt-2 text-sm text-muted leading-relaxed">
+                Tack för att du hjälper andra förare. Din tillgång har förlängts
+                utan kostnad.
+              </p>
+            )}
 
           {hasAccess &&
             !isBeta &&
             profile.membership_type === "active_driver" &&
             !meetsContributionRequirements(profile) && (
-            <p className="mt-2 text-xs text-muted">
-              Hjälp andra förare denna månad för gratis tillgång.
-            </p>
-          )}
+              <p className="mt-2 text-xs text-muted">
+                Hjälp andra förare denna månad för gratis tillgång.
+              </p>
+            )}
 
           {isAnnual && (
             <p className="mt-2 text-sm text-muted">
@@ -201,6 +223,7 @@ export function MembershipGateBanner({
   profile: Profile | null;
   className?: string;
 }) {
+  if (!MEMBERSHIP_ENABLED) return null;
   if (!profile) return null;
   if (!isVerifiedDriver(profile)) return null;
   if (hasCabRadarAccess(profile)) return null;

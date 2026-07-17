@@ -1,14 +1,12 @@
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 import { WelcomeActivationBanner } from "@/components/verification/WelcomeActivationBanner";
-import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import { AdvertiserBanner } from "@/components/layout/AdvertiserBanner";
 import { MarketingLandingPage } from "@/components/marketing/MarketingLandingPage";
 import { PushAutoEnable } from "@/components/notifications/PushAutoEnable";
 import { fetchActiveAlerts } from "@/lib/alerts";
 import { createClient } from "@/lib/supabase/server";
 import type { DriverAlert, Profile } from "@/lib/types/database";
-import Link from "next/link";
 import {
   canContributeToCommunity,
   hasCabRadarAccess,
@@ -94,12 +92,6 @@ export default async function HomePage() {
           </div>
         )}
 
-        {profile && !isVerified && (
-          <div className="mx-4 mt-3">
-            <MembershipGateBanner profile={profile} />
-          </div>
-        )}
-
         <AdvertiserBanner />
 
         {profile && (
@@ -124,25 +116,9 @@ export default async function HomePage() {
   if (userId && profile && !hasAccess) {
     return (
       <div className="pb-2">
-        {verificationStatus && !isVerified && (
+        {verificationStatus && (
           <div className="mx-4 mt-3">
             <VerificationStatusBanner status={verificationStatus} />
-          </div>
-        )}
-
-        {profile && (
-          <div className="mx-4 mt-3">
-            <MembershipGateBanner profile={profile} />
-          </div>
-        )}
-
-        {isVerified && (
-          <div className="mx-4 mt-4 rounded-2xl border border-dashed border-card-border p-8 text-center">
-            <p className="mb-2 text-3xl">🔒</p>
-            <p className="font-medium">Medlemskap krävs</p>
-            <Link href="/settings" className="btn-primary mt-3 inline-block text-sm">
-              Se medlemskap
-            </Link>
           </div>
         )}
       </div>

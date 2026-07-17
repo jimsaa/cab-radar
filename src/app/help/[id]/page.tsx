@@ -1,5 +1,4 @@
 import { HelpArticleDetail } from "@/components/help/HelpArticleDetail";
-import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import {
   fetchHelpArticleById,
   incrementHelpArticleViews,
@@ -53,25 +52,12 @@ export default async function HelpArticlePage({
   if (!user || !hasAccess) {
     return (
       <div className="safe-bottom mx-auto max-w-lg px-4 py-8">
-        {!user ? (
-          <div className="text-center">
-            <p className="text-muted">Logga in för att läsa artikeln.</p>
-            <Link href="/login" className="mt-4 inline-block btn-primary">
-              Logga in
-            </Link>
-          </div>
-        ) : (
-          <>
-            {profile && <MembershipGateBanner profile={profile} />}
-            <div className="mt-4 rounded-2xl border border-dashed border-card-border p-8 text-center">
-              <p className="text-3xl mb-2">🔒</p>
-              <p className="font-medium">Medlemskap krävs</p>
-              <Link href="/settings" className="mt-3 inline-block btn-primary text-sm">
-                Se medlemskap
-              </Link>
-            </div>
-          </>
-        )}
+        <div className="text-center">
+          <p className="text-muted">Logga in för att läsa artikeln.</p>
+          <Link href="/login" className="mt-4 inline-block btn-primary">
+            Logga in
+          </Link>
+        </div>
       </div>
     );
   }

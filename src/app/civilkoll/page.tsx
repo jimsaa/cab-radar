@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CivilkollCard } from "@/components/civilkoll/CivilkollCard";
-import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 import { NAV } from "@/lib/constants";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
@@ -47,8 +46,6 @@ export default async function CivilkollPage() {
           className="mt-4"
         />
       )}
-
-      {profile && <MembershipGateBanner profile={profile} className="mt-4" />}
 
       {user && hasAccess && isVerified && (
         <div className="mt-4">

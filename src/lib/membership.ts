@@ -3,6 +3,13 @@ import { isTeslaBetaUser } from "./tesla-beta";
 import type { DriverVerificationStatus } from "./verification";
 import type { MembershipType } from "./types/database";
 
+/**
+ * Feature flag: membership paywall / activity gates.
+ * Keep the membership codebase, but when false nothing is blocked by membership.
+ * Flip to true later for Premium Bookings / Concierge / partner modules only.
+ */
+export const MEMBERSHIP_ENABLED = false;
+
 export const MEMBERSHIP_THRESHOLDS = {
   reports: 5,
   votes: 10,
@@ -31,6 +38,10 @@ export interface MembershipProfile {
   monthly_points: number;
 }
 
+export function isMembershipSystemActive(): boolean {
+  return MEMBERSHIP_ENABLED;
+}
+
 export function isBetaUser(
   profile: { beta_user?: boolean } | null | undefined
 ): boolean {
@@ -45,6 +56,7 @@ export function isVerifiedDriver(profile: {
 }
 
 export function hasAnnualMembership(profile: MembershipProfile): boolean {
+  if (!MEMBERSHIP_ENABLED) return false;
   if (profile.is_admin) return true;
   if (profile.membership_type !== "annual_member") return false;
   if (!profile.membership_expires_at) return false;
@@ -52,6 +64,7 @@ export function hasAnnualMembership(profile: MembershipProfile): boolean {
 }
 
 export function meetsContributionRequirements(profile: MembershipProfile): boolean {
+  if (!MEMBERSHIP_ENABLED) return true;
   return (
     profile.monthly_reports_count >= MEMBERSHIP_THRESHOLDS.reports ||
     profile.monthly_votes_count >= MEMBERSHIP_THRESHOLDS.votes ||
@@ -59,10 +72,14 @@ export function meetsContributionRequirements(profile: MembershipProfile): boole
   );
 }
 
-/** Verified + free/active_driver, valid annual, admin, beta tester, or Tesla Beta */
+/**
+ * Access to core CabRadar features.
+ * When MEMBERSHIP_ENABLED is false: every verified driver has full access.
+ */
 export function hasCabRadarAccess(profile: MembershipProfile): boolean {
   if (profile.is_admin) return true;
   if (!isVerifiedDriver(profile)) return false;
+  if (!MEMBERSHIP_ENABLED) return true;
   if (isTeslaBetaUser(profile)) return true;
   if (isBetaUser(profile)) return true;
   if (profile.membership_type === "free") return true;
@@ -87,14 +104,13 @@ export function formatMembershipExpiry(iso: string | null): string {
 
 export function membershipStatusIcon(profile: MembershipProfile): string {
   if (!isVerifiedDriver(profile)) return "⏳";
-  if (hasCabRadarAccess(profile)) {
-    return profile.membership_type === "annual_member" ? "✓" : "✓";
-  }
+  if (hasCabRadarAccess(profile)) return "✓";
   return "⚠";
 }
 
 export function membershipStatusLine(profile: MembershipProfile): string {
   if (!isVerifiedDriver(profile)) return "Verifiering krävs";
+  if (!MEMBERSHIP_ENABLED) return "✓ Gratis för alla taxiförare";
   if (isTeslaBetaUser(profile)) return "🚕 Tesla Beta — testläge";
   if (isBetaUser(profile)) return "🧪 Betatest — full tillgång";
   if (profile.membership_type === "free") {

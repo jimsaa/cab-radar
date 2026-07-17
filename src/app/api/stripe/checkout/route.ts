@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
-import { ANNUAL_MEMBERSHIP_PRICE_SEK } from "@/lib/membership";
+import {
+  ANNUAL_MEMBERSHIP_PRICE_SEK,
+  MEMBERSHIP_ENABLED,
+} from "@/lib/membership";
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -10,6 +13,12 @@ function getStripe() {
 }
 
 export async function POST(request: Request) {
+  if (!MEMBERSHIP_ENABLED) {
+    return NextResponse.json(
+      { error: "Medlemskapsköp är avstängt. CabRadar är gratis för alla taxiförare." },
+      { status: 403 }
+    );
+  }
   const stripe = getStripe();
   if (!stripe) {
     return NextResponse.json(

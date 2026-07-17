@@ -1,7 +1,6 @@
 import { OfferRevealBanner } from "@/components/deals/OfferRevealBanner";
 import { BannerSlot } from "@/components/layout/BannerSlot";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
-import { MembershipGateBanner } from "@/components/membership/MembershipCard";
 import { fetchBannerForSlot } from "@/lib/deals";
 import { fetchActiveOffersForDrivers } from "@/lib/offers";
 import { hasCabRadarAccess, isVerifiedDriver } from "@/lib/membership";
@@ -76,18 +75,6 @@ export default async function DealsPage() {
 
       {verificationStatus && !isVerified && (
         <VerificationStatusBanner status={verificationStatus} className="mb-4" />
-      )}
-
-      {profile && <MembershipGateBanner profile={profile} className="mb-4" />}
-
-      {userId && isVerified && !hasAccess && (
-        <div className="rounded-2xl border border-dashed border-card-border p-8 text-center">
-          <p className="text-3xl mb-2">🔒</p>
-          <p className="font-medium">Medlemskap krävs</p>
-          <Link href="/settings" className="mt-3 inline-block btn-primary text-sm">
-            Se medlemskap
-          </Link>
-        </div>
       )}
 
       {userId && hasAccess && (
