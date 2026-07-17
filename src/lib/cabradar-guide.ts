@@ -56,6 +56,16 @@ export const CABRADAR_GUIDE_SECTIONS: GuideSection[] = [
         ],
       },
       {
+        title: "Bilar behövs",
+        body: "Används när det är högt taxibehov på en plats, till exempel:",
+        bullets: [
+          "Landvetter, Stena Line eller andra terminaler",
+          "Scandinavium, Ullevi, Liseberg, Gothia Towers",
+          "Efter konserter, matcher eller evenemang",
+        ],
+        note: "Du kan lägga till en valfri kommentar, t.ex. varför behovet är stort.",
+      },
+      {
         title: "Stopp",
         icon: "🚧",
         body: "Används när vägen är blockerad eller trafiken står still. Exempel:",

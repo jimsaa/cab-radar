@@ -105,12 +105,21 @@ export function TeslaReportDetailPanel({
   return (
     <div className="flex min-h-0 flex-col p-6">
       <div className="flex items-start gap-4">
-        <ReportTypeIcon type={item.type} variant="large" className="text-white" />
+        <ReportTypeIcon
+          type={item.type}
+          variant="large"
+          className={item.type === "need_cars" ? "text-emerald-400" : "text-white"}
+        />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8A9099]">
             Rapportdetaljer
           </p>
-          <h3 className="mt-1 text-3xl font-bold leading-tight text-white">
+          <h3
+            className={cn(
+              "mt-1 text-3xl font-bold leading-tight",
+              item.type === "need_cars" ? "text-emerald-300" : "text-white"
+            )}
+          >
             {item.type_label}
           </h3>
           <p className="mt-2 text-lg font-medium text-[#B0B6BE]">{ageLabel}</p>
@@ -296,9 +305,21 @@ function TeslaLiveFeedList({
 
               <p className="pr-14 text-lg font-bold text-white">
                 <span aria-hidden className="mr-1.5 inline-flex align-middle">
-                  <ReportTypeIcon type={item.type} variant="badge" className="text-white" />
+                  <ReportTypeIcon
+                    type={item.type}
+                    variant="badge"
+                    className={
+                      item.type === "need_cars" ? "text-emerald-400" : "text-white"
+                    }
+                  />
                 </span>
-                {item.type_label}
+                <span
+                  className={
+                    item.type === "need_cars" ? "text-emerald-300" : undefined
+                  }
+                >
+                  {item.type_label}
+                </span>
               </p>
               <p className="mt-1 text-base text-[#B0B6BE]">{item.location}</p>
               <p className="mt-0.5 text-sm font-mono text-[#8A9099]">

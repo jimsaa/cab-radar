@@ -7,6 +7,7 @@ export const ALERT_TYPES = [
   "traffic_control",
   "laser",
   "all_vehicle_check",
+  "need_cars",
 ] as const;
 
 export type AlertType = (typeof ALERT_TYPES)[number];
@@ -39,6 +40,7 @@ export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   traffic_control: "Taxikontroll",
   laser: "Laser",
   all_vehicle_check: "Kontroll av alla fordon",
+  need_cars: "Bilar behövs",
 };
 
 export const ALERT_TYPE_ICONS: Record<AlertType, string> = {
@@ -50,6 +52,7 @@ export const ALERT_TYPE_ICONS: Record<AlertType, string> = {
   traffic_control: "🚕",
   laser: "",
   all_vehicle_check: "",
+  need_cars: "",
 };
 
 export const ALERT_TYPE_DESCRIPTIONS: Record<AlertType, string> = {
@@ -62,6 +65,8 @@ export const ALERT_TYPE_DESCRIPTIONS: Record<AlertType, string> = {
   laser: "Laser, fartkamera eller polis med laser.",
   all_vehicle_check:
     "Kontroll där alla fordon stoppas (polis, tull, kronofogden etc).",
+  need_cars:
+    "Högt taxibehov på platsen — många kunder väntar (event, terminal, arena).",
 };
 
 const LEGACY_LABELS: Record<LegacyAlertType, string> = {
@@ -97,7 +102,8 @@ export function alertTypeLabel(type: string): string {
 }
 
 export function alertTypeIcon(type: string): string {
-  if (type === "laser" || type === "all_vehicle_check") return "";
+  if (type === "laser" || type === "all_vehicle_check" || type === "need_cars")
+    return "";
   if (type in ALERT_TYPE_ICONS) {
     return ALERT_TYPE_ICONS[type as AlertType];
   }
@@ -126,6 +132,7 @@ export const ALERT_TYPES_NEEDING_GPS: AlertType[] = [
   "traffic_control",
   "laser",
   "all_vehicle_check",
+  "need_cars",
 ];
 
 export const ALERT_TYPES_NEEDING_ADMIN: AlertType[] = ["taxi_info"];
@@ -137,4 +144,5 @@ export const PUSH_NOTIFICATION_TYPES: AlertType[] = [
   "traffic_control",
   "laser",
   "all_vehicle_check",
+  "need_cars",
 ];

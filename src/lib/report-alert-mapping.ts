@@ -8,6 +8,7 @@ export type ReportButtonId =
   | "taxikontroll"
   | "laser"
   | "all_vehicle_check"
+  | "need_cars"
   | "olycka"
   | "nod";
 
@@ -18,6 +19,7 @@ export const REPORT_BUTTON_TO_ALERT_TYPE: Record<ReportButtonId, AlertType> = {
   taxikontroll: "traffic_control",
   laser: "laser",
   all_vehicle_check: "all_vehicle_check",
+  need_cars: "need_cars",
   olycka: "accident",
   nod: "taxi_emergency",
 };
@@ -34,6 +36,11 @@ export function isTaxiControlReportButton(id: ReportButtonId): boolean {
   return id === "taxikontroll";
 }
 
+/** Report types that open an optional-comment modal before submit. */
+export function isOptionalCommentReportButton(id: ReportButtonId): boolean {
+  return id === "taxikontroll" || id === "need_cars";
+}
+
 const ALERT_TYPE_TO_REPORT_BUTTON: Partial<
   Record<AlertType, ReportButtonId>
 > = {
@@ -42,6 +49,7 @@ const ALERT_TYPE_TO_REPORT_BUTTON: Partial<
   traffic_control: "taxikontroll",
   laser: "laser",
   all_vehicle_check: "all_vehicle_check",
+  need_cars: "need_cars",
   accident: "olycka",
   taxi_emergency: "nod",
 };

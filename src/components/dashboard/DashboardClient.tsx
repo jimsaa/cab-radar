@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AlertValidationPrompt } from "@/components/alerts/AlertValidationPrompt";
-import { TaxiControlReportModal } from "@/components/alerts/TaxiControlReportModal";
+import {
+  NEED_CARS_COMMENT_CONFIG,
+  OptionalCommentReportModal,
+  TAXI_CONTROL_COMMENT_CONFIG,
+  type OptionalCommentReportConfig,
+} from "@/components/alerts/OptionalCommentReportModal";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { DashboardSafetyBanner } from "@/components/dashboard/RecentEventsList";
 import { RadarLatestReports } from "@/components/dashboard/RadarLatestReports";
@@ -22,7 +27,7 @@ import {
 } from "@/lib/emergency-driver";
 import {
   isEmergencyReportButton,
-  isTaxiControlReportButton,
+  isOptionalCommentReportButton,
   logAlertButtonPressed,
 } from "@/lib/report-alert-mapping";
 import { recordDriverActivityFromDevice } from "@/lib/driver-activity-client";
@@ -59,7 +64,8 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const showToast = useAppToast();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [taxiControlOpen, setTaxiControlOpen] = useState(false);
+  const [commentConfig, setCommentConfig] =
+    useState<OptionalCommentReportConfig | null>(null);
   const [reportPreset, setReportPreset] = useState<DashboardReportType | null>(
     null
   );
@@ -132,8 +138,12 @@ export function DashboardClient({
       return;
     }
 
-    if (isTaxiControlReportButton(item.id)) {
-      setTaxiControlOpen(true);
+    if (isOptionalCommentReportButton(item.id)) {
+      setCommentConfig(
+        item.id === "need_cars"
+          ? NEED_CARS_COMMENT_CONFIG
+          : TAXI_CONTROL_COMMENT_CONFIG
+      );
       return;
     }
 
@@ -159,13 +169,16 @@ export function DashboardClient({
     }
   }
 
-  async function handleTaxiControlSubmit(data: CreateAlertInput) {
-    if (!userId) return;
+  async function handleCommentSubmit(data: CreateAlertInput) {
+    if (!userId || !commentConfig) return;
 
     const alert = await submitDriverAlert(userId, data);
     updateAlert(alert);
-    setTaxiControlOpen(false);
-    const { message, variant } = reportSuccessToast("traffic_control", alert.is_test);
+    setCommentConfig(null);
+    const { message, variant } = reportSuccessToast(
+      commentConfig.alertType,
+      alert.is_test
+    );
     showToast(message, { variant });
   }
 
@@ -209,12 +222,15 @@ export function DashboardClient({
 
       {userId && (
         <>
-          <TaxiControlReportModal
-            open={taxiControlOpen}
-            variant="app"
-            onClose={() => setTaxiControlOpen(false)}
-            onSubmit={handleTaxiControlSubmit}
-          />
+          {commentConfig && (
+            <OptionalCommentReportModal
+              open
+              config={commentConfig}
+              variant="app"
+              onClose={() => setCommentConfig(null)}
+              onSubmit={handleCommentSubmit}
+            />
+          )}
 
           <ReportEventSheet
             userId={userId}

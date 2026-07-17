@@ -29,6 +29,7 @@ create type public.alert_type as enum (
   'traffic_control',
   'laser',
   'all_vehicle_check',
+  'need_cars',
   'total_stop_accident',
   'roadwork',
   'hazard_on_road',
@@ -379,6 +380,7 @@ begin
     when 'traffic_control' then now() + interval '2 hours'
     when 'laser' then now() + interval '2 hours'
     when 'all_vehicle_check' then now() + interval '15 minutes'
+    when 'need_cars' then now() + interval '15 minutes'
     when 'roadwork' then now() + interval '24 hours'
     when 'hazard_on_road' then now() + interval '2 hours'
     when 'unsafe_pickup_area' then now() + interval '7 days'

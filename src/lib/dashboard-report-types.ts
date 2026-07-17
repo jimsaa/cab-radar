@@ -95,6 +95,23 @@ export const DASHBOARD_REPORT_TYPES: DashboardReportType[] = [
 
   {
 
+    id: "need_cars",
+
+    label: "Bilar behövs",
+
+    description:
+      "Högt taxibehov på platsen — många kunder väntar (event, terminal, arena).",
+
+    icon: "",
+
+    borderClass: "border-emerald-500/50",
+
+    glowClass: "shadow-emerald-500/10",
+
+  },
+
+  {
+
     id: "ko",
 
     label: "Kö",

@@ -285,6 +285,8 @@ export function adminReportSuccessToast(
       return "✅ Laser rapporterad";
     case "all_vehicle_check":
       return "✅ Kontroll av alla fordon rapporterad";
+    case "need_cars":
+      return "✅ Bilar behövs rapporterad";
     case "slow_traffic":
       return "✅ Kö rapporterad";
     case "total_stop":

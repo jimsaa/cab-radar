@@ -42,9 +42,11 @@ export async function GET() {
       projectRef: supabaseProjectRef(),
       missing,
       hint:
-        missing.includes("all_vehicle_check")
-          ? "Run supabase/migration-alert-all-vehicle-check.sql in Supabase SQL Editor."
-          : undefined,
+        missing.includes("need_cars")
+          ? "Run supabase/migration-alert-need-cars.sql in Supabase SQL Editor."
+          : missing.includes("all_vehicle_check")
+            ? "Run supabase/migration-alert-all-vehicle-check.sql in Supabase SQL Editor."
+            : undefined,
     });
   } catch (err) {
     console.error("[ALERT TYPES PROBE]", err);

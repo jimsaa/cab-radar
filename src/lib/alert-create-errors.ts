@@ -2,6 +2,7 @@ import { formatSupabaseError } from "@/lib/db-errors";
 
 const ALL_VEHICLE_CHECK_MIGRATION =
   "migration-alert-all-vehicle-check.sql";
+const NEED_CARS_MIGRATION = "migration-alert-need-cars.sql";
 
 export function formatAlertCreateError(
   err: unknown,
@@ -21,6 +22,9 @@ export function formatAlertCreateError(
       message.includes("all_vehicle_check")
     ) {
       return `Reporttypen «Kontroll av alla fordon» saknas i databasen. Kör ${ALL_VEHICLE_CHECK_MIGRATION} i Supabase SQL Editor, vänta en minut och försök igen.`;
+    }
+    if (alertType === "need_cars" || message.includes("need_cars")) {
+      return `Reporttypen «Bilar behövs» saknas i databasen. Kör ${NEED_CARS_MIGRATION} i Supabase SQL Editor, vänta en minut och försök igen.`;
     }
     return `Rapporttypen stöds inte i databasen ännu. Kör senaste Supabase-migration för ${alertType ?? "denna typ"}.`;
   }

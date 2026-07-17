@@ -28,6 +28,7 @@ export const LOCAL_CITY_FILTERED_ALERT_TYPES = [
   "traffic_control",
   "laser",
   "all_vehicle_check",
+  "need_cars",
   "slow_traffic",
   "total_stop",
   "accident",

@@ -1,6 +1,7 @@
 import { alertTypeIcon } from "@/lib/alert-types";
 import { isSvgReportType } from "@/lib/svg-report-types";
 import { AllVehicleCheckIcon } from "@/components/icons/AllVehicleCheckIcon";
+import { CrowdIcon } from "@/components/icons/CrowdIcon";
 import { LaserIcon } from "@/components/icons/LaserIcon";
 import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,10 @@ function resolveAllVehicleCheck(type?: string, reportId?: string): boolean {
   return type === "all_vehicle_check" || reportId === "all_vehicle_check";
 }
 
+function resolveNeedCars(type?: string, reportId?: string): boolean {
+  return type === "need_cars" || reportId === "need_cars";
+}
+
 function resolveQueue(type?: string, reportId?: string): boolean {
   return type === "slow_traffic" || reportId === "ko";
 }
@@ -57,6 +62,15 @@ export function ReportTypeIcon({
           variant === "tesla" ? "h-9 w-10" : sizeClass,
           className
         )}
+      />
+    );
+  }
+
+  if (resolveNeedCars(type, reportId)) {
+    return (
+      <CrowdIcon
+        className={cn(sizeClass, "text-current", className)}
+        strokeWidth={SVG_STROKE[variant]}
       />
     );
   }

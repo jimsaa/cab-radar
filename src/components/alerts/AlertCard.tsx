@@ -28,6 +28,7 @@ const TYPE_COLORS: Record<AlertType, string> = {
   traffic_control: "bg-accent/20 text-accent",
   laser: "bg-purple-500/20 text-purple-300",
   all_vehicle_check: "bg-amber-500/20 text-amber-300",
+  need_cars: "bg-emerald-500/20 text-emerald-300",
 };
 
 const LEGACY_COLORS: Record<string, string> = {

@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Shield } from "lucide-react";
-import { TaxiControlReportModal } from "@/components/alerts/TaxiControlReportModal";
+import {
+  NEED_CARS_COMMENT_CONFIG,
+  OptionalCommentReportModal,
+  TAXI_CONTROL_COMMENT_CONFIG,
+  type OptionalCommentReportConfig,
+} from "@/components/alerts/OptionalCommentReportModal";
 import { ReportEventSheet } from "@/components/dashboard/ReportEventSheet";
 import { useAppToast } from "@/components/ui/AppToast";
 import {
@@ -15,7 +20,7 @@ import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { isSvgReportType } from "@/lib/svg-report-types";
 import {
   isEmergencyReportButton,
-  isTaxiControlReportButton,
+  isOptionalCommentReportButton,
 } from "@/lib/report-alert-mapping";
 import {
   reportSubmitErrorMessage,
@@ -52,7 +57,8 @@ export function TeslaQuickReportPanel({
   const [userId, setUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [preset, setPreset] = useState<DashboardReportType | null>(null);
-  const [taxiControlOpen, setTaxiControlOpen] = useState(false);
+  const [commentConfig, setCommentConfig] =
+    useState<OptionalCommentReportConfig | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
   const isDriving = mode === "driving";
@@ -87,13 +93,16 @@ export function TeslaQuickReportPanel({
     }
   }
 
-  async function handleTaxiControlSubmit(data: CreateAlertInput) {
-    if (!userId) return;
+  async function handleCommentSubmit(data: CreateAlertInput) {
+    if (!userId || !commentConfig) return;
 
     const alert = await submitDriverAlert(userId, data);
     onReported?.();
-    setTaxiControlOpen(false);
-    const { message, variant } = reportSuccessToast("traffic_control", alert.is_test);
+    setCommentConfig(null);
+    const { message, variant } = reportSuccessToast(
+      commentConfig.alertType,
+      alert.is_test
+    );
     showToast(message, { variant });
   }
 
@@ -105,8 +114,12 @@ export function TeslaQuickReportPanel({
       return;
     }
 
-    if (isTaxiControlReportButton(item.id)) {
-      setTaxiControlOpen(true);
+    if (isOptionalCommentReportButton(item.id)) {
+      setCommentConfig(
+        item.id === "need_cars"
+          ? NEED_CARS_COMMENT_CONFIG
+          : TAXI_CONTROL_COMMENT_CONFIG
+      );
       return;
     }
 
@@ -141,7 +154,13 @@ export function TeslaQuickReportPanel({
               ) : item.id === "ko" ? (
                 <QueueTrafficIcon className="h-9 w-10" />
               ) : isSvgReportType(item.id) ? (
-                <ReportTypeIcon reportId={item.id} variant="tesla" />
+                <ReportTypeIcon
+                  reportId={item.id}
+                  variant="tesla"
+                  className={
+                    item.id === "need_cars" ? "text-emerald-400" : undefined
+                  }
+                />
               ) : (
                 <span className="text-3xl leading-none" aria-hidden>
                   {TESLA_ICONS[item.id] ?? item.icon}
@@ -155,12 +174,15 @@ export function TeslaQuickReportPanel({
 
       {userId && (
         <>
-          <TaxiControlReportModal
-            open={taxiControlOpen}
-            variant="tesla"
-            onClose={() => setTaxiControlOpen(false)}
-            onSubmit={handleTaxiControlSubmit}
-          />
+          {commentConfig && (
+            <OptionalCommentReportModal
+              open
+              config={commentConfig}
+              variant="tesla"
+              onClose={() => setCommentConfig(null)}
+              onSubmit={handleCommentSubmit}
+            />
+          )}
 
           <ReportEventSheet
             userId={userId}
