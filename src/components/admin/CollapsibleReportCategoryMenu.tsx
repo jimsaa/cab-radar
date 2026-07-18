@@ -6,11 +6,20 @@ import {
   REPORT_MENU_CATEGORIES,
   reportsForCategory,
   type ReportMenuCategoryId,
+  type ReportMenuUtilityId,
 } from "@/lib/report-menu-categories";
 import type { DashboardReportType } from "@/lib/dashboard-report-types";
 import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { isSvgReportType } from "@/lib/svg-report-types";
+import {
+  DEFAULT_GSI_DISPATCH_SITE,
+  openGsiDispatch,
+} from "@/lib/gsi-dispatch";
+import {
+  SJ_ANKOMSTER_ADMIN_LABEL,
+  openSjAnkomster,
+} from "@/lib/sj-ankomster";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_BUTTON_CLASS =
@@ -19,10 +28,29 @@ const CATEGORY_BUTTON_CLASS =
 const REPORT_BUTTON_CLASS =
   "flex min-h-[64px] w-full items-center gap-4 rounded-[14px] border border-[#3A4048] bg-[#262B31] px-4 py-3 text-left text-base font-bold text-white transition hover:border-[#4A5159] hover:bg-[#2a3038] active:scale-[0.98] disabled:opacity-40 sm:min-h-[72px]";
 
+const UTILITY_BUTTON_CLASS =
+  "flex min-h-[64px] w-full flex-col items-start justify-center gap-0.5 rounded-[14px] border border-[#3A4048] bg-[#262B31] px-4 py-3 text-left transition hover:border-[#4A5159] hover:bg-[#2a3038] active:scale-[0.98] sm:min-h-[72px]";
+
 const TESLA_ICONS: Record<string, string> = {
   taxikontroll: "🚕",
   stopp: "⛔",
   olycka: "🚑",
+};
+
+const UTILITY_COPY: Record<
+  ReportMenuUtilityId,
+  { label: string; subtitle: string; onOpen: () => void }
+> = {
+  gsi_landvetter: {
+    label: DEFAULT_GSI_DISPATCH_SITE.adminLabel,
+    subtitle: "Airport arrivals",
+    onOpen: () => openGsiDispatch(DEFAULT_GSI_DISPATCH_SITE),
+  },
+  sj_ankomster: {
+    label: SJ_ANKOMSTER_ADMIN_LABEL,
+    subtitle: "Train arrivals",
+    onOpen: () => openSjAnkomster(),
+  },
 };
 
 interface CollapsibleReportCategoryMenuProps {
@@ -49,6 +77,7 @@ export function CollapsibleReportCategoryMenu({
       {REPORT_MENU_CATEGORIES.map((category) => {
         const expanded = expandedId === category.id;
         const reports = reportsForCategory(category);
+        const utilities = category.utilityIds ?? [];
         const panelId = `report-cat-${category.id}`;
 
         return (
@@ -68,7 +97,7 @@ export function CollapsibleReportCategoryMenu({
               </span>
               <span className="min-w-0 flex-1 truncate">{category.label}</span>
               <ChevronDown
-                  className={cn(
+                className={cn(
                   "h-5 w-5 shrink-0 text-white/60 transition-transform duration-300 ease-out",
                   expanded && "rotate-180 text-sky-300"
                 )}
@@ -113,6 +142,34 @@ export function CollapsibleReportCategoryMenu({
                       </button>
                     );
                   })}
+
+                  {utilities.length > 0 && (
+                    <>
+                      <div
+                        className="my-1.5 border-t border-[#3A4048]"
+                        role="separator"
+                        aria-hidden
+                      />
+                      {utilities.map((utilityId) => {
+                        const utility = UTILITY_COPY[utilityId];
+                        return (
+                          <button
+                            key={utilityId}
+                            type="button"
+                            onClick={utility.onOpen}
+                            className={UTILITY_BUTTON_CLASS}
+                          >
+                            <span className="text-base font-bold text-white">
+                              {utility.label}
+                            </span>
+                            <span className="text-xs font-medium text-[#8A9099]">
+                              {utility.subtitle}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
                 </div>
               </div>
             </div>

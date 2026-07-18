@@ -7,16 +7,24 @@ import {
 /** Accordion categories for Tesla View + Admin quick-report menus. */
 export type ReportMenuCategoryId = "police" | "traffic" | "taxi";
 
+/**
+ * Non-report utility tools shown under a category (external shortcuts).
+ * Add future taxi tools here: bookings, hotel network, partner deals, etc.
+ */
+export type ReportMenuUtilityId = "gsi_landvetter" | "sj_ankomster";
+
 export interface ReportMenuCategory {
   id: ReportMenuCategoryId;
   label: string;
   icon: string;
   /** Report button ids — add new types here without redesigning the menu. */
   reportIds: ReportButtonId[];
+  /** Optional utility tools rendered below reports (with a divider). */
+  utilityIds?: ReportMenuUtilityId[];
 }
 
 /**
- * Category → report types.
+ * Category → report types + utilities.
  * Mobile/App dashboard does not use this — only Tesla + Admin.
  */
 export const REPORT_MENU_CATEGORIES: ReportMenuCategory[] = [
@@ -44,7 +52,12 @@ export const REPORT_MENU_CATEGORIES: ReportMenuCategory[] = [
     reportIds: [
       "need_cars",
       "nod",
-      // future: taxi-specific features
+      // future: taxi-specific report types
+    ],
+    utilityIds: [
+      "gsi_landvetter",
+      "sj_ankomster",
+      // future: bookings, hotel_network, partner_deals, airport_queue, taxi_stats
     ],
   },
 ];

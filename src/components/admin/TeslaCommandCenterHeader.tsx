@@ -2,9 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { GsiDispatchAdminButton } from "@/components/gsi/GsiDispatchAdminButton";
 import { ViewModeSwitcher } from "@/components/layout/ViewModeSwitcher";
-import { SjAnkomsterAdminButton } from "@/components/sj/SjAnkomsterAdminButton";
 import { TeslaBetaTestModeToggle } from "@/components/tesla/TeslaBetaTestModeToggle";
 import { TeslaLogoutButton } from "@/components/tesla/TeslaLogoutButton";
 import { APP_NAME } from "@/lib/constants";
@@ -121,8 +119,6 @@ export function TeslaCommandCenterHeader({
               onChange={onTestModeChange}
             />
           )}
-          <GsiDispatchAdminButton />
-          <SjAnkomsterAdminButton />
           {showLogoutButton && <TeslaLogoutButton />}
           <SwedishDateTimeDisplay />
         </div>
