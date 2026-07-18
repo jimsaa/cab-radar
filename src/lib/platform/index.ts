@@ -29,3 +29,16 @@ export {
 } from "@/lib/country-rules/validation";
 
 export { t, getLocale, setLocale } from "@/lib/i18n";
+
+export {
+  COUNTRY_COOKIE,
+  COUNTRY_HEADER,
+  resolveCountryCodeFromHost,
+  resolveCountryFromHost,
+  isCountrySubdomainHost,
+} from "@/lib/country-routing/hostname";
+
+export {
+  getRequestCountryCode,
+  getRequestCountry,
+} from "@/lib/country-routing/request";

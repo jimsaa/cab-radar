@@ -3,6 +3,7 @@
   "code": "SE",
   "name": "Sweden",
   "enabled": true,
+  "subdomains": ["se"],
   "defaultLanguage": "sv",
   "supportedLanguages": ["sv", "en"],
   "timezone": "Europe/Stockholm",

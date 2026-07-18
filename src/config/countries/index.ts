@@ -2,16 +2,26 @@ import type { CountryConfig, CountryCode } from "@/config/types";
 import se from "@/config/countries/se.json";
 import isConfig from "@/config/countries/is.json";
 import noConfig from "@/config/countries/no.json";
+import dk from "@/config/countries/dk.json";
+import fi from "@/config/countries/fi.json";
+import uk from "@/config/countries/uk.json";
+import us from "@/config/countries/us.json";
 
 /**
  * Registry of all country configs.
  * Adding a country = add JSON under config/countries + import here once
  * (or auto-discover in a future build step). No business logic changes.
+ *
+ * DNS: {subdomain}.cabradar.com — subdomain from id/code/`subdomains` aliases.
  */
 const COUNTRY_CONFIGS: CountryConfig[] = [
   se as CountryConfig,
   isConfig as CountryConfig,
   noConfig as CountryConfig,
+  dk as CountryConfig,
+  fi as CountryConfig,
+  uk as CountryConfig,
+  us as CountryConfig,
 ];
 
 const BY_CODE = new Map(

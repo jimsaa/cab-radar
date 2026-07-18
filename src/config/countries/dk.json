@@ -1,36 +1,35 @@
 {
-  "id": "no",
-  "code": "NO",
-  "name": "Norway",
+  "id": "dk",
+  "code": "DK",
+  "name": "Denmark",
   "enabled": false,
-  "subdomains": ["no"],
-  "defaultLanguage": "nb",
-  "supportedLanguages": ["nb", "en"],
-  "timezone": "Europe/Oslo",
-  "currency": "NOK",
-  "locale": "nb-NO",
+  "subdomains": ["dk"],
+  "defaultLanguage": "da",
+  "supportedLanguages": ["da", "en"],
+  "timezone": "Europe/Copenhagen",
+  "currency": "DKK",
+  "locale": "da-DK",
   "emergency": {
     "police": "112",
-    "medical": "113",
-    "fire": "110"
+    "medical": "112",
+    "fire": "112"
   },
   "formats": {
     "vehicleRegistration": {
-      "pattern": "^[A-Z]{2}[0-9]{5}$",
+      "pattern": "^[A-Z]{2}[0-9]{2}[A-Z]{3}$|^[A-Z]{2}[0-9]{5}$",
       "example": "AB12345",
-      "descriptionKey": "validation.vehicle_registration.no"
+      "descriptionKey": "validation.vehicle_registration.dk"
     },
     "taxiLicense": {
       "pattern": "^[0-9]{4,12}$",
       "example": "123456",
-      "descriptionKey": "validation.taxi_license.no"
+      "descriptionKey": "validation.taxi_license.dk"
     }
   },
   "regions": [],
   "defaultCityId": null,
   "enabledReportTypes": [
     "traffic_control",
-    "laser",
     "slow_traffic",
     "total_stop",
     "accident",
@@ -39,7 +38,6 @@
   ],
   "enabledReportButtons": [
     "taxikontroll",
-    "laser",
     "ko",
     "stopp",
     "olycka",
@@ -52,7 +50,7 @@
       "id": "police",
       "labelKey": "report_menu.police",
       "icon": "🚔",
-      "reportButtons": ["taxikontroll", "laser"]
+      "reportButtons": ["taxikontroll"]
     },
     {
       "id": "traffic",

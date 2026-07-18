@@ -1,36 +1,35 @@
 {
-  "id": "no",
-  "code": "NO",
-  "name": "Norway",
+  "id": "us",
+  "code": "US",
+  "name": "United States",
   "enabled": false,
-  "subdomains": ["no"],
-  "defaultLanguage": "nb",
-  "supportedLanguages": ["nb", "en"],
-  "timezone": "Europe/Oslo",
-  "currency": "NOK",
-  "locale": "nb-NO",
+  "subdomains": ["us"],
+  "defaultLanguage": "en",
+  "supportedLanguages": ["en"],
+  "timezone": "America/New_York",
+  "currency": "USD",
+  "locale": "en-US",
   "emergency": {
-    "police": "112",
-    "medical": "113",
-    "fire": "110"
+    "police": "911",
+    "medical": "911",
+    "fire": "911"
   },
   "formats": {
     "vehicleRegistration": {
-      "pattern": "^[A-Z]{2}[0-9]{5}$",
-      "example": "AB12345",
-      "descriptionKey": "validation.vehicle_registration.no"
+      "pattern": "^[A-Z0-9]{1,8}$",
+      "example": "ABC1234",
+      "descriptionKey": "validation.vehicle_registration.us"
     },
     "taxiLicense": {
-      "pattern": "^[0-9]{4,12}$",
-      "example": "123456",
-      "descriptionKey": "validation.taxi_license.no"
+      "pattern": "^[A-Z0-9-]{4,20}$",
+      "example": "TLC-12345",
+      "descriptionKey": "validation.taxi_license.us"
     }
   },
   "regions": [],
   "defaultCityId": null,
   "enabledReportTypes": [
     "traffic_control",
-    "laser",
     "slow_traffic",
     "total_stop",
     "accident",
@@ -39,7 +38,6 @@
   ],
   "enabledReportButtons": [
     "taxikontroll",
-    "laser",
     "ko",
     "stopp",
     "olycka",
@@ -52,7 +50,7 @@
       "id": "police",
       "labelKey": "report_menu.police",
       "icon": "🚔",
-      "reportButtons": ["taxikontroll", "laser"]
+      "reportButtons": ["taxikontroll"]
     },
     {
       "id": "traffic",

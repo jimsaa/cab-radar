@@ -35,6 +35,11 @@ export interface CountryConfig {
   name: string;
   /** When false, country is registered but not selectable in production. */
   enabled: boolean;
+  /**
+   * Extra hostname labels that map to this country (e.g. ["uk"] for code GB).
+   * Always also accepts `id` and lowercase `code` as subdomains.
+   */
+  subdomains?: string[];
   defaultLanguage: string;
   supportedLanguages: string[];
   timezone: string;

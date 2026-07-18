@@ -3,6 +3,7 @@
   "code": "IS",
   "name": "Iceland",
   "enabled": false,
+  "subdomains": ["is"],
   "defaultLanguage": "is",
   "supportedLanguages": ["is", "en"],
   "timezone": "Atlantic/Reykjavik",

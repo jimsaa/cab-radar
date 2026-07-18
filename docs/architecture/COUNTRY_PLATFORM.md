@@ -32,9 +32,13 @@ src/
     sv.json
     en.json
   lib/
-    i18n/index.ts              # t("reports.taxi_in_need")
+    i18n/index.ts
     country-rules/validation.ts
-    platform/index.ts          # public façade
+    country-routing/
+      hostname.ts       # Host → country code
+      request.ts        # getRequestCountry() (server)
+      use-request-country.ts
+    platform/index.ts
 docs/
   architecture/
     COUNTRY_PLATFORM.md        # this file
@@ -129,14 +133,54 @@ Existing Swedish users need no action — defaults apply.
 
 ---
 
+## Domain routing (subdomains)
+
+Country is resolved automatically from the hostname — no manual picker.
+
+| Host | Country |
+|------|---------|
+| `se.cabradar.com` | SE → `se.json` |
+| `is.cabradar.com` | IS → `is.json` |
+| `uk.cabradar.com` | GB → `uk.json` (alias) |
+| `localhost` / Vercel preview | SE (default) |
+| `www.cabradar.com` / apex | SE (default market) |
+
+### Flow
+
+```
+Host: se.cabradar.com
+  → middleware resolveCountryCodeFromHost()
+  → x-cabradar-country: SE + cookie cabradar_country=SE
+  → getRequestCountry() / useRequestCountry()
+  → load /config/countries/se.json
+```
+
+### Files
+
+- `src/lib/country-routing/hostname.ts` — pure hostname → country code
+- `src/lib/country-routing/request.ts` — server `getRequestCountry()`
+- `src/lib/country-routing/use-request-country.ts` — client hook
+- `src/middleware.ts` — sets header + cookie on every request
+
+### Enabling a country on DNS
+
+1. Add/enable country JSON (`enabled: true`, optional `subdomains: ["xx"]`)
+2. Import in `countries/index.ts`
+3. Add translations
+4. Create DNS: `xx.cabradar.com` → app
+5. Done — **no routing code changes**
+
+---
+
 ## How to add a new country
 
-1. Copy `src/config/countries/se.json` → `xx.json`, set `code`, `enabled: true`, local rules.
+1. Copy `src/config/countries/se.json` → `xx.json`, set `code`, `enabled: true`, local rules, `subdomains`.
 2. Import it in `src/config/countries/index.ts`.
 3. Add locale files (or extend `en.json` / `sv.json`) for missing keys.
 4. Seed `geo_*` tables (or extend the migration) for regions/cities.
 5. Enable report types/utilities in the country JSON.
-6. Deploy. **No core logic rewrite.**
+6. Point DNS subdomain `xx.cabradar.com` at the app.
+7. Deploy. **No core logic rewrite.**
 
 ---
 
