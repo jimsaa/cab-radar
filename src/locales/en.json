@@ -1,0 +1,61 @@
+{
+  "app": {
+    "name": "CabRadar",
+    "slogan": "The digital co-pilot for taxi drivers."
+  },
+  "report_menu": {
+    "police": "Police & Controls",
+    "traffic": "Traffic",
+    "taxi": "Taxi"
+  },
+  "reports": {
+    "taxi_control": "Taxi control",
+    "taxi_control_desc": "Police or other inspection point.",
+    "laser": "Laser",
+    "laser_desc": "Laser, speed camera, or police with laser.",
+    "all_vehicle_check": "All-vehicle check",
+    "all_vehicle_check_desc": "Checkpoint where every vehicle is stopped.",
+    "need_cars": "Cars needed",
+    "need_cars_desc": "High taxi demand — many customers waiting.",
+    "queue": "Queue",
+    "queue_desc": "Congestion or slow traffic.",
+    "stop": "Stop",
+    "stop_desc": "Road closure or standing traffic.",
+    "accident": "Accident",
+    "accident_desc": "Traffic accident or incident.",
+    "taxi_in_need": "Taxi in need",
+    "taxi_in_need_desc": "Discreet emergency assistance.",
+    "taxi_info": "Taxi info",
+    "taxi_info_desc": "Important information for taxi drivers."
+  },
+  "utilities": {
+    "gsi_landvetter": "✈️ GSI Landvetter",
+    "gsi_landvetter_subtitle": "Airport arrivals",
+    "sj_ankomster": "🚆 SJ Arrivals",
+    "sj_ankomster_subtitle": "Train arrivals"
+  },
+  "regions": {
+    "vastra_gotaland": "Västra Götaland",
+    "stockholm": "Stockholm",
+    "skane": "Skåne"
+  },
+  "validation": {
+    "vehicle_registration": {
+      "se": "Swedish plate format (e.g. ABC12D)",
+      "is": "Icelandic plate format",
+      "no": "Norwegian plate format"
+    },
+    "taxi_license": {
+      "se": "Swedish taxi driver licence",
+      "is": "Icelandic taxi licence",
+      "no": "Norwegian taxi licence"
+    },
+    "invalid_format": "Invalid format"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue"
+  }
+}

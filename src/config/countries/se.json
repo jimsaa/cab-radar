@@ -1,0 +1,97 @@
+{
+  "id": "se",
+  "code": "SE",
+  "name": "Sweden",
+  "enabled": true,
+  "defaultLanguage": "sv",
+  "supportedLanguages": ["sv", "en"],
+  "timezone": "Europe/Stockholm",
+  "currency": "SEK",
+  "locale": "sv-SE",
+  "emergency": {
+    "police": "112",
+    "medical": "112",
+    "fire": "112",
+    "nonEmergencyPolice": "11414"
+  },
+  "formats": {
+    "vehicleRegistration": {
+      "pattern": "^[A-Z]{3}[0-9]{2}[A-Z0-9]$",
+      "example": "ABC12D",
+      "descriptionKey": "validation.vehicle_registration.se"
+    },
+    "taxiLicense": {
+      "pattern": "^[0-9]{6,12}$",
+      "example": "123456",
+      "descriptionKey": "validation.taxi_license.se"
+    }
+  },
+  "regions": [
+    {
+      "id": "vastra-gotaland",
+      "nameKey": "regions.vastra_gotaland",
+      "cities": [
+        { "id": "goteborg", "name": "Göteborg", "aliases": ["goteborg", "gothenburg", "gbg"] },
+        { "id": "other-vg", "name": "Annan", "isOther": true }
+      ]
+    },
+    {
+      "id": "stockholm",
+      "nameKey": "regions.stockholm",
+      "cities": [
+        { "id": "stockholm", "name": "Stockholm", "aliases": ["stockholm", "sthlm"] }
+      ]
+    },
+    {
+      "id": "skane",
+      "nameKey": "regions.skane",
+      "cities": [
+        { "id": "malmo", "name": "Malmö", "aliases": ["malmo", "malmö"] }
+      ]
+    }
+  ],
+  "defaultCityId": "goteborg",
+  "enabledReportTypes": [
+    "traffic_control",
+    "laser",
+    "all_vehicle_check",
+    "need_cars",
+    "slow_traffic",
+    "total_stop",
+    "accident",
+    "taxi_emergency",
+    "taxi_info"
+  ],
+  "enabledReportButtons": [
+    "taxikontroll",
+    "laser",
+    "all_vehicle_check",
+    "need_cars",
+    "ko",
+    "stopp",
+    "olycka",
+    "nod"
+  ],
+  "enabledUtilities": ["gsi_landvetter", "sj_ankomster"],
+  "reportMenuCategories": [
+    {
+      "id": "police",
+      "labelKey": "report_menu.police",
+      "icon": "🚔",
+      "reportButtons": ["taxikontroll", "laser", "all_vehicle_check"]
+    },
+    {
+      "id": "traffic",
+      "labelKey": "report_menu.traffic",
+      "icon": "🚦",
+      "reportButtons": ["ko", "stopp", "olycka"]
+    },
+    {
+      "id": "taxi",
+      "labelKey": "report_menu.taxi",
+      "icon": "🚖",
+      "reportButtons": ["need_cars", "nod"],
+      "utilities": ["gsi_landvetter", "sj_ankomster"]
+    }
+  ]
+}

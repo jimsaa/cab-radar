@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, Loader2, Shield } from "lucide-react";
 import {
-  REPORT_MENU_CATEGORIES,
+  getReportMenuCategories,
   reportsForCategory,
   type ReportMenuCategoryId,
   type ReportMenuUtilityId,
@@ -12,14 +12,12 @@ import type { DashboardReportType } from "@/lib/dashboard-report-types";
 import { QueueTrafficIcon } from "@/components/icons/QueueTrafficIcon";
 import { ReportTypeIcon } from "@/components/icons/ReportTypeIcon";
 import { isSvgReportType } from "@/lib/svg-report-types";
+import { t } from "@/lib/i18n";
 import {
   DEFAULT_GSI_DISPATCH_SITE,
   openGsiDispatch,
 } from "@/lib/gsi-dispatch";
-import {
-  SJ_ANKOMSTER_ADMIN_LABEL,
-  openSjAnkomster,
-} from "@/lib/sj-ankomster";
+import { openSjAnkomster } from "@/lib/sj-ankomster";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_BUTTON_CLASS =
@@ -39,16 +37,16 @@ const TESLA_ICONS: Record<string, string> = {
 
 const UTILITY_COPY: Record<
   ReportMenuUtilityId,
-  { label: string; subtitle: string; onOpen: () => void }
+  { labelKey: string; subtitleKey: string; onOpen: () => void }
 > = {
   gsi_landvetter: {
-    label: DEFAULT_GSI_DISPATCH_SITE.adminLabel,
-    subtitle: "Airport arrivals",
+    labelKey: "utilities.gsi_landvetter",
+    subtitleKey: "utilities.gsi_landvetter_subtitle",
     onOpen: () => openGsiDispatch(DEFAULT_GSI_DISPATCH_SITE),
   },
   sj_ankomster: {
-    label: SJ_ANKOMSTER_ADMIN_LABEL,
-    subtitle: "Train arrivals",
+    labelKey: "utilities.sj_ankomster",
+    subtitleKey: "utilities.sj_ankomster_subtitle",
     onOpen: () => openSjAnkomster(),
   },
 };
@@ -74,7 +72,7 @@ export function CollapsibleReportCategoryMenu({
 
   return (
     <div className="flex min-h-0 flex-col gap-2">
-      {REPORT_MENU_CATEGORIES.map((category) => {
+      {getReportMenuCategories().map((category) => {
         const expanded = expandedId === category.id;
         const reports = reportsForCategory(category);
         const utilities = category.utilityIds ?? [];
@@ -160,10 +158,10 @@ export function CollapsibleReportCategoryMenu({
                             className={UTILITY_BUTTON_CLASS}
                           >
                             <span className="text-base font-bold text-white">
-                              {utility.label}
+                              {t(utility.labelKey)}
                             </span>
                             <span className="text-xs font-medium text-[#8A9099]">
-                              {utility.subtitle}
+                              {t(utility.subtitleKey)}
                             </span>
                           </button>
                         );

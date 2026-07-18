@@ -1,0 +1,77 @@
+{
+  "reportTypes": [
+    {
+      "id": "traffic_control",
+      "catalogKey": "TAXI_CONTROL",
+      "icon": "🚕",
+      "labelKey": "reports.taxi_control",
+      "descriptionKey": "reports.taxi_control_desc",
+      "buttonId": "taxikontroll"
+    },
+    {
+      "id": "laser",
+      "catalogKey": "LASER_CONTROL",
+      "icon": "",
+      "labelKey": "reports.laser",
+      "descriptionKey": "reports.laser_desc",
+      "buttonId": "laser"
+    },
+    {
+      "id": "all_vehicle_check",
+      "catalogKey": "VEHICLE_CONTROL",
+      "icon": "",
+      "labelKey": "reports.all_vehicle_check",
+      "descriptionKey": "reports.all_vehicle_check_desc",
+      "buttonId": "all_vehicle_check"
+    },
+    {
+      "id": "need_cars",
+      "catalogKey": "TAXI_NEEDED",
+      "icon": "",
+      "labelKey": "reports.need_cars",
+      "descriptionKey": "reports.need_cars_desc",
+      "buttonId": "need_cars"
+    },
+    {
+      "id": "slow_traffic",
+      "catalogKey": "TRAFFIC_QUEUE",
+      "icon": "🚗🚗🚗",
+      "labelKey": "reports.queue",
+      "descriptionKey": "reports.queue_desc",
+      "buttonId": "ko"
+    },
+    {
+      "id": "total_stop",
+      "catalogKey": "TRAFFIC_STOP",
+      "icon": "🚧",
+      "labelKey": "reports.stop",
+      "descriptionKey": "reports.stop_desc",
+      "buttonId": "stopp"
+    },
+    {
+      "id": "accident",
+      "catalogKey": "TRAFFIC_ACCIDENT",
+      "icon": "🚑",
+      "labelKey": "reports.accident",
+      "descriptionKey": "reports.accident_desc",
+      "buttonId": "olycka"
+    },
+    {
+      "id": "taxi_emergency",
+      "catalogKey": "TAXI_EMERGENCY",
+      "icon": "🆘",
+      "labelKey": "reports.taxi_in_need",
+      "descriptionKey": "reports.taxi_in_need_desc",
+      "buttonId": "nod",
+      "discreet": true
+    },
+    {
+      "id": "taxi_info",
+      "catalogKey": "TAXI_INFO",
+      "icon": "📋",
+      "labelKey": "reports.taxi_info",
+      "descriptionKey": "reports.taxi_info_desc",
+      "buttonId": null
+    }
+  ]
+}

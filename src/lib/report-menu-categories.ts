@@ -3,64 +3,50 @@ import {
   DASHBOARD_REPORT_TYPES,
   type DashboardReportType,
 } from "./dashboard-report-types";
+import { getActiveCountry } from "@/config/countries";
+import { t } from "@/lib/i18n";
+import type { ReportMenuUtilityId } from "./report-menu-categories.types";
+
+export type { ReportMenuUtilityId } from "./report-menu-categories.types";
 
 /** Accordion categories for Tesla View + Admin quick-report menus. */
 export type ReportMenuCategoryId = "police" | "traffic" | "taxi";
-
-/**
- * Non-report utility tools shown under a category (external shortcuts).
- * Add future taxi tools here: bookings, hotel network, partner deals, etc.
- */
-export type ReportMenuUtilityId = "gsi_landvetter" | "sj_ankomster";
 
 export interface ReportMenuCategory {
   id: ReportMenuCategoryId;
   label: string;
   icon: string;
-  /** Report button ids — add new types here without redesigning the menu. */
   reportIds: ReportButtonId[];
-  /** Optional utility tools rendered below reports (with a divider). */
   utilityIds?: ReportMenuUtilityId[];
 }
 
 /**
- * Category → report types + utilities.
- * Mobile/App dashboard does not use this — only Tesla + Admin.
+ * Build categories from the active country configuration.
+ * Adding/removing report types per country = edit country JSON only.
  */
-export const REPORT_MENU_CATEGORIES: ReportMenuCategory[] = [
-  {
-    id: "police",
-    label: "Polis & Kontroller",
-    icon: "🚔",
-    reportIds: [
-      "taxikontroll",
-      "laser",
-      "all_vehicle_check",
-      // future: civil_check
-    ],
-  },
-  {
-    id: "traffic",
-    label: "Trafik",
-    icon: "🚦",
-    reportIds: ["ko", "stopp", "olycka"],
-  },
-  {
-    id: "taxi",
-    label: "Taxi",
-    icon: "🚖",
-    reportIds: [
-      "need_cars",
-      "nod",
-      // future: taxi-specific report types
-    ],
-    utilityIds: [
-      "gsi_landvetter",
-      "sj_ankomster",
-      // future: bookings, hotel_network, partner_deals, airport_queue, taxi_stats
-    ],
-  },
-];
+export function getReportMenuCategories(
+  countryCode?: string | null
+): ReportMenuCategory[] {
+  const country = getActiveCountry(countryCode);
+  const enabledButtons = new Set(country.enabledReportButtons);
+  const enabledUtilities = new Set(country.enabledUtilities);
+
+  return country.reportMenuCategories.map((cat) => ({
+    id: cat.id as ReportMenuCategoryId,
+    label: t(cat.labelKey, { countryCode: country.code }),
+    icon: cat.icon,
+    reportIds: cat.reportButtons.filter((id): id is ReportButtonId =>
+      enabledButtons.has(id)
+    ) as ReportButtonId[],
+    utilityIds: (cat.utilities ?? []).filter((id) =>
+      enabledUtilities.has(id)
+    ) as ReportMenuUtilityId[],
+  }));
+}
+
+/** @deprecated Prefer getReportMenuCategories() — kept for callers that expect a const. */
+export const REPORT_MENU_CATEGORIES: ReportMenuCategory[] =
+  getReportMenuCategories();
 
 export function reportsForCategory(
   category: ReportMenuCategory

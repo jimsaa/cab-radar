@@ -1,0 +1,68 @@
+{
+  "id": "is",
+  "code": "IS",
+  "name": "Iceland",
+  "enabled": false,
+  "defaultLanguage": "is",
+  "supportedLanguages": ["is", "en"],
+  "timezone": "Atlantic/Reykjavik",
+  "currency": "ISK",
+  "locale": "is-IS",
+  "emergency": {
+    "police": "112",
+    "medical": "112",
+    "fire": "112"
+  },
+  "formats": {
+    "vehicleRegistration": {
+      "pattern": "^[A-Z]{2}[A-Z0-9]{2,4}$",
+      "example": "AB123",
+      "descriptionKey": "validation.vehicle_registration.is"
+    },
+    "taxiLicense": {
+      "pattern": "^[0-9]{4,10}$",
+      "example": "1234",
+      "descriptionKey": "validation.taxi_license.is"
+    }
+  },
+  "regions": [],
+  "defaultCityId": null,
+  "enabledReportTypes": [
+    "traffic_control",
+    "slow_traffic",
+    "total_stop",
+    "accident",
+    "taxi_emergency",
+    "need_cars"
+  ],
+  "enabledReportButtons": [
+    "taxikontroll",
+    "ko",
+    "stopp",
+    "olycka",
+    "nod",
+    "need_cars"
+  ],
+  "enabledUtilities": [],
+  "reportMenuCategories": [
+    {
+      "id": "police",
+      "labelKey": "report_menu.police",
+      "icon": "🚔",
+      "reportButtons": ["taxikontroll"]
+    },
+    {
+      "id": "traffic",
+      "labelKey": "report_menu.traffic",
+      "icon": "🚦",
+      "reportButtons": ["ko", "stopp", "olycka"]
+    },
+    {
+      "id": "taxi",
+      "labelKey": "report_menu.taxi",
+      "icon": "🚖",
+      "reportButtons": ["need_cars", "nod"],
+      "utilities": []
+    }
+  ]
+}

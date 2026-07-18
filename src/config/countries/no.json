@@ -1,0 +1,70 @@
+{
+  "id": "no",
+  "code": "NO",
+  "name": "Norway",
+  "enabled": false,
+  "defaultLanguage": "nb",
+  "supportedLanguages": ["nb", "en"],
+  "timezone": "Europe/Oslo",
+  "currency": "NOK",
+  "locale": "nb-NO",
+  "emergency": {
+    "police": "112",
+    "medical": "113",
+    "fire": "110"
+  },
+  "formats": {
+    "vehicleRegistration": {
+      "pattern": "^[A-Z]{2}[0-9]{5}$",
+      "example": "AB12345",
+      "descriptionKey": "validation.vehicle_registration.no"
+    },
+    "taxiLicense": {
+      "pattern": "^[0-9]{4,12}$",
+      "example": "123456",
+      "descriptionKey": "validation.taxi_license.no"
+    }
+  },
+  "regions": [],
+  "defaultCityId": null,
+  "enabledReportTypes": [
+    "traffic_control",
+    "laser",
+    "slow_traffic",
+    "total_stop",
+    "accident",
+    "taxi_emergency",
+    "need_cars"
+  ],
+  "enabledReportButtons": [
+    "taxikontroll",
+    "laser",
+    "ko",
+    "stopp",
+    "olycka",
+    "nod",
+    "need_cars"
+  ],
+  "enabledUtilities": [],
+  "reportMenuCategories": [
+    {
+      "id": "police",
+      "labelKey": "report_menu.police",
+      "icon": "🚔",
+      "reportButtons": ["taxikontroll", "laser"]
+    },
+    {
+      "id": "traffic",
+      "labelKey": "report_menu.traffic",
+      "icon": "🚦",
+      "reportButtons": ["ko", "stopp", "olycka"]
+    },
+    {
+      "id": "taxi",
+      "labelKey": "report_menu.taxi",
+      "icon": "🚖",
+      "reportButtons": ["need_cars", "nod"],
+      "utilities": []
+    }
+  ]
+}

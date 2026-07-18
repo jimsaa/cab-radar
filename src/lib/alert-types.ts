@@ -1,3 +1,6 @@
+import { getReportTypeEntry } from "@/config/reports";
+import { t } from "@/lib/i18n";
+
 export const ALERT_TYPES = [
   "total_stop",
   "slow_traffic",
@@ -31,6 +34,7 @@ export type StoredAlertType = AlertType | LegacyAlertType;
 /** Three cars in a row — traffic queue / Kö */
 export const QUEUE_TRAFFIC_ICON = "🚗🚗🚗";
 
+/** Fallback Swedish labels — prefer alertTypeLabel() which uses i18n + catalog. */
 export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   total_stop: "Stopp",
   slow_traffic: "Kö",
@@ -92,6 +96,10 @@ const LEGACY_ICONS: Record<LegacyAlertType, string> = {
 };
 
 export function alertTypeLabel(type: string): string {
+  const entry = getReportTypeEntry(type);
+  if (entry) {
+    return t(entry.labelKey);
+  }
   if (type in ALERT_TYPE_LABELS) {
     return ALERT_TYPE_LABELS[type as AlertType];
   }

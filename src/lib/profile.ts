@@ -162,6 +162,10 @@ export function normalizeProfileRow(row: Record<string, unknown>): Profile {
     )
       ? Boolean(row.test_mode_enabled)
       : false,
+    country_code:
+      typeof row.country_code === "string" && row.country_code.trim()
+        ? row.country_code.trim().toUpperCase()
+        : "SE",
     created_at: (row.created_at as string) ?? new Date().toISOString(),
     updated_at: (row.updated_at as string) ?? new Date().toISOString(),
   };

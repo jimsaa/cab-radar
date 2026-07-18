@@ -1,0 +1,61 @@
+{
+  "app": {
+    "name": "CabRadar",
+    "slogan": "Den digitala co-piloten för taxiförare."
+  },
+  "report_menu": {
+    "police": "Polis & Kontroller",
+    "traffic": "Trafik",
+    "taxi": "Taxi"
+  },
+  "reports": {
+    "taxi_control": "Taxikontroll",
+    "taxi_control_desc": "Poliskontroll eller annan kontrollplats.",
+    "laser": "Laser",
+    "laser_desc": "Laser, fartkamera eller polis med laser.",
+    "all_vehicle_check": "Kontroll av alla fordon",
+    "all_vehicle_check_desc": "Kontroll där alla fordon stoppas (polis, tull, kronofogden etc).",
+    "need_cars": "Bilar behövs",
+    "need_cars_desc": "Högt taxibehov på platsen — många kunder väntar (event, terminal, arena).",
+    "queue": "Kö",
+    "queue_desc": "Trafikstockning, långsam trafik.",
+    "stop": "Stopp",
+    "stop_desc": "Vägavstängning, stillastående trafik.",
+    "accident": "Olycka",
+    "accident_desc": "Trafikolycka eller incident.",
+    "taxi_in_need": "Taxi i nöd",
+    "taxi_in_need_desc": "Diskret säkerhetsfunktion.",
+    "taxi_info": "Taxiinfo",
+    "taxi_info_desc": "Viktig information för taxiförare."
+  },
+  "utilities": {
+    "gsi_landvetter": "✈️ GSI Landvetter",
+    "gsi_landvetter_subtitle": "Airport arrivals",
+    "sj_ankomster": "🚆 SJ Ankomster",
+    "sj_ankomster_subtitle": "Train arrivals"
+  },
+  "regions": {
+    "vastra_gotaland": "Västra Götaland",
+    "stockholm": "Stockholm",
+    "skane": "Skåne"
+  },
+  "validation": {
+    "vehicle_registration": {
+      "se": "Svenskt registreringsnummer (t.ex. ABC12D)",
+      "is": "Isländskt registreringsnummer",
+      "no": "Norskt registreringsnummer"
+    },
+    "taxi_license": {
+      "se": "Svenskt taxiförarlegitimation",
+      "is": "Isländskt taxilicens",
+      "no": "Norskt taxilicens"
+    },
+    "invalid_format": "Ogiltigt format"
+  },
+  "common": {
+    "loading": "Laddar…",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "continue": "Fortsätt"
+  }
+}

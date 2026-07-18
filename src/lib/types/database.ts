@@ -59,6 +59,8 @@ export interface Profile {
   show_national_emergencies: boolean;
   welcome_pending: boolean;
   test_mode_enabled: boolean;
+  /** ISO 3166-1 Alpha-2 — default SE */
+  country_code: string;
   preferred_view: "app" | "tesla" | "tab";
   created_at: string;
   updated_at: string;
@@ -113,6 +115,8 @@ export interface DriverAlert {
   longitude: number | null;
   road_address: string | null;
   city: string | null;
+  /** ISO 3166-1 Alpha-2 — default SE */
+  country_code?: string;
   created_by: string | null;
   created_at: string;
   expires_at: string;

@@ -1,7 +1,19 @@
 import type { DriverAlert } from "./types/database";
 import { isEmergencyAlertType } from "./emergency-rules";
+import {
+  getActiveCountry,
+  getCountryCities,
+  resolveDefaultCityName,
+} from "@/config/countries";
 
-/** Preset operating cities — add future locations here. */
+/**
+ * Preset operating cities from the active country configuration.
+ * Kept as a stable export for existing UI — values come from config, not hardcoding.
+ */
+function citiesFromConfig() {
+  return getCountryCities(getActiveCountry()).filter((c) => !c.isOther);
+}
+
 export const PREDEFINED_DRIVER_CITIES = [
   "Göteborg",
   "Stockholm",
@@ -18,7 +30,9 @@ export const DRIVER_CITY_OPTIONS = [
 
 export type DriverCityOption = (typeof DRIVER_CITY_OPTIONS)[number];
 
-export const DEFAULT_DRIVER_CITY: PredefinedDriverCity = "Göteborg";
+export const DEFAULT_DRIVER_CITY: PredefinedDriverCity =
+  (resolveDefaultCityName(getActiveCountry()) as PredefinedDriverCity) ||
+  "Göteborg";
 
 /** Marker stored when driver selects Annan without a custom city name. */
 export const DRIVER_CITY_OTHER_MARKER = "Annan";
@@ -34,15 +48,26 @@ export const LOCAL_CITY_FILTERED_ALERT_TYPES = [
   "accident",
 ] as const;
 
-const CITY_ALIASES: Record<string, string> = {
-  goteborg: "Göteborg",
-  gothenburg: "Göteborg",
-  gbg: "Göteborg",
-  stockholm: "Stockholm",
-  sthlm: "Stockholm",
-  malmo: "Malmö",
-  malmö: "Malmö",
-};
+const CITY_ALIASES: Record<string, string> = Object.fromEntries(
+  getCountryCities(getActiveCountry()).flatMap((city) =>
+    city.aliases.map((alias) => [
+      alias
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{M}/gu, ""),
+      city.name,
+    ])
+  )
+);
+
+// Ensure canonical names resolve to themselves
+for (const city of citiesFromConfig()) {
+  const key = city.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+  CITY_ALIASES[key] = city.name;
+}
 
 export function isLocalCityFilteredAlert(type: string): boolean {
   return (LOCAL_CITY_FILTERED_ALERT_TYPES as readonly string[]).includes(type);
