@@ -133,31 +133,38 @@ Existing Swedish users need no action — defaults apply.
 
 ---
 
-## Domain routing (subdomains)
+## Domain routing (cabradar.se)
 
-Country is resolved automatically from the hostname — no manual picker.
+Primary production domain: **https://cabradar.se** (Sweden).
 
-| Host | Country |
-|------|---------|
-| `se.cabradar.com` | SE → `se.json` |
-| `is.cabradar.com` | IS → `is.json` |
-| `uk.cabradar.com` | GB → `uk.json` (alias) |
-| `localhost` / Vercel preview | SE (default) |
-| `www.cabradar.com` / apex | SE (default market) |
+International expansion uses country subdomains on the same apex:
+
+| Host | Country | Config |
+|------|---------|--------|
+| `cabradar.se` / `www.cabradar.se` | SE (default) | `se.json` |
+| `is.cabradar.se` | IS | `is.json` |
+| `no.cabradar.se` | NO | `no.json` |
+| `dk.cabradar.se` | DK | `dk.json` |
+| `fi.cabradar.se` | FI | `fi.json` |
+| `de.cabradar.se` | DE | `de.json` |
+| `uk.cabradar.se` | GB | `uk.json` |
+| `us.cabradar.se` | US | `us.json` |
+| `localhost` / Vercel preview | SE | `se.json` |
+| Unknown host / unknown subdomain | SE (safe fallback) | `se.json` |
 
 ### Flow
 
 ```
-Host: se.cabradar.com
+Host: is.cabradar.se
   → middleware resolveCountryCodeFromHost()
-  → x-cabradar-country: SE + cookie cabradar_country=SE
+  → x-cabradar-country: IS + cookie cabradar_country=IS
   → getRequestCountry() / useRequestCountry()
-  → load /config/countries/se.json
+  → load /config/countries/is.json
 ```
 
 ### Files
 
-- `src/lib/country-routing/hostname.ts` — pure hostname → country code
+- `src/lib/country-routing/hostname.ts` — Host → country code (apex = cabradar.se)
 - `src/lib/country-routing/request.ts` — server `getRequestCountry()`
 - `src/lib/country-routing/use-request-country.ts` — client hook
 - `src/middleware.ts` — sets header + cookie on every request
@@ -167,8 +174,9 @@ Host: se.cabradar.com
 1. Add/enable country JSON (`enabled: true`, optional `subdomains: ["xx"]`)
 2. Import in `countries/index.ts`
 3. Add translations
-4. Create DNS: `xx.cabradar.com` → app
-5. Done — **no routing code changes**
+4. Create DNS: `xx.cabradar.se` → app
+5. Activate in Admin when ready
+6. Done — **no routing code changes**
 
 ---
 
@@ -179,8 +187,9 @@ Host: se.cabradar.com
 3. Add locale files (or extend `en.json` / `sv.json`) for missing keys.
 4. Seed `geo_*` tables (or extend the migration) for regions/cities.
 5. Enable report types/utilities in the country JSON.
-6. Point DNS subdomain `xx.cabradar.com` at the app.
-7. Deploy. **No core logic rewrite.**
+6. Point DNS subdomain `xx.cabradar.se` at the app.
+7. Activate the country in Admin.
+8. Deploy. **No core logic rewrite.**
 
 ---
 

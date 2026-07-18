@@ -1,0 +1,69 @@
+{
+  "id": "de",
+  "code": "DE",
+  "name": "Germany",
+  "enabled": false,
+  "subdomains": ["de"],
+  "defaultLanguage": "de",
+  "supportedLanguages": ["de", "en"],
+  "timezone": "Europe/Berlin",
+  "currency": "EUR",
+  "locale": "de-DE",
+  "emergency": {
+    "police": "110",
+    "medical": "112",
+    "fire": "112"
+  },
+  "formats": {
+    "vehicleRegistration": {
+      "pattern": "^[A-Z\\u00C4\\u00D6\\u00DC]{1,3}-?[A-Z]{1,2}[0-9]{1,4}$",
+      "example": "B-AB1234",
+      "descriptionKey": "validation.vehicle_registration.de"
+    },
+    "taxiLicense": {
+      "pattern": "^[A-Z0-9-]{4,20}$",
+      "example": "TX-12345",
+      "descriptionKey": "validation.taxi_license.de"
+    }
+  },
+  "regions": [],
+  "defaultCityId": null,
+  "enabledReportTypes": [
+    "traffic_control",
+    "slow_traffic",
+    "total_stop",
+    "accident",
+    "taxi_emergency",
+    "need_cars"
+  ],
+  "enabledReportButtons": [
+    "taxikontroll",
+    "ko",
+    "stopp",
+    "olycka",
+    "nod",
+    "need_cars"
+  ],
+  "enabledUtilities": [],
+  "reportMenuCategories": [
+    {
+      "id": "police",
+      "labelKey": "report_menu.police",
+      "icon": "🚔",
+      "reportButtons": ["taxikontroll"]
+    },
+    {
+      "id": "traffic",
+      "labelKey": "report_menu.traffic",
+      "icon": "🚦",
+      "reportButtons": ["ko", "stopp", "olycka"]
+    },
+    {
+      "id": "taxi",
+      "labelKey": "report_menu.taxi",
+      "icon": "🚖",
+      "reportButtons": ["need_cars", "nod"],
+      "utilities": []
+    }
+  ]
+}

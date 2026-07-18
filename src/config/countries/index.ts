@@ -4,6 +4,7 @@ import isConfig from "@/config/countries/is.json";
 import noConfig from "@/config/countries/no.json";
 import dk from "@/config/countries/dk.json";
 import fi from "@/config/countries/fi.json";
+import de from "@/config/countries/de.json";
 import uk from "@/config/countries/uk.json";
 import us from "@/config/countries/us.json";
 
@@ -12,7 +13,7 @@ import us from "@/config/countries/us.json";
  * Adding a country = add JSON under config/countries + import here once
  * (or auto-discover in a future build step). No business logic changes.
  *
- * DNS: {subdomain}.cabradar.com — subdomain from id/code/`subdomains` aliases.
+ * DNS (primary): cabradar.se | {subdomain}.cabradar.se
  */
 const COUNTRY_CONFIGS: CountryConfig[] = [
   se as CountryConfig,
@@ -20,6 +21,7 @@ const COUNTRY_CONFIGS: CountryConfig[] = [
   noConfig as CountryConfig,
   dk as CountryConfig,
   fi as CountryConfig,
+  de as CountryConfig,
   uk as CountryConfig,
   us as CountryConfig,
 ];

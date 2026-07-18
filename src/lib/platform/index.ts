@@ -33,6 +33,7 @@ export { t, getLocale, setLocale } from "@/lib/i18n";
 export {
   COUNTRY_COOKIE,
   COUNTRY_HEADER,
+  PRIMARY_APEX_HOST,
   resolveCountryCodeFromHost,
   resolveCountryFromHost,
   isCountrySubdomainHost,
