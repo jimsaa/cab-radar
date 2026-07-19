@@ -5,12 +5,14 @@ Sweden (`SE`) remains the only **enabled** country. Existing behaviour is unchan
 
 ---
 
-## Principles
+## Architecture Principles
 
-1. **Configuration over conditionals** — never `if (country === "SE")` in app logic.
-2. **Add a country by adding config** — JSON + translations + validation patterns.
-3. **Backwards compatible** — default `country_code = SE` everywhere.
-4. **Core stays agnostic** — UI and APIs read country config at runtime.
+1. **The platform is country-agnostic.** Core application code must not encode market-specific behaviour.
+2. **Country-specific behaviour belongs in configuration** — country JSON, translation files, validation rules, aliases, feature flags, and domain lists.
+3. **No country should ever become a special case in the codebase.** Avoid `if (country === "SE")`, `switch (country)`, or hard-coded market branches in app logic.
+4. **Future countries should be enabled through configuration, not development.** Shipping a new market means config + translations + DNS + Admin activation — not a core rewrite.
+5. **Root domains do not determine country.** `cabradar.se` and `cabradar.com` both resolve to the platform default country. Only an explicit country subdomain (`is.cabradar.se`) selects a market.
+6. **Aliases are configurable.** Example: `uk.cabradar.se` → ISO `GB` → `config/countries/gb.json` via `subdomains: ["uk", "gb"]`.
 
 ---
 
@@ -19,14 +21,16 @@ Sweden (`SE`) remains the only **enabled** country. Existing behaviour is unchan
 ```
 src/
   config/
+    domains.json       # parent / apex domains (multi-domain ready)
+    domains.ts
     countries/
       se.json          # enabled
-      is.json          # stub, enabled: false
-      no.json          # stub, enabled: false
-      index.ts         # registry (getActiveCountry, …)
+      is.json … us.json
+      gb.json          # United Kingdom (alias: uk)
+      index.ts         # registry (getCountryConfig, aliases, …)
     reports/
       catalog.json     # canonical report type catalog
-      index.ts         # enabled filters per country
+      index.ts
     types.ts
   locales/
     sv.json
@@ -41,7 +45,7 @@ src/
     platform/index.ts
 docs/
   architecture/
-    COUNTRY_PLATFORM.md        # this file
+    COUNTRY_PLATFORM.md
 supabase/
   migration-country-platform.sql
 ```
@@ -56,8 +60,10 @@ Each file defines:
 
 | Field | Purpose |
 |--------|---------|
-| `code` | ISO 3166-1 Alpha-2 |
+| `code` | ISO 3166-1 Alpha-2 (file name should match, e.g. `gb.json` → `GB`) |
+| `id` | Stable config id (usually lowercase ISO code) |
 | `enabled` | Whether the country is live |
+| `subdomains` | Hostname aliases (e.g. `["uk","gb"]` for United Kingdom) |
 | `defaultLanguage` / `supportedLanguages` | i18n |
 | `timezone`, `currency`, `locale` | Formatting |
 | `emergency` | Emergency numbers |
@@ -74,6 +80,13 @@ import { getActiveCountry, t, validateVehicleRegistration } from "@/lib/platform
 const country = getActiveCountry(profile.country_code); // defaults to SE
 const label = t("reports.taxi_in_need");
 const plate = validateVehicleRegistration(input, country.code);
+```
+
+Aliases resolve through the registry:
+
+```ts
+getCountryConfig("uk") // → gb.json (code GB)
+getCountryConfig("GB") // → gb.json
 ```
 
 ---
@@ -133,61 +146,66 @@ Existing Swedish users need no action — defaults apply.
 
 ---
 
-## Domain routing (cabradar.se)
+## Domain routing (multi-domain)
 
-Primary production domain: **https://cabradar.se** (Sweden).
+Primary production domain: **https://cabradar.se**.
 
-International expansion uses country subdomains on the same apex:
+Parent domains are listed in `src/config/domains.json`. Adding `cabradar.com` (or another apex) is a config + DNS change — not a routing rewrite.
 
 | Host | Country | Config |
 |------|---------|--------|
-| `cabradar.se` / `www.cabradar.se` | SE (default) | `se.json` |
+| `cabradar.se` / `www.cabradar.se` | default (`SE`) | `se.json` |
+| `cabradar.com` / `www.cabradar.com` | default (`SE`) | `se.json` |
 | `is.cabradar.se` | IS | `is.json` |
-| `no.cabradar.se` | NO | `no.json` |
-| `dk.cabradar.se` | DK | `dk.json` |
-| `fi.cabradar.se` | FI | `fi.json` |
-| `de.cabradar.se` | DE | `de.json` |
-| `uk.cabradar.se` | GB | `uk.json` |
-| `us.cabradar.se` | US | `us.json` |
-| `localhost` / Vercel preview | SE | `se.json` |
-| Unknown host / unknown subdomain | SE (safe fallback) | `se.json` |
+| `is.cabradar.com` | IS | `is.json` |
+| `uk.cabradar.se` | GB (alias) | `gb.json` |
+| `no` / `dk` / `fi` / `de` / `us` subdomains | matching ISO | matching JSON |
+| `localhost` / Vercel preview | default (`SE`) | `se.json` |
+| Unknown host / unknown subdomain | default (`SE`) | `se.json` |
 
 ### Flow
 
 ```
-Host: is.cabradar.se
+Host: uk.cabradar.se
   → middleware resolveCountryCodeFromHost()
-  → x-cabradar-country: IS + cookie cabradar_country=IS
+  → x-cabradar-country: GB + cookie cabradar_country=GB
   → getRequestCountry() / useRequestCountry()
-  → load /config/countries/is.json
+  → load /config/countries/gb.json
 ```
 
 ### Files
 
-- `src/lib/country-routing/hostname.ts` — Host → country code (apex = cabradar.se)
+- `src/config/domains.json` — parent / primary apex hosts
+- `src/lib/country-routing/hostname.ts` — Host → country code
 - `src/lib/country-routing/request.ts` — server `getRequestCountry()`
 - `src/lib/country-routing/use-request-country.ts` — client hook
 - `src/middleware.ts` — sets header + cookie on every request
 
-### Enabling a country on DNS
+### Enabling a country
 
-1. Add/enable country JSON (`enabled: true`, optional `subdomains: ["xx"]`)
+1. Add country JSON (`enabled: true`, optional `subdomains` aliases)
 2. Import in `countries/index.ts`
 3. Add translations
-4. Create DNS: `xx.cabradar.se` → app
+4. Create DNS: `xx.cabradar.se` (and any other parent domains) → app
 5. Activate in Admin when ready
 6. Done — **no routing code changes**
+
+### Adding a root domain
+
+1. Add the parent to `src/config/domains.json`
+2. Point DNS (apex + `*.parent`) at the app
+3. Done — **no routing code changes**
 
 ---
 
 ## How to add a new country
 
-1. Copy `src/config/countries/se.json` → `xx.json`, set `code`, `enabled: true`, local rules, `subdomains`.
+1. Copy `src/config/countries/se.json` → `xx.json`, set `code`/`id`, local rules, `subdomains`.
 2. Import it in `src/config/countries/index.ts`.
 3. Add locale files (or extend `en.json` / `sv.json`) for missing keys.
 4. Seed `geo_*` tables (or extend the migration) for regions/cities.
 5. Enable report types/utilities in the country JSON.
-6. Point DNS subdomain `xx.cabradar.se` at the app.
+6. Point DNS subdomain `xx.{parent}` at the app.
 7. Activate the country in Admin.
 8. Deploy. **No core logic rewrite.**
 

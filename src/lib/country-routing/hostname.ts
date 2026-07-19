@@ -1,17 +1,20 @@
 /**
- * Hostname → country routing (primary domain: cabradar.se).
+ * Hostname → country routing (configuration-driven).
  *
  * Examples:
- *   cabradar.se       → SE (production default)
- *   www.cabradar.se   → SE
+ *   cabradar.se       → default country (SE) — apex, not because of .se TLD
+ *   www.cabradar.se   → default country
+ *   cabradar.com      → default country (same rule on any parent domain)
  *   is.cabradar.se    → IS → config/countries/is.json
- *   uk.cabradar.se    → GB → config/countries/uk.json
- *   localhost         → SE
+ *   is.cabradar.com   → IS → config/countries/is.json
+ *   uk.cabradar.se    → GB → config/countries/gb.json (alias)
+ *   localhost         → default country
  *
- * Unknown host / unknown subdomain → SE (safe fallback).
+ * Unknown host / unknown subdomain → default country (safe fallback).
  *
- * Adding a country: config JSON + translations + DNS `xx.cabradar.se`.
- * No core routing logic changes when the subdomain matches config id/code/aliases.
+ * Adding a country: country JSON (with optional subdomains aliases) +
+ * translations + DNS. Adding a root domain: config/domains.json + DNS.
+ * No core routing logic changes.
  */
 
 import type { CountryCode, CountryConfig } from "@/config/types";
@@ -20,35 +23,19 @@ import {
   getCountryConfig,
   listCountryConfigs,
 } from "@/config/countries";
+import {
+  listApexHosts,
+  listParentDomains,
+  PRIMARY_APEX_HOST,
+} from "@/config/domains";
+
+export { PRIMARY_APEX_HOST };
 
 /** Request header set by middleware — readable in Server Components / Route Handlers. */
 export const COUNTRY_HEADER = "x-cabradar-country";
 
 /** Non-httpOnly cookie so client components can read the active country. */
 export const COUNTRY_COOKIE = "cabradar_country";
-
-/** Production apex — Sweden default market. */
-export const PRIMARY_APEX_HOST = "cabradar.se";
-
-/**
- * Apex hosts that serve Sweden when there is no country subdomain.
- * Primary is cabradar.se; others are legacy / alternate entry points.
- */
-const APEX_HOSTS = [
-  PRIMARY_APEX_HOST,
-  "www.cabradar.se",
-  "cabradar.com",
-  "www.cabradar.com",
-  "cabradar.app",
-  "www.cabradar.app",
-] as const;
-
-/** Parent domains that accept `{country}.parent` subdomains. */
-const COUNTRY_PARENT_DOMAINS = [
-  PRIMARY_APEX_HOST,
-  "cabradar.com",
-  "cabradar.app",
-] as const;
 
 /** Host labels that never count as a country subdomain. */
 const IGNORED_SUBDOMAIN_LABELS = new Set([
@@ -114,12 +101,12 @@ function stripWww(host: string): string {
 }
 
 /**
- * If host is `{label}.cabradar.se` (or other parent), return the label.
- * Multi-level leftovers (e.g. a.b.cabradar.se) return null → fallback SE.
+ * If host is `{label}.{parent}` for a configured parent domain, return the label.
+ * Multi-level leftovers (e.g. a.b.cabradar.se) return null → default country.
  */
 function countryLabelUnderParent(host: string): string | null {
   const bare = stripWww(host);
-  for (const parent of COUNTRY_PARENT_DOMAINS) {
+  for (const parent of listParentDomains()) {
     if (bare === parent) return null;
     const suffix = `.${parent}`;
     if (!bare.endsWith(suffix)) continue;
@@ -132,7 +119,8 @@ function countryLabelUnderParent(host: string): string | null {
 
 /**
  * Resolve ISO country code from a request Host header.
- * Always returns a valid code; unknown → SE.
+ * Always returns a valid code; unknown → DEFAULT_COUNTRY_CODE.
+ * Root domain TLD never selects a country — only an explicit subdomain label does.
  */
 export function resolveCountryCodeFromHost(
   hostHeader: string | null | undefined
@@ -143,8 +131,8 @@ export function resolveCountryCodeFromHost(
     return DEFAULT_COUNTRY_CODE;
   }
 
-  // Exact apex / www → Sweden
-  if ((APEX_HOSTS as readonly string[]).includes(host)) {
+  // Apex / www on any configured parent → platform default (not TLD-based)
+  if (listApexHosts().includes(host)) {
     return DEFAULT_COUNTRY_CODE;
   }
 
@@ -155,7 +143,6 @@ export function resolveCountryCodeFromHost(
     }
     const mapped = subdomainMap().get(label);
     if (mapped) return mapped;
-    // Unknown subdomain under cabradar.se → safe fallback
     return DEFAULT_COUNTRY_CODE;
   }
 
@@ -165,7 +152,7 @@ export function resolveCountryCodeFromHost(
 /**
  * Load country config for a hostname.
  * Uses the country file even when `enabled: false` (preview / pre-launch DNS).
- * Falls back to Sweden if the subdomain is unknown.
+ * Falls back to default country if the subdomain is unknown.
  */
 export function resolveCountryFromHost(
   hostHeader: string | null | undefined
@@ -182,7 +169,7 @@ export function isCountrySubdomainHost(
 ): boolean {
   const host = normalizeHost(hostHeader);
   if (!host || isLocalHost(host) || isVercelPreview(host)) return false;
-  if ((APEX_HOSTS as readonly string[]).includes(host)) return false;
+  if (listApexHosts().includes(host)) return false;
   const label = countryLabelUnderParent(host);
   if (!label || IGNORED_SUBDOMAIN_LABELS.has(label)) return false;
   return subdomainMap().has(label);

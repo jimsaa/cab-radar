@@ -1,5 +1,5 @@
 {
-  "id": "uk",
+  "id": "gb",
   "code": "GB",
   "name": "United Kingdom",
   "enabled": false,
@@ -19,12 +19,12 @@
     "vehicleRegistration": {
       "pattern": "^[A-Z]{2}[0-9]{2}[A-Z]{3}$",
       "example": "AB12CDE",
-      "descriptionKey": "validation.vehicle_registration.uk"
+      "descriptionKey": "validation.vehicle_registration.gb"
     },
     "taxiLicense": {
       "pattern": "^[A-Z0-9]{4,16}$",
       "example": "LICENSE1",
-      "descriptionKey": "validation.taxi_license.uk"
+      "descriptionKey": "validation.taxi_license.gb"
     }
   },
   "regions": [],

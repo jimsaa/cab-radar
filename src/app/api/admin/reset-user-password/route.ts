@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PRIMARY_APEX_HOST } from "@/config/domains";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 interface ResetPasswordBody {
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-    "https://cabradar.se";
+    `https://${PRIMARY_APEX_HOST}`;
 
   const { error: resetError } = await service.auth.resetPasswordForEmail(
     authUser.user.email,

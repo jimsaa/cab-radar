@@ -39,6 +39,8 @@ export {
   isCountrySubdomainHost,
 } from "@/lib/country-routing/hostname";
 
+export { listParentDomains, listApexHosts } from "@/config/domains";
+
 export {
   getRequestCountryCode,
   getRequestCountry,

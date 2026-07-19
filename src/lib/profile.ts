@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { DEFAULT_COUNTRY_CODE } from "@/config/countries";
 import { isMissingSchemaError } from "./db-errors";
 import {
   fetchContributionCountsFromSource,
@@ -165,7 +166,7 @@ export function normalizeProfileRow(row: Record<string, unknown>): Profile {
     country_code:
       typeof row.country_code === "string" && row.country_code.trim()
         ? row.country_code.trim().toUpperCase()
-        : "SE",
+        : DEFAULT_COUNTRY_CODE,
     created_at: (row.created_at as string) ?? new Date().toISOString(),
     updated_at: (row.updated_at as string) ?? new Date().toISOString(),
   };

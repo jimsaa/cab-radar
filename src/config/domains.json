@@ -1,0 +1,9 @@
+{
+  "primaryApexHost": "cabradar.se",
+  "parentDomains": [
+    "cabradar.se",
+    "cabradar.com",
+    "cabradar.app"
+  ],
+  "notes": "Root domains never imply a country. Apex / www always resolve to the platform default country (DEFAULT_COUNTRY_CODE). Only an explicit country subdomain label selects a market."
+}
